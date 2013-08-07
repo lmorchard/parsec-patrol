@@ -5,7 +5,9 @@
     "requirejs": "~2.1.4",
     "modernizr": "~2.6.2",
     "jquery": "~1.9.1",
-    "underscore": "~1.5.1"
+    "underscore": "~1.5.1",
+    "requirejs-text": "~2.0.10",
+    "requirejs-domready": "~2.0.1"
   },
   "devDependencies": {}
 }
