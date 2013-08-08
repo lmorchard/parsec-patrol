@@ -1,8 +1,5 @@
 define ['entities'], (entities) ->
 
-    should = chai.should()
-    assert = chai.assert
-
     suite 'entities', () ->
 
         setup () ->
