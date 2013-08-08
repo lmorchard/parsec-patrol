@@ -1,6 +1,5 @@
 /* global define */
 define([
-    'spec/test-app',
     'spec/test-maps',
     'spec/test-entities'
 ], function () {
