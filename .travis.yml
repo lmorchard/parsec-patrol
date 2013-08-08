@@ -1,0 +1,32 @@
+language: node_js
+env: 
+  global: 
+  - secure: dO9COrIg/xxshxeXchoKK1rW8apddYi9wxkDdpJhFSa3A0vSPrzb+N0FWwflm4R8SQyEHJ9khKSMEYdJx7btBGCO7DFGwU5Pjs61EVdoJfpDQCnDYIsyUHmMAUpowrnlb09h3KBPJ2K6lsYUPh+/mVT8gmqTZgvi53CVsNxsN2I=
+  - GH_OWNER: lmorchard
+  - GH_PROJECT_NAME: parsec-patrol
+node_js: 
+- 0.8
+branches: 
+  only: 
+  - master
+before_script: 
+- npm install -g grunt-cli bower
+after_success: 
+- git submodule add -b gh-pages https://${GH_OAUTH_TOKEN}@github.com/${GH_OWNER}/${GH_PROJECT_NAME} site > /dev/null 2>&1
+- cd site
+- node ../app/scripts/util/cleanup.js ../dist/index.html
+- if git checkout gh-pages; then git checkout -b gh-pages; fi
+- git rm -r .
+- cp -R ../dist/* .
+- cp ../dist/.* .
+- git add -f .
+- git config user.email "me@lmorchard.com"
+- git config user.name "Les Orchard"
+- git commit -am "adding the yeoman build files to gh-pages"
+- git push https://${GH_OAUTH_TOKEN}@github.com/${GH_OWNER}/${GH_PROJECT_NAME} HEAD:gh-pages > /dev/null 2>&1
+script: 
+- npm install
+- bower install
+- grunt
+GH_OAUTH_TOKEN=5bc3b6e6e08afb707978ecf6f918ccd134d469ea: 
+  secure: aKD1+WIvZsEXm0RnZeMJdCmY0oHZKmiWti2M4CCm+8sBV86JUdBRgF54HX+MRQEKfU8R4eD/OZhPApx5j4lUdZJiv/AlE4AFVHtilXg8x8TbRfRCHaSmlA9bDV9VpjTvNw0c9lqAiQ+15Z6Uwe5OSD97AEd0MJszI619yZcGGpg=
