@@ -62,8 +62,7 @@ module.exports = function (grunt) {
         connect: {
             options: {
                 port: 9000,
-                // change this to '0.0.0.0' to access the server from outside
-                hostname: 'localhost'
+                hostname: '0.0.0.0'
             },
             livereload: {
                 options: {
@@ -95,11 +94,6 @@ module.exports = function (grunt) {
                         ];
                     }
                 }
-            }
-        },
-        open: {
-            server: {
-                path: 'http://localhost:<%= connect.options.port %>'
             }
         },
         clean: {
@@ -150,7 +144,7 @@ module.exports = function (grunt) {
                     expand: true,
                     cwd: 'test/spec',
                     src: '{,*/}*.coffee',
-                    dest: '.tmp/spec',
+                    dest: '.tmp/test/spec',
                     ext: '.js'
                 }]
             }
@@ -167,17 +161,12 @@ module.exports = function (grunt) {
                 debugInfo: true
             }
         },
-        // not used since Uglify task does concat,
-        // but still available if needed
-        /*concat: {
-            dist: {}
-        },*/
         requirejs: {
             dist: {
                 // Options: https://github.com/jrburke/r.js/blob/master/build/example.build.js
                 options: {
                     // `name` and `out` is set by grunt-usemin
-                    baseUrl: yeomanConfig.app + '/scripts',
+                    baseUrl: '.tmp/scripts',
                     optimize: 'none',
                     // TODO: Figure out how to make sourcemaps work with grunt-usemin
                     // https://github.com/yeoman/grunt-usemin/issues/30
@@ -185,12 +174,9 @@ module.exports = function (grunt) {
                     // required to support SourceMaps
                     // http://requirejs.org/docs/errors.html#sourcemapcomments
                     preserveLicenseComments: false,
-                    useStrict: true,
+                    useStrict: false,
                     wrap: true,
-                    //uglify2: {} // https://github.com/mishoo/UglifyJS2
-                    include: '../bower_components/requirejs/require',
-                    mainConfigFile: yeomanConfig.app + '/scripts/config.js',
-                    out: yeomanConfig.dist + '/scripts/app.min.js'
+                    mainConfigFile: '.tmp/scripts/config.js'
                 }
             }
         },
@@ -315,19 +301,18 @@ module.exports = function (grunt) {
         concurrent: {
             server: [
                 'stylus:compile',
-                'coffee:dist',
+                'coffee',
                 'copy:styles'
             ],
             test: [
+                'stylus:compile',
                 'coffee',
-                'copy:styles',
-                'compass'
+                'copy:styles'
             ],
             dist: [
                 'coffee',
                 'stylus:compile',
                 'copy:styles',
-                'compass:dist',
                 'imagemin',
                 'svgmin',
                 'htmlmin'
@@ -336,31 +321,29 @@ module.exports = function (grunt) {
         bower: {
             options: {
                 exclude: ['modernizr']
-            },
-            all: {
-                rjsConfig: '<%= yeoman.app %>/scripts/config.js'
             }
         },
         symlink: {
             js: {
                 dest: '.tmp/bower_components',
                 relativeSrc: '../app/bower_components',
-                options: {type: 'dir'},
-                rjsConfig: '<%= yeoman.app %>/scripts/config.js'
+                options: {type: 'dir'}
             }
         }
     });
 
     grunt.registerTask('server', function (target) {
         if (target === 'dist') {
-            return grunt.task.run(['build', /*'open',*/ 'connect:dist:keepalive']);
+            return grunt.task.run([
+                'build',
+                'connect:dist:keepalive'
+            ]);
         }
 
         grunt.task.run([
             'clean:server',
             'concurrent:server',
             'connect:livereload',
-            // 'open',
             'watch'
         ]);
     });
@@ -368,6 +351,8 @@ module.exports = function (grunt) {
     grunt.registerTask('test', [
         'clean:server',
         'concurrent:test',
+        'copy:js',
+        'symlink:js',
         'connect:test',
         'mocha'
     ]);

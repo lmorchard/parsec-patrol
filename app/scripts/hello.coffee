@@ -1,4 +1,4 @@
-define ['jquery', 'underscore', 'backbone'], ($, _, Backbone) ->
+define ['jquery', 'underscore'], ($, _) ->
 
     console.log "'Allo from CoffeeScript!"
     for i in ['one', 'two', 'three']

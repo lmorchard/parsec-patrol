@@ -1,8 +1,8 @@
 /* global define */
 define([
     // All your tests go here.
-    'spec/app.test',
-    //'spec/hello.test'
+    'spec/test-app',
+    'spec/test-hello'
 ], function () {
     'use strict';
 

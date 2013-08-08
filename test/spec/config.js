@@ -1,12 +1,12 @@
 'use strict';
 
 require.config({
-    baseUrl: '../../app/scripts/',
+    baseUrl: '../../scripts/',
     deps: ['runner'],
     paths: {
-        spec: '../../test/spec',
-        runner: '../../test/spec/runner',
-        appConfig: '../../app/scripts/config'
+        spec: '../test/spec',
+        runner: '../test/spec/runner',
+        appConfig: 'config'
     },
     shim: {
         runner: ['appConfig']
