@@ -22,6 +22,9 @@ module.exports = function (grunt) {
         dist: 'dist'
     };
 
+    grunt.loadNpmTasks('grunt-contrib-stylus');
+    grunt.registerTask('compass', ['stylus']);
+
     grunt.initConfig({
         yeoman: yeomanConfig,
         watch: {
@@ -33,9 +36,9 @@ module.exports = function (grunt) {
                 files: ['test/spec/{,*/}*.coffee'],
                 tasks: ['coffee:test']
             },
-            compass: {
-                files: ['<%= yeoman.app %>/styles/{,*/}*.{scss,sass}'],
-                tasks: ['compass:server']
+            stylus: {
+                files: ['<%= yeoman.app %>/styles/{,*/}*.styl'],
+                tasks: ['stylus']
             },
             styles: {
                 files: ['<%= yeoman.app %>/styles/{,*/}*.css'],
@@ -147,28 +150,14 @@ module.exports = function (grunt) {
                 }]
             }
         },
-        compass: {
-            options: {
-                sassDir: '<%= yeoman.app %>/styles',
-                cssDir: '.tmp/styles',
-                generatedImagesDir: '.tmp/images/generated',
-                imagesDir: '<%= yeoman.app %>/images',
-                javascriptsDir: '<%= yeoman.app %>/scripts',
-                fontsDir: '<%= yeoman.app %>/styles/fonts',
-                importPath: '<%= yeoman.app %>/bower_components',
-                httpImagesPath: '/images',
-                httpGeneratedImagesPath: '/images/generated',
-                httpFontsPath: '/styles/fonts',
-                relativeAssets: false
-            },
-            dist: {
+        stylus: {
+            compile: {
                 options: {
-                    generatedImagesDir: '<%= yeoman.dist %>/images/generated'
-                }
-            },
-            server: {
-                options: {
-                    debugInfo: true
+                    compress: true,
+                    paths: ['node_modules/grunt-contrib-stylus/node_modules']
+                },
+                files: {
+                    '.tmp/styles/styls.css': ['app/styles/*.styl']
                 }
             }
         },
@@ -182,7 +171,7 @@ module.exports = function (grunt) {
                 // Options: https://github.com/jrburke/r.js/blob/master/build/example.build.js
                 options: {
                     // `name` and `out` is set by grunt-usemin
-                    baseUrl: yeomanConfig.app + '/scripts',
+                    baseUrl: '.tmp/scripts',
                     optimize: 'none',
                     // TODO: Figure out how to make sourcemaps work with grunt-usemin
                     // https://github.com/yeoman/grunt-usemin/issues/30
@@ -294,6 +283,17 @@ module.exports = function (grunt) {
                     ]
                 }]
             },
+            js: {
+                files: [{
+                    expand: true,
+                    dot: true,
+                    cwd: '<%= yeoman.app %>/scripts',
+                    dest: '.tmp/scripts',
+                    src: [
+                        '{,*/}*.js'
+                    ]
+                }]
+            },
             styles: {
                 expand: true,
                 dot: true,
@@ -304,7 +304,7 @@ module.exports = function (grunt) {
         },
         concurrent: {
             server: [
-                'compass',
+                'stylus:compile',
                 'coffee:dist',
                 'copy:styles'
             ],
@@ -314,7 +314,7 @@ module.exports = function (grunt) {
             ],
             dist: [
                 'coffee',
-                'compass',
+                'stylus:compile',
                 'copy:styles',
                 'imagemin',
                 'svgmin',
@@ -327,6 +327,13 @@ module.exports = function (grunt) {
             },
             all: {
                 rjsConfig: '<%= yeoman.app %>/scripts/main.js'
+            }
+        },
+        symlink: {
+            js: {
+                dest: '.tmp/bower_components',
+                relativeSrc: '../app/bower_components',
+                options: {type: 'dir'}
             }
         }
     });
@@ -356,6 +363,8 @@ module.exports = function (grunt) {
         'clean:dist',
         'useminPrepare',
         'concurrent:dist',
+        'copy:js',
+        'symlink:js',
         'requirejs',
         'concat',
         'cssmin',
