@@ -1,7 +1,7 @@
 language: node_js
 env: 
   global: 
-  - secure: dO9COrIg/xxshxeXchoKK1rW8apddYi9wxkDdpJhFSa3A0vSPrzb+N0FWwflm4R8SQyEHJ9khKSMEYdJx7btBGCO7DFGwU5Pjs61EVdoJfpDQCnDYIsyUHmMAUpowrnlb09h3KBPJ2K6lsYUPh+/mVT8gmqTZgvi53CVsNxsN2I=
+  - secure: "iiAWfVJ90ogzcgl46acbQYzVth25a0++87OlXbV0/fR6gkRU535FcLb8jIoFpOdDMAwyXWw/qlZkxJKknrXW7vPRrYmQo3ijsAbV23piv71eOtOXzd9Slhqq4feXnYAUdZ/f/5hcW4t1ws1Dbmhd9Iie5jqT6FWIShmYBCEpnqc="
   - GH_OWNER: lmorchard
   - GH_PROJECT_NAME: parsec-patrol
 node_js: 
@@ -28,5 +28,3 @@ script:
 - npm install
 - bower install
 - grunt
-GH_OAUTH_TOKEN=5bc3b6e6e08afb707978ecf6f918ccd134d469ea: 
-  secure: aKD1+WIvZsEXm0RnZeMJdCmY0oHZKmiWti2M4CCm+8sBV86JUdBRgF54HX+MRQEKfU8R4eD/OZhPApx5j4lUdZJiv/AlE4AFVHtilXg8x8TbRfRCHaSmlA9bDV9VpjTvNw0c9lqAiQ+15Z6Uwe5OSD97AEd0MJszI619yZcGGpg=
