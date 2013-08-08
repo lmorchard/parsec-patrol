@@ -1,23 +1,41 @@
 <!doctype html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Mocha Spec Runner</title>
-    <link rel="stylesheet" href="lib/mocha/mocha.css">
-</head>
-<body>
-    <div id="mocha"></div>
-    <script src="lib/mocha/mocha.js"></script>
-    <script>mocha.setup('bdd')</script>
-    <!-- assertion framework -->
-    <script src="lib/chai.js"></script>
-    <script>var expect = chai.expect</script>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-    <!-- include source files here... -->
+        <title></title>
 
-    <!-- include spec files here... -->
-    <script src="spec/test.js"></script>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
 
-    <script>mocha.run()</script>
-</body>
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+        <link rel="stylesheet" href="../.tmp/styles/main.css">
+
+        <script src="../app/bower_components/modernizr/modernizr.js"></script>
+
+        <link rel="stylesheet" href="../app/bower_components/mocha/mocha.css">
+        <script src="../app/bower_components/mocha/mocha.js"></script>
+        <script src="../app/bower_components/chai/chai.js"></script>
+    </head>
+    <body>
+        <div class="container"></div>
+        <div id="mocha" style="opacity: 0.85;"></div>
+
+        <script>
+            mocha.setup(
+                {
+                    ui: 'bdd',
+                    reporter: 'html',
+                    ignoreLeaks: true
+                }
+            );
+            var should = chai.should();
+        </script>
+
+        <script data-main="spec/config" src="../app/bower_components/requirejs/require.js"></script>
+    </body>
 </html>

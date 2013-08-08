@@ -1,5 +1,5 @@
 /*global define */
-define(['underscore'], function (_) {
+define([], function () {
     'use strict';
 
     return '\'Allo \'Allo!';
