@@ -1,4 +1,5 @@
 /* global define */
+'use strict';
 define([
     'spec/test-maps',
     'spec/test-entities'
