@@ -1,6 +1,5 @@
 /*global define */
-define([], function () {
+define(['entities'], function (entities) {
     'use strict';
-
     return '\'Allo \'Allo!';
 });

@@ -33,15 +33,24 @@ module.exports = function (grunt) {
             },
             coffee: {
                 files: ['<%= yeoman.app %>/scripts/{,*/}*.coffee'],
-                tasks: ['coffee:dist']
+                tasks: ['coffee:dist'],
+                options: {
+                    livereload: true
+                }
             },
             coffeeTest: {
                 files: ['test/spec/{,*/}*.coffee'],
-                tasks: ['coffee:test']
+                tasks: ['coffee:test'],
+                options: {
+                    livereload: true
+                }
             },
             stylus: {
                 files: ['<%= yeoman.app %>/styles/{,*/}*.styl'],
-                tasks: ['stylus']
+                tasks: ['stylus'],
+                options: {
+                    livereload: true
+                }
             },
             styles: {
                 files: ['<%= yeoman.app %>/styles/{,*/}*.css'],
@@ -53,7 +62,9 @@ module.exports = function (grunt) {
                 },
                 files: [
                     '<%= yeoman.app %>/*.html',
-                    '{.tmp,<%= yeoman.app %>}/styles/{,*/}*.css',
+                    'test/*.html',
+                    'test/spec/*.js',
+                    '<%= yeoman.app %>/styles/{,*/}*.css',
                     '{.tmp,<%= yeoman.app %>}/scripts/{,*/}*.js',
                     '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
                 ]
@@ -62,16 +73,17 @@ module.exports = function (grunt) {
         connect: {
             options: {
                 port: 9000,
-                hostname: '0.0.0.0'
+                // change this to '0.0.0.0' to access the server from outside
+                hostname: 'localhost'
             },
             livereload: {
                 options: {
                     middleware: function (connect) {
                         return [
+                            lrSnippet,
                             mountFolder(connect, '.tmp'),
                             mountFolder(connect, yeomanConfig.app),
-                            mountFolder(connect, '.'),
-                            lrSnippet
+                            mountFolder(connect, '.')
                         ];
                     }
                 }

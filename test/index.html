@@ -26,14 +26,12 @@
         <div id="mocha" style="opacity: 0.85;"></div>
 
         <script>
-            mocha.setup(
-                {
-                    ui: 'bdd',
-                    reporter: 'html',
-                    ignoreLeaks: true
-                }
-            );
-            var should = chai.should();
+            mocha.setup({
+                ui: 'tdd',
+                reporter: 'html',
+                ignoreLeaks: true
+            });
+            //var should = chai.should();
         </script>
 
         <script data-main="spec/config" src="../app/bower_components/requirejs/require.js"></script>
