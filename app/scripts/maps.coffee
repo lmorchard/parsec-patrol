@@ -11,10 +11,10 @@ define ['underscore', 'backbone', 'entities'], (_, Backbone, Entities) ->
         constructor: (@grid, @size=[320,320], @stars=1, @min_planets=1,
                       @max_planets=15) ->
             super
-            this.spawn(new Entities.Star this)
-            num_planets = _.random(@min_planets, @max_planets)
-            for idx in [1..num_planets]
-                this.spawn(new Entities.Planet this)
+            #this.spawn(new Entities.Star this)
+            #num_planets = _.random(@min_planets, @max_planets)
+            #for idx in [1..num_planets]
+            #    this.spawn(new Entities.Planet this)
 
 
     class GridOfMaps

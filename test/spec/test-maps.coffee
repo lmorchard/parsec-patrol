@@ -18,7 +18,3 @@ define ['games', 'maps'], (Games, Maps) ->
                 for map in row
                     # Having an entities list sounds like a SpaceMap
                     assert.isDefined map.entities.length
-                    assert.ok map.entities.length > 0
-                    for entity in map.entities
-                        console.log "  #{entity.toString()}"
-
