@@ -1,22 +1,34 @@
-define ['underscore', 'backbone'], (_, Backbone) ->
+define ['underscore', 'backbone', 'entities'], (_, Backbone, Entities) ->
 
     class SpaceMap
-        constructor: (@size=[8,8]) ->
-            [@width, @height] = @size
-            @entities = ((null for col_idx in [0..@width-1]) for row_idx in [0..@height-1])
+        constructor: (@grid, @size=[320,320]) ->
+            @entities = []
 
-    class SectorMap extends SpaceMap
+        spawn: (entity) ->
+            @entities.push(entity)
+
+    class SystemMap extends SpaceMap
+        constructor: (@grid, @size=[320,320], @stars=1, @min_planets=1,
+                      @max_planets=15) ->
+            super
+            this.spawn(new Entities.Star this)
+            num_planets = _.random(@min_planets, @max_planets)
+            for idx in [1..num_planets]
+                this.spawn(new Entities.Planet this)
+
 
     class GridOfMaps
         map_type: SpaceMap
-
-        constructor: (@size=[8,8]) ->
-            [@width, @height] = @size
-            @maps = ((new @map_type for col_idx in [0..@width-1]) for row_idx in [0..@height-1])
+        constructor: (@game, @size=[8,8]) ->
+            [width, height] = @size
+            @maps = for row_idx in [1..height]
+                new @map_type this for col_idx in [1..width]
 
     class ConstellationGrid extends GridOfMaps
-        map_type: SectorMap
+        map_type: SystemMap
+        constructor: (@game, @size=[8,8]) ->
+            super
 
     return {
-        SectorMap, ConstellationGrid
+        SystemMap, ConstellationGrid
     }
