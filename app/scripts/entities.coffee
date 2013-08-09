@@ -3,12 +3,19 @@ define ['underscore', 'backbone'], (_, Backbone) ->
     class SpaceEntity
         constructor: (@name) ->
 
-    class Base extends SpaceEntity
+
+    class Celestial extends SpaceEntity
+
+    class Asteroid extends Celestial
+
+
+    class SpaceBase extends SpaceEntity
+
+    class FriendlyBase extends SpaceBase
+
 
     class Ship extends SpaceEntity
     
-    class FriendlyBase extends Base
-
     class PlayerShip extends Ship
 
     class HeroPlayerShip extends PlayerShip
@@ -17,6 +24,8 @@ define ['underscore', 'backbone'], (_, Backbone) ->
 
     class KlangonScoutShip extends Ship
 
+
     return {
-        SpaceEntity, Base, Ship, FriendlyBase, PlayerShip, EnemyShip
+        Asteroid, FriendlyBase,
+        HeroPlayerShip, KlangonScoutShip
     }

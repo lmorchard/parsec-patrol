@@ -1,9 +1,9 @@
-define ['entities'], (entities) ->
+define ['entities'], (Entities) ->
 
-    suite 'entities', () ->
+    suite 'Entities', () ->
 
         setup () ->
             return
 
-        test 'should be defined', () ->
-            assert.isDefined entities
+        test 'Module should be defined', () ->
+            assert.isDefined Entities
