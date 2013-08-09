@@ -1,4 +1,4 @@
-require(['jquery'], function ($) {
+require(['jquery', 'app'], function ($, App) {
     'use strict';
-    console.log('Running jQuery %s', $().jquery);
+    (new App()).run();
 });

@@ -1,6 +1,7 @@
 /* global define */
 'use strict';
 define([
+    'spec/test-app',
     'spec/test-games',
     'spec/test-maps',
     'spec/test-entities'

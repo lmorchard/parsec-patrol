@@ -32,7 +32,10 @@ define ['underscore', 'backbone'], (_, Backbone) ->
         constructor: (@game, @position=[0,0]) ->
             super
             [m_width, m_height] = @map.size
-            @position = [m_width * Math.random(), m_height * Math.random()]
+            @position = [
+                m_width * Math.random(),
+                m_height * Math.random()
+            ]
 
 
     class SpaceBase extends SpaceEntity
