@@ -2,6 +2,8 @@ define ['underscore', 'backbone'], (_, Backbone) ->
 
     class Component
         type: 'AbstractComponent'
+        toString: () ->
+            return "(#{@type} #{JSON.stringify(this)})"
 
     class TypeName extends Component
         type: 'TypeName'
@@ -13,7 +15,7 @@ define ['underscore', 'backbone'], (_, Backbone) ->
 
     class MapPosition extends Component
         type: 'MapPosition'
-        constructor: (@map, @x, @y) ->
+        constructor: (@map, @x, @y, @rotation) ->
     
     class CenterSpawn extends Component
         type: 'CenterSpawn'
@@ -25,5 +27,6 @@ define ['underscore', 'backbone'], (_, Backbone) ->
         type: 'Renderable'
 
     return {
-        Component, TypeName, MapPosition, Renderable
+        Component, TypeName, EntityName, MapPosition, CenterSpawn, RandomSpawn,
+        Renderable
     }
