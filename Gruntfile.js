@@ -39,7 +39,10 @@ module.exports = function (grunt) {
                 }
             },
             coffeeTest: {
-                files: ['test/spec/{,*/}*.coffee'],
+                files: [
+                    'test/spec/{,*/}*.coffee',
+                    'sketches/{,*/}*.coffee'
+                ],
                 tasks: ['coffee:test'],
                 options: {
                     livereload: true
@@ -62,7 +65,7 @@ module.exports = function (grunt) {
                 },
                 files: [
                     '<%= yeoman.app %>/*.html',
-                    'sketches/*.{html,coffee}',
+                    'sketches/*.html',
                     'test/*.html',
                     'test/spec/*.js',
                     '<%= yeoman.app %>/styles/{,*/}*.css',

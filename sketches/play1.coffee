@@ -1,10 +1,22 @@
-define [
-    'worlds', 'entities', 'components', 'systems'
-], (
-    Worlds, Entities, Components, Systems
-) ->
+define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'underscore'], (W, E, C, S, PubSub, $, _) ->
 
-    init = () ->
-        console.log "WANG GAR"
+    PubSub.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) ->
+        console.log "SPAWN #{msg} #{JSON.stringify(data)}"
 
-    return init
+    canvas = $('#display')[0]
+
+    world = new W.World
+    
+    world.width = canvas.width
+    world.height = canvas.height
+
+    world.addSystem(new S.SpawnSystem)
+    world.addSystem(new S.OrbiterSystem)
+    world.addSystem(new S.RenderSystem canvas)
+
+    em = world.entity_manager
+    sun = E.Star.create(em, "Star 1")
+    for idx in [0..7]
+        E.Planet.create(em, "Planet #{idx}", sun)
+
+    () -> world.start()

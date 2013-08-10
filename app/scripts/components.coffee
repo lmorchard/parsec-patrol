@@ -23,14 +23,24 @@ define ['entities', 'underscore', 'backbone'], (Entities, _, Backbone) ->
         type: 'MapPosition'
         constructor: (@map, @x, @y, @rotation) ->
     
+    class Orbit extends Component
+        type: 'Orbit'
+        constructor: (@orbited_entity) ->
+            
+
     class Spawn extends Component
         type: 'Spawn'
         constructor: (@position_logic='random') ->
 
+    class Sprite extends Component
+        type: 'Sprite'
+        constructor: (@shape) ->
+
     class Renderable extends Component
         type: 'Renderable'
+        constructor: () ->
 
     return {
-        Component, TypeName, EntityName, MapPosition, Spawn,
-        Renderable
+        Component, TypeName, EntityName, MapPosition, Orbit, Spawn,
+        Renderable, Sprite
     }

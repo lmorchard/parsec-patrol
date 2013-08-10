@@ -72,13 +72,13 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
         # Get a list of all components for an entity
         getComponentsByEntity: (entity_id) ->
-            _.clone(@_by_entity[entity_id])
+            _.clone(@_by_entity[entity_id]) || []
 
         # Get a list of all components by type
         getComponentsByType: (type) ->
             if not _.isString(type)
                 type = type.prototype.type
-            _.clone(@_by_type[type])
+            _.clone(@_by_type[type]) || []
 
 
     # Thin convenience wrapper around entity IDs
@@ -112,7 +112,9 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
             return em.createEntity([
                 new C.TypeName('Star'),
                 new C.EntityName(name),
-                new C.Spawn('center')
+                new C.Spawn('center'),
+                new C.MapPosition,
+                new C.Sprite('star')
             ])
 
     class Asteroid extends Celestial
@@ -120,15 +122,20 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
             return em.createEntity([
                 new C.TypeName('Asteroid'),
                 new C.EntityName(name),
-                new C.Spawn('random')
+                new C.Spawn('random'),
+                new C.MapPosition,
+                new C.Sprite('asteroid')
             ])
 
     class Planet extends Celestial
-        @create: (em, name='unnamed') ->
+        @create: (em, name='unnamed', sun) ->
             return em.createEntity([
                 new C.TypeName('Planet'),
                 new C.EntityName(name),
-                new C.Spawn('random')
+                new C.Spawn('random'),
+                new C.MapPosition,
+                new C.Orbit(sun),
+                new C.Sprite('planet')
             ])
 
     return {
