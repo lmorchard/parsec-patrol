@@ -149,7 +149,10 @@ module.exports = function (grunt) {
                     src: '{,*/}*.coffee',
                     dest: '.tmp/scripts',
                     ext: '.js'
-                }]
+                }],
+                options: {
+                    sourceMap: true
+                }
             },
             test: {
                 files: [{
@@ -158,7 +161,10 @@ module.exports = function (grunt) {
                     src: '{,*/}*.coffee',
                     dest: '.tmp/test/spec',
                     ext: '.js'
-                }]
+                }],
+                options: {
+                    sourceMap: true
+                }
             }
         },
         stylus: {

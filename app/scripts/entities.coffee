@@ -5,44 +5,46 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
         generateID = () -> curr_id++
 
         constructor: () ->
-            @components_by_type = {}
-            @components_by_entity = {}
+            @_by_type = {}
+            @_by_entity = {}
 
         # Create an entity with the given components
         createEntity: (components=null) ->
             entity_id = generateID()
-            @components_by_entity[entity_id] = []
+            @_by_entity[entity_id] = []
             entity = new EntityAccessor(this, entity_id)
             if components
-                entity.add(c) for c in components
+                for c in components
+                    this.addComponentToEntity(entity_id, c)
             return entity
 
         # Add the given component to the entity
         addComponentToEntity: (entity_id, component) ->
-            @components_by_entity[entity_id].push(component)
+            component.entity_manager = this
+            component.entity_id = entity_id
+            @_by_entity[entity_id].push(component)
             type = component.type
-            if not @components_by_type[type]
-                @components_by_type[type] = []
-            @components_by_type[type].push(component)
+            @_by_type[type] or= []
+            @_by_type[type].push(component)
             return this
 
         # Remove the given component from the entity_id
         removeComponentFromEntity: (entity_id, component) ->
             return false if not this.hasEntity(entity_id)
-            by_type = @components_by_type[component.type]
+            by_type = @_by_type[component.type]
             idx = by_type.indexOf(component)
             by_type.splice(idx, 1) if idx != -1
-            by_entity = @components_by_entity[entity_id]
+            by_entity = @_by_entity[entity_id]
             idx = by_entity.indexOf(component)
             by_entity.splice(idx, 1) if idx != -1
 
         # Destroy an entity and all its components by ID
         destroyEntity: (entity_id) ->
             return false if not this.hasEntity(entity_id)
-            components = this.components_by_entity[entity_id]
-            delete @components_by_entity[entity_id]
+            components = this._by_entity[entity_id]
+            delete @_by_entity[entity_id]
             for c in components
-                by_type = @components_by_type[c.type]
+                by_type = @_by_type[c.type]
                 idx = by_type.indexOf(c)
                 if idx  != -1
                     by_type.splice(idx, 1)
@@ -51,11 +53,11 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
         hasEntity: (entity_id) ->
             if not _.isNumber(entity_id)
                 entity_id = entity_id.id
-            return _.isArray(@components_by_entity[entity_id])
+            return entity_id of @_by_entity
 
         # Build an entity accessor, if we know of this entity ID
         getEntity: (entity_id) ->
-            return null if not self.hasEntity(entity_id)
+            return null if not this.hasEntity(entity_id)
             return new EntityAccessor(this, entity_id)
 
         # Shortcut to get the first named component from an entity
@@ -69,13 +71,13 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
         # Get a list of all components for an entity
         getComponentsByEntity: (entity_id) ->
-            _.clone(@components_by_entity[entity_id])
+            _.clone(@_by_entity[entity_id])
 
         # Get a list of all components by type
         getComponentsByType: (type) ->
-            if not _.isNumber(entity_id)
-                entity_id = entity_id.id
-            _.clone(@components_by_type[type])
+            if not _.isString(type)
+                type = type.prototype.type
+            _.clone(@_by_type[type])
 
 
     # Thin convenience wrapper around entity IDs

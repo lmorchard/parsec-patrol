@@ -1,9 +1,15 @@
-define ['underscore', 'backbone'], (_, Backbone) ->
+define ['entities', 'underscore', 'backbone'], (Entities, _, Backbone) ->
 
     class Component
         type: 'AbstractComponent'
+        entity_manager: null
+        entity_id: null
+        getEntity: () ->
+            @entity_manager?.getEntity(@entity_id)
+        find: (em) ->
+            em.getComponentsByType(@type)
         toString: () ->
-            return "(#{@type} #{JSON.stringify(this)})"
+            "(#{@type} #{JSON.stringify(this)})"
 
     class TypeName extends Component
         type: 'TypeName'

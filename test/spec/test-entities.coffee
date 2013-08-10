@@ -4,10 +4,9 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
         setup () ->
             this.em = new Entities.EntityManager
-            this.entity_0 = this.em.createEntity([
-                new C.TypeName('test0'),
-                new C.MapPosition(null, 4, 8)
-            ])
+            this.entity_0 = this.em.createEntity()
+                .add(new C.TypeName('test0'))
+                .add(new C.MapPosition(null, 4, 8))
 
         test 'Module should be defined', () ->
             assert.isDefined Entities
@@ -29,7 +28,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 assert.ok(_.isArray(by_entity))
                 assert.ok(by_entity.indexOf(c) != -1)
 
-                by_type = this.em.components_by_type[c.type]
+                by_type = c.find(this.em)
                 assert.ok(_.isArray(by_type))
                 assert.ok(by_type.indexOf(c) != -1)
 
@@ -42,7 +41,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 by_entity = entity_1.components()
                 assert.ok(_.isUndefined(by_entity))
 
-                by_type = this.em.components_by_type[c.type]
+                by_type = this.em.getComponentsByType(c.type)
                 if _.isArray(by_type)
                     assert.ok(by_type.indexOf(c) == -1)
 
@@ -57,6 +56,13 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
             this.entity_0.add(c)
             en = this.entity_0.get(C.EntityName)
             assert.equal(en.name, expected_name)
+
+        test "component.getEntity() should result in an EntityAccessor (this belongs in test-components)", () ->
+            expected_name = 'My Test 0'
+            c = new C.EntityName(expected_name)
+            this.entity_0.add(c)
+            e = c.getEntity()
+            assert.equal(e.id, this.entity_0.id)
             
         test "entity.remove() should remove a component from an entity", () ->
             c = new C.EntityName("Blah blah")
