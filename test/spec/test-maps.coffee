@@ -1,4 +1,4 @@
-define ['games', 'maps'], (Games, Maps) ->
+define ['worlds', 'maps'], (Worlds, Maps) ->
 
     suite 'Maps', () ->
 
@@ -8,6 +8,7 @@ define ['games', 'maps'], (Games, Maps) ->
         test 'Module should be defined', () ->
             assert.isDefined Maps
 
+        ###
         test 'ConstellationGrid should contain a grid of SpaceMaps', () ->
             [expected_width, expected_height] = size = [6, 9]
             game = new Games.BasicGame
@@ -18,3 +19,4 @@ define ['games', 'maps'], (Games, Maps) ->
                 for map in row
                     # Having an entities list sounds like a SpaceMap
                     assert.isDefined map.entities.length
+        ###

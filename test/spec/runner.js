@@ -2,7 +2,7 @@
 'use strict';
 define([
     'spec/test-app',
-    'spec/test-games',
+    'spec/test-worlds',
     'spec/test-maps',
     'spec/test-systems',
     'spec/test-components',

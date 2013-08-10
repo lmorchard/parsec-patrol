@@ -1,5 +1,5 @@
-require.config({
-    deps: ['main'],
+var require = {
+    baseUrl: '../scripts',
     paths: {
         jquery: '../bower_components/jquery/jquery',
         underscore: '../bower_components/underscore-amd/underscore',
@@ -12,4 +12,4 @@ require.config({
             exports: 'async'
         }
     }
-});
+};

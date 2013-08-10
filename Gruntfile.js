@@ -62,6 +62,7 @@ module.exports = function (grunt) {
                 },
                 files: [
                     '<%= yeoman.app %>/*.html',
+                    'sketches/*.{html,coffee}',
                     'test/*.html',
                     'test/spec/*.js',
                     '<%= yeoman.app %>/styles/{,*/}*.css',
@@ -160,6 +161,12 @@ module.exports = function (grunt) {
                     cwd: 'test/spec',
                     src: '{,*/}*.coffee',
                     dest: '.tmp/test/spec',
+                    ext: '.js'
+                },{
+                    expand: true,
+                    cwd: 'sketches',
+                    src: '{,*/}*.coffee',
+                    dest: '.tmp/sketches',
                     ext: '.js'
                 }],
                 options: {
