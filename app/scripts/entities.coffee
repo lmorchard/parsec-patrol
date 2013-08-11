@@ -7,7 +7,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             @store = {}
 
         # Create an entity with the given components
-        create: (components=[]) ->
+        create: (components...) ->
             entity_id = Utils.generateID()
             for c in components
                 @addComponent(entity_id, c)
@@ -28,9 +28,14 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             return false
 
         # Get a list of all components for an entity
-        get: (entity_id, component=null) ->
-            if component
-                @store[component.prototype.type]?[entity_id]
+        get: (entity_id, components...) ->
+            if components.length is 1
+                return @store[components[0].prototype.type]?[entity_id]
+            else if components.length > 1
+                out = []
+                for c in components
+                    out.push @store[c.prototype.type]?[entity_id]
+                return out
             else
                 out = {}
                 for type, by_entity of @store
@@ -39,16 +44,17 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
                 return out
 
         # Add the given component to the entity
-        addComponent: (entity_id, component) ->
-            type = component.type
-            @store[type] ?= {}
-            @store[type][entity_id] = component
+        addComponent: (entity_id, components...) ->
+            for component in components
+                type = component.type
+                @store[type] ?= {}
+                @store[type][entity_id] = component
             return @
 
         # Remove the given component from the entity_id
-        removeComponent: (entity_id, component) ->
-            type = component.type
-            delete @store[type][entity_id]
+        removeComponent: (entity_id, components...) ->
+            for component in components
+                delete @store[component.type][entity_id]
             return @
 
         # Get a by-entity map of all components by type
@@ -57,45 +63,48 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
 
     class EntityTemplate
         @create: (entity_manager) ->
-            eid = entity_manager.create([])
-            return eid
+            return entity_manager.create()
+
+    class Scene extends EntityTemplate
+        @create: (em, name='unnamed') -> em.create(
+            new C.TypeName('Scene'),
+            new C.EntityName(name),
+            new C.EntityGroup
+        )
 
     class SpaceEntity extends EntityTemplate
 
     class Celestial extends SpaceEntity
 
     class Star extends Celestial
-        @create: (em, name='unnamed') ->
-            return em.create([
-                new C.TypeName('Star'),
-                new C.EntityName(name),
-                new C.Spawn('center'),
-                new C.MapPosition,
-                # new C.Bouncer(),
-                new C.Sprite('star')
-            ])
+        @create: (em, name='unnamed') -> em.create(
+            new C.TypeName('Star'),
+            new C.EntityName(name),
+            new C.Spawn('center'),
+            new C.MapPosition,
+            new C.Bouncer(),
+            new C.Sprite('star')
+        )
 
     class Asteroid extends Celestial
-        @create: (em, name='unnamed') ->
-            return em.create([
-                new C.TypeName('Asteroid'),
-                new C.EntityName(name),
-                new C.Spawn('random'),
-                new C.MapPosition,
-                new C.Sprite('asteroid')
-            ])
+        @create: (em, name='unnamed') -> em.create(
+            new C.TypeName('Asteroid'),
+            new C.EntityName(name),
+            new C.Spawn('random'),
+            new C.MapPosition,
+            new C.Sprite('asteroid')
+        )
 
     class Planet extends Celestial
-        @create: (em, name='unnamed', sun) ->
-            return em.create([
-                new C.TypeName('Planet'),
-                new C.EntityName(name),
-                new C.Spawn('random'),
-                new C.MapPosition,
-                new C.Orbit(sun),
-                new C.Sprite('planet')
-            ])
+        @create: (em, name='unnamed', sun) -> em.create(
+            new C.TypeName('Planet'),
+            new C.EntityName(name),
+            new C.Spawn('random'),
+            new C.MapPosition,
+            new C.Orbit(sun),
+            new C.Sprite('planet')
+        )
 
     return {
-        EntityManager, Star, Asteroid, Planet
+        EntityManager, Scene, Star, Asteroid, Planet
     }

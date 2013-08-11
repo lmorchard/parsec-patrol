@@ -5,9 +5,6 @@ define [
     W, E, C, S, PubSub, $, _
 ) ->
 
-    #PubSub.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) ->
-    #    console.log "SPAWN #{msg} #{JSON.stringify(data)}"
-
     canvas = $('#display')[0]
 
     world = new W.World
@@ -17,10 +14,12 @@ define [
     world.width = canvas.width
     world.height = canvas.height
 
-    world.addSystem(new S.SpawnSystem)
-    world.addSystem(new S.BouncerSystem)
-    world.addSystem(new S.OrbiterSystem)
-    world.addSystem(new S.RenderSystem canvas)
+    world.addSystem(
+        new S.SpawnSystem,
+        new S.BouncerSystem,
+        new S.OrbiterSystem,
+        new S.RenderSystem canvas
+    )
 
     em = world.entities
     sun = E.Star.create(em, "Star 1")

@@ -1,10 +1,9 @@
 /* global define */
 'use strict';
 define([
-    'spec/test-utils',
     'spec/test-app',
+    'spec/test-utils',
     'spec/test-worlds',
-    'spec/test-maps',
     'spec/test-systems',
     'spec/test-components',
     'spec/test-entities'

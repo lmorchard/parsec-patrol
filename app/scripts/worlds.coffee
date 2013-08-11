@@ -14,31 +14,38 @@ define [
 
         constructor: () ->
             @id = Utils.generateID()
+
             @is_running = false
             @is_paused = false
+            
             @systems = []
             @entities = new Entities.EntityManager
+            @scenes = []
 
-            PubSub.subscribe "worlds.#{@id}", (msg, data) ->
-                console.log "WORLD #{msg} #{JSON.stringify(data)}"
+            #@subscribe '', (msg, data) ->
+            #    console.log "DEBUG #{msg} <- #{JSON.stringify(data)}"
 
-        _pubsubPrefix: (msg) -> "worlds.#{@id}.#{msg}"
+        _psPrefix: (msg=null) ->
+            msg = if not msg then '' else ".#{msg}"
+            "worlds.#{@id}#{msg}"
 
         subscribe: (msg, handler) ->
-            PubSub.subscribe(@_pubsubPrefix(msg), handler)
+            PubSub.subscribe(@_psPrefix(msg), handler)
 
         publish: (msg, data) ->
-            PubSub.publish(@_pubsubPrefix(msg), data)
+            PubSub.publish(@_psPrefix(msg), data)
 
         unsubscribe: (thing) ->
             PubSub.unsubscribe(thing)
 
-        addSystem: (system) ->
-            system.setWorld(this)
-            @systems.push(system)
-            return this
+        addSystem: (to_add...) ->
+            for system in to_add
+                system.world = @
+                @systems.push(system)
+            return @
 
         removeSystem: (system) ->
+            system.world = null
             @systems.splice(@systems.indexOf(system), 1)
             return this
 
@@ -51,7 +58,9 @@ define [
         start: () ->
             return if @is_running
             @is_running = true
+
             @t_last = Utils.now() - @tick_delay
+            
             tick_loop = () =>
                 if not @is_paused
                     t_now = Utils.now()
@@ -59,7 +68,8 @@ define [
                     @t_last = t_now
                 if @is_running
                     setTimeout tick_loop, @tick_delay
-            tick_loop()
+
+            setTimeout tick_loop, 0.1
 
         stop: () ->
             @is_running = false

@@ -4,10 +4,10 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
         setup () ->
             @em = new Entities.EntityManager
-            @entity_0 = @em.create([
+            @entity_0 = @em.create(
                 new C.TypeName('test0'),
                 new C.MapPosition(null, 4, 8)
-            ])
+            )
 
         test 'Module should be defined', () ->
             assert.isDefined Entities
@@ -19,6 +19,26 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 assert.equal(mp.x, 4)
                 assert.equal(mp.y, 8)
 
+            test "EntityManager.get should accept multiple components", () ->
+                [mp, tn] = @em.get(@entity_0, C.MapPosition, C.TypeName)
+                assert.equal(mp.x, 4)
+                assert.equal(mp.y, 8)
+                assert.equal(tn.name, 'test0')
+
+            test "EntityManager.get with no specified component should return all", () ->
+                expected_name = 'My Test 0'
+                c = new C.EntityName(expected_name)
+                @em.addComponent(@entity_0, c)
+
+                all = @em.get(@entity_0)
+                assert.equal(all.EntityName.name, expected_name)
+
+                all_keys = _.keys(all)
+                all_keys.sort()
+                expected_keys = ["EntityName","MapPosition","TypeName"]
+                for idx in [0..all_keys.length-1]
+                    assert.equal(all_keys[idx], expected_keys[idx])
+
             test "EntityManager.addComponent should add a component to an entity", () ->
                 expected_name = 'My Test 0'
                 c = new C.EntityName(expected_name)
@@ -26,12 +46,6 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
                 en = @em.get(@entity_0, C.EntityName)
                 assert.equal(en.name, expected_name)
-
-                expected = ["EntityName","MapPosition","TypeName"]
-                all_keys = _.keys(@em.get(@entity_0))
-                all_keys.sort()
-                for idx in [0..all_keys.length-1]
-                    assert.equal(all_keys[idx], expected[idx])
                 
             test "EntityManager.removeComponent() should remove a component from an entity", () ->
                 c = new C.EntityName("Blah blah")
@@ -46,7 +60,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                     new C.MapPosition(null, 4, 8)
                 ]
 
-                entity_1 = @em.create(components)
+                entity_1 = @em.create components...
 
                 assert.ok(@em.has(@entity_0))
                 assert.ok(@em.has(entity_1))

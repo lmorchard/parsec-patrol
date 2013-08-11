@@ -3,7 +3,7 @@ define ['entities', 'underscore'], (Entities, _) ->
     class Component
         type: 'AbstractComponent'
         toString: () ->
-            "(#{@type} #{JSON.stringify(this)})"
+            "#{@type}: #{JSON.stringify(this)}"
 
     class TypeName extends Component
         type: 'TypeName'
@@ -12,6 +12,25 @@ define ['entities', 'underscore'], (Entities, _) ->
     class EntityName extends Component
         type: 'EntityName'
         constructor: (@name) ->
+
+    class EntityGroup extends Component
+        type: 'EntityGroup'
+        constructor: (to_add=[]) ->
+            @entities = {}
+            EntityGroup.add(@, e) for e in to_add
+
+        @add: (group, entity) ->
+            group.entities[entity] = true
+            return @
+        @remove: (group, entity) ->
+            delete group.entities[entity]
+            return @
+        @move: (group1, group2, entity) ->
+            delete group1.entities[entity]
+            group2.entities[entity] = true
+            return @
+        @has: (group, entity) ->
+            entity of group.entities
 
     class MapPosition extends Component
         type: 'MapPosition'
@@ -44,6 +63,6 @@ define ['entities', 'underscore'], (Entities, _) ->
         constructor: () ->
 
     return {
-        Component, TypeName, EntityName, MapPosition, Orbit, Bouncer, Spawn,
+        Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Bouncer, Spawn,
         Renderable, Sprite
     }

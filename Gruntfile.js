@@ -155,7 +155,7 @@ module.exports = function (grunt) {
                     ext: '.js'
                 }],
                 options: {
-                    sourceMap: true
+                    // sourceMap: true
                 }
             },
             test: {
@@ -173,7 +173,7 @@ module.exports = function (grunt) {
                     ext: '.js'
                 }],
                 options: {
-                    sourceMap: true
+                    // sourceMap: true
                 }
             }
         },
