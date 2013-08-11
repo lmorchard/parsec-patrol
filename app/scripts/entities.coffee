@@ -26,8 +26,6 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
         
         # Determine whether this manager has this entity
         has: (entity_id) ->
-            if not _.isNumber(entity_id)
-                entity_id = entity_id.id
             return entity_id of @_by_entity
 
         # Get a list of all components for an entity
@@ -48,10 +46,9 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
         # Remove the given component from the entity_id
         removeComponent: (entity_id, component) ->
-            if @has(entity_id)
-                type = component.type
-                delete @_by_entity[entity_id][type]
-                delete @_by_type[type][entity_id]
+            type = component.type
+            delete @_by_entity[entity_id][type]
+            delete @_by_type[type][entity_id]
             return @
 
         # Get a list of all components by type
@@ -74,7 +71,7 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
                 new C.EntityName(name),
                 new C.Spawn('center'),
                 new C.MapPosition,
-                new C.Bouncer(),
+                # new C.Bouncer(),
                 new C.Sprite('star')
             ])
 

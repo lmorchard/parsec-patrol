@@ -7,7 +7,7 @@ define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'unde
 
     world = new W.World
 
-    world.tick_delay = 1000 / 100
+    world.tick_delay = 1000 / 60
     
     world.width = canvas.width
     world.height = canvas.height

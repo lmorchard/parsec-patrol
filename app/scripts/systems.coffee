@@ -88,7 +88,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         update: (dt) ->
             orbiters = @entity_manager.getComponents(C.Orbit)
             for eid, orbiter of orbiters
-                pos = @entity_manager.get(orbiter.entity_id, C.MapPosition)
+                pos = @entity_manager.get(eid, C.MapPosition)
                 o_pos = @entity_manager.get(orbiter.orbited_entity_id,
                                             C.MapPosition)
 

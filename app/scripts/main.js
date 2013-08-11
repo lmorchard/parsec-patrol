@@ -1,7 +1,7 @@
 // 
 // Simple bootstrap to get the app up & running.
 //
-require(['jquery', 'app'], function ($, App) {
+require(['jquery', 'app'], function ($, app) {
     'use strict';
-    (new App()).run();
+    app();
 });
