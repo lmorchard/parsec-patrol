@@ -49,13 +49,11 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
             assert.ok(@em.has(@entity_0))
             assert.ok(@em.has(entity_1))
             for c in components
-                assert.equal(@em._by_type[c.type][entity_1], c)
-                assert.equal(@em._by_entity[entity_1][c.type], c)
+                assert.equal(@em.store[c.type][entity_1], c)
 
             @em.destroy(entity_1)
             
             assert.ok(@em.has(@entity_0))
             assert.ok(!@em.has(entity_1))
             for c in components
-                assert.ok(_.isUndefined(@em._by_type[c.type][entity_1]))
-                assert.ok(_.isUndefined(@em._by_entity[entity_1]))
+                assert.ok(_.isUndefined(@em.store[c.type][entity_1]))

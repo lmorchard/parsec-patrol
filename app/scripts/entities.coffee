@@ -5,8 +5,8 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
         generateID = () -> curr_id++
 
         constructor: () ->
-            @_by_type = {}
-            @_by_entity = {}
+            # Component store, indexed by @store[component][entity]
+            @store = {}
 
         # Create an entity with the given components
         create: (components=[]) ->
@@ -17,43 +17,45 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
         # Destroy an entity and all its components by ID
         destroy: (entity_id) ->
-            return @ if not @has(entity_id)
-            delete @_by_entity[entity_id]
-            for type, entities of @_by_type
-                if entity_id of entities
-                    delete entities[entity_id]
+            for type, by_entity of @store
+                if entity_id of by_entity
+                    delete by_entity[entity_id]
             return @
         
         # Determine whether this manager has this entity
         has: (entity_id) ->
-            return entity_id of @_by_entity
+            for type, by_entity of @store
+                if entity_id of by_entity
+                    return true
+            return false
 
         # Get a list of all components for an entity
         get: (entity_id, component=null) ->
             if component
-                @_by_entity[entity_id]?[component.prototype.type]
+                @store[component.prototype.type]?[entity_id]
             else
-                @_by_entity[entity_id]
+                out = {}
+                for type, by_entity of @store
+                    if entity_id of by_entity
+                        out[type] = by_entity[entity_id]
+                return out
 
         # Add the given component to the entity
         addComponent: (entity_id, component) ->
             type = component.type
-            @_by_type[type] ?= {}
-            @_by_type[type][entity_id] = component
-            @_by_entity[entity_id] ?= {}
-            @_by_entity[entity_id][type] = component
+            @store[type] ?= {}
+            @store[type][entity_id] = component
             return @
 
         # Remove the given component from the entity_id
         removeComponent: (entity_id, component) ->
             type = component.type
-            delete @_by_entity[entity_id][type]
-            delete @_by_type[type][entity_id]
+            delete @store[type][entity_id]
             return @
 
-        # Get a list of all components by type
+        # Get a by-entity map of all components by type
         getComponents: (component) ->
-            @_by_type[component.prototype.type] || {}
+            @store[component.prototype.type] || {}
 
     class EntityTemplate
         @create: (entity_manager) ->
