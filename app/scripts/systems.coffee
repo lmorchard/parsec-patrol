@@ -1,4 +1,4 @@
-define ['components', 'underscore', 'pubsub'], (C, _, PubSub) ->
+define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector2D) ->
 
     class System
         world: null,
@@ -11,34 +11,23 @@ define ['components', 'underscore', 'pubsub'], (C, _, PubSub) ->
     class SpawnSystem extends System
         @MSG_SPAWN = 'spawn'
         update: (t_delta) ->
-            spawns = @entity_manager.getComponentsByType(C.Spawn)
-            for spawn in spawns when !spawn.spawned
-
-                pos = spawn.getEntity().get(C.MapPosition)
-                switch spawn.position_logic
-                    when 'random'
-                        pos.x = _.random(0, @world.width)
-                        pos.y = _.random(0, @world.height)
-                    when 'center'
-                        pos.x = @world.width / 2
-                        pos.y = @world.height / 2
-                    else
-                        pos.x = pos.y = 0
+            spawns = @entity_manager.getComponents(C.Spawn)
+            for eid, spawn of spawns when !spawn.spawned
+                if @world
+                    pos = @entity_manager.get(eid, C.MapPosition)
+                    switch spawn.position_logic
+                        when 'random'
+                            pos.x = _.random(0, @world.width)
+                            pos.y = _.random(0, @world.height)
+                        when 'center'
+                            pos.x = @world.width / 2
+                            pos.y = @world.height / 2
+                        else
+                            pos.x = pos.y = 0
 
                 spawn.spawned = true
                 PubSub.publish @constructor.MSG_SPAWN,
                     entity_id: spawn.entity_id
-
-    class OrbiterSystem extends System
-        pixels_per_sec: 5,
-
-        update: (t_delta) ->
-            p_delta = (t_delta / 1000) * @pixels_per_sec
-            orbiters = @entity_manager.getComponentsByType(C.Orbit)
-            for orbiter in orbiters
-                pos = orbiter.getEntity().get(C.MapPosition)
-                pos.x += p_delta
-                pos.y += p_delta
 
     class RenderSystem extends System
 
@@ -48,14 +37,14 @@ define ['components', 'underscore', 'pubsub'], (C, _, PubSub) ->
         update: (t_delta) ->
 
             @ctx.save()
-            @ctx.clearRect(0, 0, @canvas.width, @canvas.height)
+            #@ctx.clearRect(0, 0, @canvas.width, @canvas.height)
             @ctx.fillStyle = "#000"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
-            sprites = @entity_manager.getComponentsByType(C.Sprite)
-            for sprite in sprites
-                pos = sprite.getEntity().get(C.MapPosition)
+            sprites = @entity_manager.getComponents(C.Sprite)
+            for eid, sprite of sprites
+                pos = @entity_manager.get(eid, C.MapPosition)
                 
                 @ctx.save()
                 switch sprite.shape
@@ -71,8 +60,47 @@ define ['components', 'underscore', 'pubsub'], (C, _, PubSub) ->
                         @ctx.stroke()
                 @ctx.restore()
 
-    class MapPositionSystem extends System
+    class BouncerSystem extends System
+        update: (dt) ->
+            bouncers = @entity_manager.getComponents(C.Bouncer)
+            for eid, bouncer of bouncers
+                pos = @entity_manager.get(eid, C.MapPosition)
+
+                if pos.x > @world.width
+                    bouncer.x_dir = -1
+                if pos.x < 0
+                    bouncer.x_dir = 1
+
+                if pos.y > @world.height
+                    bouncer.y_dir = -1
+                if pos.y < 0
+                    bouncer.y_dir = 1
+
+                pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
+                pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
+                
+    class OrbiterSystem extends System
+
+        constructor: () ->
+            @v_orbited = new Vector2D()
+            @v_orbiter = new Vector2D()
+
+        update: (dt) ->
+            orbiters = @entity_manager.getComponents(C.Orbit)
+            for eid, orbiter of orbiters
+                pos = @entity_manager.get(orbiter.entity_id, C.MapPosition)
+                o_pos = @entity_manager.get(orbiter.orbited_entity_id,
+                                            C.MapPosition)
+
+                @v_orbited.setValues(o_pos.x, o_pos.y)
+                @v_orbiter.setValues(pos.x, pos.y)
+
+                angle_delta = (dt / 1000) * orbiter.rad_per_sec
+                @v_orbiter.rotateAround(@v_orbited, angle_delta)
+
+                pos.x = @v_orbiter.x
+                pos.y = @v_orbiter.y
 
     return {
-        System, SpawnSystem, OrbiterSystem, MapPositionSystem, RenderSystem
+        System, SpawnSystem, BouncerSystem, OrbiterSystem, RenderSystem
     }

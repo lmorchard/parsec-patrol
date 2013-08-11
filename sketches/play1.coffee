@@ -1,16 +1,19 @@
 define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'underscore'], (W, E, C, S, PubSub, $, _) ->
 
-    PubSub.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) ->
-        console.log "SPAWN #{msg} #{JSON.stringify(data)}"
+    #PubSub.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) ->
+    #    console.log "SPAWN #{msg} #{JSON.stringify(data)}"
 
     canvas = $('#display')[0]
 
     world = new W.World
+
+    world.tick_delay = 1000 / 100
     
     world.width = canvas.width
     world.height = canvas.height
 
     world.addSystem(new S.SpawnSystem)
+    world.addSystem(new S.BouncerSystem)
     world.addSystem(new S.OrbiterSystem)
     world.addSystem(new S.RenderSystem canvas)
 

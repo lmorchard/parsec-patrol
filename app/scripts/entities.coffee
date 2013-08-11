@@ -9,98 +9,58 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
             @_by_entity = {}
 
         # Create an entity with the given components
-        createEntity: (components=null) ->
+        create: (components=[]) ->
             entity_id = generateID()
-            @_by_entity[entity_id] = []
-            entity = new EntityAccessor(this, entity_id)
-            if components
-                for c in components
-                    @addComponentToEntity(entity_id, c)
-            return entity
-
-        # Add the given component to the entity
-        addComponentToEntity: (entity_id, component) ->
-            component.entity_manager = this
-            component.entity_id = entity_id
-            @_by_entity[entity_id].push(component)
-            type = component.type
-            @_by_type[type] or= []
-            @_by_type[type].push(component)
-            return this
-
-        # Remove the given component from the entity_id
-        removeComponentFromEntity: (entity_id, component) ->
-            return false if not @hasEntity(entity_id)
-            by_entity = @_by_entity[entity_id]
-            idx = by_entity.indexOf(component)
-            by_entity.splice(idx, 1) if idx != -1
-            by_type = @_by_type[component.type]
-            idx = by_type.indexOf(component)
-            by_type.splice(idx, 1) if idx != -1
+            for c in components
+                @addComponent(entity_id, c)
+            return entity_id
 
         # Destroy an entity and all its components by ID
-        destroyEntity: (entity_id) ->
-            return false if not @hasEntity(entity_id)
-            components = @_by_entity[entity_id]
+        destroy: (entity_id) ->
+            return @ if not @has(entity_id)
             delete @_by_entity[entity_id]
-            for c in components
-                by_type = @_by_type[c.type]
-                idx = by_type.indexOf(c)
-                by_type.splice(idx, 1) if idx  != -1
-            return true
-
+            for type, entities of @_by_type
+                if entity_id of entities
+                    delete entities[entity_id]
+            return @
+        
         # Determine whether this manager has this entity
-        hasEntity: (entity_id) ->
+        has: (entity_id) ->
             if not _.isNumber(entity_id)
                 entity_id = entity_id.id
-            entity_id of @_by_entity
-
-        # Build an entity accessor, if we know of this entity ID
-        getEntity: (entity_id) ->
-            if @hasEntity(entity_id)
-                new EntityAccessor(this, entity_id)
-            else
-                null
-
-        # Shortcut to get the first named component from an entity
-        getFirstComponentByEntity: (entity_id, type) ->
-            if not _.isString(type)
-                type = type.prototype.type
-            for c in @_by_entity[entity_id]
-                return c if c.type == type
-            return null
+            return entity_id of @_by_entity
 
         # Get a list of all components for an entity
-        getComponentsByEntity: (entity_id) ->
-            _.clone(@_by_entity[entity_id]) || []
+        get: (entity_id, component=null) ->
+            if component
+                @_by_entity[entity_id]?[component.prototype.type]
+            else
+                @_by_entity[entity_id]
+
+        # Add the given component to the entity
+        addComponent: (entity_id, component) ->
+            type = component.type
+            @_by_type[type] ?= {}
+            @_by_type[type][entity_id] = component
+            @_by_entity[entity_id] ?= {}
+            @_by_entity[entity_id][type] = component
+            return @
+
+        # Remove the given component from the entity_id
+        removeComponent: (entity_id, component) ->
+            if @has(entity_id)
+                type = component.type
+                delete @_by_entity[entity_id][type]
+                delete @_by_type[type][entity_id]
+            return @
 
         # Get a list of all components by type
-        getComponentsByType: (type) ->
-            if not _.isString(type)
-                type = type.prototype.type
-            _.clone(@_by_type[type]) || []
-
-
-    # Thin convenience wrapper around entity IDs
-    class EntityAccessor
-        constructor: (@manager, @id) ->
-        destroy: () ->
-            @manager.destroyEntity(@id)
-        components: () ->
-            @manager.getComponentsByEntity(@id)
-        get: (type) ->
-            @manager.getFirstComponentByEntity(@id, type)
-        add: (component) ->
-            @manager.addComponentToEntity(@id, component)
-            return this
-        remove: (component) ->
-            @manager.removeComponentFromEntity(@id, component)
-            return this
-
+        getComponents: (component) ->
+            @_by_type[component.prototype.type] || {}
 
     class EntityTemplate
         @create: (entity_manager) ->
-            eid = entity_manager.createEntity([])
+            eid = entity_manager.create([])
             return eid
 
     class SpaceEntity extends EntityTemplate
@@ -109,17 +69,18 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
     class Star extends Celestial
         @create: (em, name='unnamed') ->
-            return em.createEntity([
+            return em.create([
                 new C.TypeName('Star'),
                 new C.EntityName(name),
                 new C.Spawn('center'),
                 new C.MapPosition,
+                new C.Bouncer(),
                 new C.Sprite('star')
             ])
 
     class Asteroid extends Celestial
         @create: (em, name='unnamed') ->
-            return em.createEntity([
+            return em.create([
                 new C.TypeName('Asteroid'),
                 new C.EntityName(name),
                 new C.Spawn('random'),
@@ -129,7 +90,7 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
     class Planet extends Celestial
         @create: (em, name='unnamed', sun) ->
-            return em.createEntity([
+            return em.create([
                 new C.TypeName('Planet'),
                 new C.EntityName(name),
                 new C.Spawn('random'),

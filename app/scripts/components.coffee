@@ -25,8 +25,17 @@ define ['entities', 'underscore', 'backbone'], (Entities, _, Backbone) ->
     
     class Orbit extends Component
         type: 'Orbit'
-        constructor: (@orbited_entity) ->
-            
+        constructor: (@orbited_entity_id) ->
+            @angle = 0.0
+            @rad_per_sec = _.random(Math.PI/16, Math.PI)
+
+    class Bouncer extends Component
+        type: 'Bouncer'
+        constructor: () ->
+            @x_dir = 1
+            @y_dir = 1
+            @x_sec = 80
+            @y_sec = 80
 
     class Spawn extends Component
         type: 'Spawn'
@@ -41,6 +50,6 @@ define ['entities', 'underscore', 'backbone'], (Entities, _, Backbone) ->
         constructor: () ->
 
     return {
-        Component, TypeName, EntityName, MapPosition, Orbit, Spawn,
+        Component, TypeName, EntityName, MapPosition, Orbit, Bouncer, Spawn,
         Renderable, Sprite
     }
