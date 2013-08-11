@@ -2,16 +2,16 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
     class System
         world: null,
-        entity_manager: null,
+        entities: null,
         match_component: null,
         
         setWorld: (world) ->
             @world = world
-            @entity_manager = world.entity_manager
+            @entities = world.entities
 
         update: (t_delta) ->
             return if not @match_component
-            matches = @entity_manager.getComponents(@match_component)
+            matches = @entities.getComponents(@match_component)
             for entity_id, component of matches
                 @update_match(t_delta, entity_id, component)
 
@@ -23,7 +23,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         update_match: (t_delta, eid, spawn) ->
             return if spawn.spawned
             if @world
-                pos = @entity_manager.get(eid, C.MapPosition)
+                pos = @entities.get(eid, C.MapPosition)
                 switch spawn.position_logic
                     when 'random'
                         pos.x = _.random(0, @world.width)
@@ -35,7 +35,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                         pos.x = pos.y = 0
 
             spawn.spawned = true
-            PubSub.publish @constructor.MSG_SPAWN,
+            @world.publish @constructor.MSG_SPAWN,
                 entity_id: eid, spawn: spawn
 
     class RenderSystem extends System
@@ -52,9 +52,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             super t_delta
 
         update_match: (t_delta, eid, sprite) ->
-            pos = @entity_manager.get(eid, C.MapPosition)
+            pos = @entities.get(eid, C.MapPosition)
             
             @ctx.save()
+
             switch sprite.shape
                 when 'star'
                     @ctx.fillStyle = "#fff"
@@ -66,12 +67,13 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                     @ctx.beginPath()
                     @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
                     @ctx.stroke()
+
             @ctx.restore()
 
     class BouncerSystem extends System
         match_component: C.Bouncer
         update_match: (dt, eid, bouncer) ->
-            pos = @entity_manager.get(eid, C.MapPosition)
+            pos = @entities.get(eid, C.MapPosition)
 
             if pos.x > @world.width
                 bouncer.x_dir = -1
@@ -94,9 +96,8 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @v_orbiter = new Vector2D()
 
         update_match: (dt, eid, orbiter) ->
-            pos = @entity_manager.get(eid, C.MapPosition)
-            o_pos = @entity_manager.get(orbiter.orbited_entity_id,
-                                        C.MapPosition)
+            pos = @entities.get(eid, C.MapPosition)
+            o_pos = @entities.get(orbiter.orbited_id, C.MapPosition)
 
             @v_orbited.setValues(o_pos.x, o_pos.y)
             @v_orbiter.setValues(pos.x, pos.y)

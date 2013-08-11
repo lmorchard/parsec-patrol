@@ -1,4 +1,4 @@
-define ['worlds'], (Worlds) ->
+define ['worlds', 'systems', 'components'], (Worlds, Systems, C) ->
 
     suite 'Worlds', () ->
 

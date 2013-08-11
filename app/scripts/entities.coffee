@@ -1,8 +1,6 @@
-define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
+define ['components', 'utils', 'underscore'], (C, Utils, _) ->
 
     class EntityManager
-        curr_id = 0
-        generateID = () -> curr_id++
 
         constructor: () ->
             # Component store, indexed by @store[component][entity]
@@ -10,7 +8,7 @@ define ['underscore', 'backbone', 'components'], (_, Backbone, C) ->
 
         # Create an entity with the given components
         create: (components=[]) ->
-            entity_id = generateID()
+            entity_id = Utils.generateID()
             for c in components
                 @addComponent(entity_id, c)
             return entity_id

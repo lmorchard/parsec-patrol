@@ -1,10 +1,8 @@
 define [
-    'entities', 'components', 'systems', 'underscore'
+    'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub'
 ], (
-    Entities, Components, Systems, _
+    Utils, Entities, Components, Systems, _, PubSub
 ) ->
-
-    now = () -> (new Date).getTime()
 
     class World
         tick_delay: 1000 / 60
@@ -15,10 +13,25 @@ define [
         height: 480
 
         constructor: () ->
+            @id = Utils.generateID()
             @is_running = false
             @is_paused = false
-            @entity_manager = new Entities.EntityManager
             @systems = []
+            @entities = new Entities.EntityManager
+
+            PubSub.subscribe "worlds.#{@id}", (msg, data) ->
+                console.log "WORLD #{msg} #{JSON.stringify(data)}"
+
+        _pubsubPrefix: (msg) -> "worlds.#{@id}.#{msg}"
+
+        subscribe: (msg, handler) ->
+            PubSub.subscribe(@_pubsubPrefix(msg), handler)
+
+        publish: (msg, data) ->
+            PubSub.publish(@_pubsubPrefix(msg), data)
+
+        unsubscribe: (thing) ->
+            PubSub.unsubscribe(thing)
 
         addSystem: (system) ->
             system.setWorld(this)
@@ -38,10 +51,10 @@ define [
         start: () ->
             return if @is_running
             @is_running = true
-            @t_last = now() - @tick_delay
+            @t_last = Utils.now() - @tick_delay
             tick_loop = () =>
                 if not @is_paused
-                    t_now = now()
+                    t_now = Utils.now()
                     @tick t_now - @t_last
                     @t_last = t_now
                 if @is_running
@@ -55,7 +68,7 @@ define [
             @is_paused = true
 
         unpause: () ->
-            @t_last = now() - @tick_delay
+            @t_last = Utils.now() - @tick_delay
             @is_paused = false
 
     class BasicWorld extends World

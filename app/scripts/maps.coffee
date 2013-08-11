@@ -1,4 +1,4 @@
-define ['underscore', 'backbone', 'entities'], (_, Backbone, Entities) ->
+define ['underscore', 'entities'], (_, Entities) ->
 
     class SpaceMap
         constructor: (@grid, @size=[320,320]) ->

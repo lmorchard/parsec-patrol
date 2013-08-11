@@ -1,13 +1,7 @@
-define ['entities', 'underscore', 'backbone'], (Entities, _, Backbone) ->
+define ['entities', 'underscore'], (Entities, _) ->
 
     class Component
         type: 'AbstractComponent'
-        entity_manager: null
-        entity_id: null
-        getEntity: () ->
-            @entity_manager?.getEntity(@entity_id)
-        find: (em) ->
-            em.getComponentsByType(@type)
         toString: () ->
             "(#{@type} #{JSON.stringify(this)})"
 
@@ -25,7 +19,7 @@ define ['entities', 'underscore', 'backbone'], (Entities, _, Backbone) ->
     
     class Orbit extends Component
         type: 'Orbit'
-        constructor: (@orbited_entity_id) ->
+        constructor: (@orbited_id) ->
             @angle = 0.0
             @rad_per_sec = _.random(Math.PI/16, Math.PI/2)
 

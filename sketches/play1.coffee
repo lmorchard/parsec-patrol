@@ -1,4 +1,9 @@
-define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'underscore'], (W, E, C, S, PubSub, $, _) ->
+define [
+    'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
+    'underscore'
+], (
+    W, E, C, S, PubSub, $, _
+) ->
 
     #PubSub.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) ->
     #    console.log "SPAWN #{msg} #{JSON.stringify(data)}"
@@ -17,13 +22,13 @@ define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'unde
     world.addSystem(new S.OrbiterSystem)
     world.addSystem(new S.RenderSystem canvas)
 
-    em = world.entity_manager
+    em = world.entities
     sun = E.Star.create(em, "Star 1")
     for idx in [0..7]
         E.Planet.create(em, "Planet #{idx}", sun)
 
     world.dump = () ->
-        console.log JSON.stringify(world.entity_manager.store)
+        console.log JSON.stringify(world.entities.store)
     window.world = world
 
     () -> world.start()
