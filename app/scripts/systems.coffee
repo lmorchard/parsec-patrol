@@ -36,7 +36,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
             spawn.spawned = true
             PubSub.publish @constructor.MSG_SPAWN,
-                entity_id: spawn.entity_id
+                entity_id: eid, spawn: spawn
 
     class RenderSystem extends System
         match_component: C.Sprite
