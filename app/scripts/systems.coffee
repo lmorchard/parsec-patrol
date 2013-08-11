@@ -51,7 +51,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @ctx.restore()
             super t_delta
 
-        update_match: (t_delta, eid, sprite)
+        update_match: (t_delta, eid, sprite) ->
             pos = @entity_manager.get(eid, C.MapPosition)
             
             @ctx.save()

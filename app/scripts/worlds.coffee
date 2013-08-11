@@ -4,12 +4,15 @@ define [
     Entities, Components, Systems, _
 ) ->
 
+    now = () -> (new Date).getTime()
+
     class World
         tick_delay: 1000 / 60
         ticks: 0
+        t_last: 0
 
-        width: 640,
-        height: 480,
+        width: 640
+        height: 480
 
         constructor: () ->
             @is_running = false
@@ -35,12 +38,12 @@ define [
         start: () ->
             return if @is_running
             @is_running = true
-            t_last = (new Date()).getTime() - @tick_delay
+            @t_last = now() - @tick_delay
             tick_loop = () =>
                 if not @is_paused
-                    t_now = (new Date).getTime()
-                    @tick t_now - t_last
-                    t_last = t_now
+                    t_now = now()
+                    @tick t_now - @t_last
+                    @t_last = t_now
                 if @is_running
                     setTimeout tick_loop, @tick_delay
             tick_loop()
@@ -52,6 +55,7 @@ define [
             @is_paused = true
 
         unpause: () ->
+            @t_last = now() - @tick_delay
             @is_paused = false
 
     class BasicWorld extends World

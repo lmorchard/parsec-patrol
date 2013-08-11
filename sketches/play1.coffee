@@ -7,7 +7,7 @@ define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'unde
 
     world = new W.World
 
-    world.tick_delay = 1000 / 60
+    world.tick_delay = 1000 / 100
     
     world.width = canvas.width
     world.height = canvas.height
@@ -21,5 +21,9 @@ define ['worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery', 'unde
     sun = E.Star.create(em, "Star 1")
     for idx in [0..7]
         E.Planet.create(em, "Planet #{idx}", sun)
+
+    world.dump = () ->
+        console.log JSON.stringify(world.entity_manager.store)
+    window.world = world
 
     () -> world.start()
