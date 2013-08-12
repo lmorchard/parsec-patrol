@@ -2,8 +2,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
     class System
         world: null
-        entities: null
         match_component: null
+
+        setWorld: (world) ->
+            @world = world
         
         update: (t_delta) ->
             return if not @match_component
@@ -37,36 +39,46 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 entity_id: eid, spawn: spawn
 
     class RenderSystem extends System
+        @MSG_SCENE_CHANGE = 'scene.change'
+        
         match_component: C.Sprite
 
         constructor: (@canvas) ->
             @ctx = @canvas.getContext('2d')
+
+        setWorld: (world) ->
+            super world
+            @world.subscribe @constructor.MSG_SCENE_CHANGE, (msg, data) =>
+                @current_scene = data.scene
 
         update: (t_delta) ->
             @ctx.save()
             @ctx.fillStyle = "#000"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
-            super t_delta
 
-        update_match: (t_delta, eid, sprite) ->
-            pos = @world.entities.get(eid, C.MapPosition)
-            
-            @ctx.save()
+            return if not @current_scene
+            scene = @world.entities.get(@current_scene, C.EntityGroup)
+            for eid, ignore of scene.entities
 
-            switch sprite.shape
-                when 'star'
-                    @ctx.fillStyle = "#fff"
-                    @ctx.beginPath()
-                    @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
-                    @ctx.fill()
-                else
-                    @ctx.strokeStyle = "#fff"
-                    @ctx.beginPath()
-                    @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
-                    @ctx.stroke()
+                [sprite, pos] = @world.entities.get(eid,
+                    C.Sprite, C.MapPosition)
 
-            @ctx.restore()
+                @ctx.save()
+
+                switch sprite.shape
+                    when 'star'
+                        @ctx.fillStyle = "#fff"
+                        @ctx.beginPath()
+                        @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
+                        @ctx.fill()
+                    else
+                        @ctx.strokeStyle = "#fff"
+                        @ctx.beginPath()
+                        @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
+                        @ctx.stroke()
+
+                @ctx.restore()
 
     class BouncerSystem extends System
         match_component: C.Bouncer

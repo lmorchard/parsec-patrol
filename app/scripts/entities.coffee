@@ -82,7 +82,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             new C.EntityName(name),
             new C.Spawn('center'),
             new C.MapPosition,
-            new C.Bouncer(),
+            # new C.Bouncer(),
             new C.Sprite('star')
         )
 

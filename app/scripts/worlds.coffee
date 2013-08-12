@@ -20,10 +20,6 @@ define [
             
             @systems = []
             @entities = new Entities.EntityManager
-            @scenes = []
-
-            #@subscribe '', (msg, data) ->
-            #    console.log "DEBUG #{msg} <- #{JSON.stringify(data)}"
 
         _psPrefix: (msg=null) ->
             msg = if not msg then '' else ".#{msg}"
@@ -40,7 +36,7 @@ define [
 
         addSystem: (to_add...) ->
             for system in to_add
-                system.world = @
+                system.setWorld(@)
                 @systems.push(system)
             return @
 

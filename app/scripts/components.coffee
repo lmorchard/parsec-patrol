@@ -19,18 +19,21 @@ define ['entities', 'underscore'], (Entities, _) ->
             @entities = {}
             EntityGroup.add(@, e) for e in to_add
 
-        @add: (group, entity) ->
-            group.entities[entity] = true
-            return @
-        @remove: (group, entity) ->
-            delete group.entities[entity]
-            return @
-        @move: (group1, group2, entity) ->
-            delete group1.entities[entity]
-            group2.entities[entity] = true
-            return @
-        @has: (group, entity) ->
-            entity of group.entities
+        @add: (group, entities...) ->
+            for entity in entities
+                group.entities[entity] = true
+        @remove: (group, entities...) ->
+            for entity in entities
+                delete group.entities[entity]
+        @move: (group1, group2, entities...) ->
+            for entity in entities
+                delete group1.entities[entity]
+                group2.entities[entity] = true
+        @has: (group, entities...) ->
+            for entity in entities
+                if not (entity of group.entities)
+                    return false
+            return true
 
     class MapPosition extends Component
         type: 'MapPosition'
@@ -47,8 +50,8 @@ define ['entities', 'underscore'], (Entities, _) ->
         constructor: () ->
             @x_dir = 1
             @y_dir = 1
-            @x_sec = 80
-            @y_sec = 80
+            @x_sec = _.random(20, 200)
+            @y_sec = _.random(20, 200)
 
     class Spawn extends Component
         type: 'Spawn'
