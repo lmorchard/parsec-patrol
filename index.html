@@ -13,14 +13,17 @@
         <meta name="viewport" content="width=device-width">
 
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-        <link rel="stylesheet" href="styles/e7938cc2.main.css">
+        <link rel="stylesheet" href="styles/3ae57203.main.css">
 
         <script src="scripts/vendor/f7f27360.modernizr.js"></script>
     </head>
     <body>
-        <div class="container">
-            <canvas id="display" style="border: 1px solid #000" width="700" height="500"></canvas>
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+            <div id="controlPanel">
+                <button class="srs"><span>SRS</span></button><button class="lrs"><span>LRS</span></button><button class="nav"><span>NAV</span></button><button class="com"><span>COM</span></button><button class="pha"><span>PHA</span></button><button class="tor"><span>TOR</span></button><button class="dmg"><span>DMG</span></button><button class="def"><span>DEF</span></button>
+            </div>
         </div>
-        <script data-main="scripts/489a4de5.main" src="bower_components/requirejs/require.js"></script>
+        <script data-main="scripts/17f52824.main" src="bower_components/requirejs/require.js"></script>
     </body>
 </html>
