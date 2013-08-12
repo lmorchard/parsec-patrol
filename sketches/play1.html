@@ -2,16 +2,17 @@
 <html class="no-js">
     <head>
         <meta charset="utf-8">
-        <title></title>
+        <title>Play 1 - Sketches</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../styles/main.css">
         <link rel="stylesheet" href="../styles/styls.css">
-        <script src="bower_components/modernizr/modernizr.js"></script>
     </head>
     <body>
-        <div class="container">
-            <canvas id="display" style="border: 1px solid #000" width="700" height="500"></canvas>
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+            <div id="controlPanel">
+                <button class="srs"><span>SRS</span></button><button class="lrs"><span>LRS</span></button><button class="nav"><span>NAV</span></button><button class="com"><span>COM</span></button><button class="pha"><span>PHA</span></button><button class="tor"><span>TOR</span></button><button class="dmg"><span>DMG</span></button><button class="def"><span>DEF</span></button>
+            </div>
         </div>
         <script src="config.js"></script>
         <script src="../app/bower_components/requirejs/require.js"></script>

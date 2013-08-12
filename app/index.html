@@ -23,8 +23,11 @@
         <!-- endbuild -->
     </head>
     <body>
-        <div class="container">
-            <canvas id="display" style="border: 1px solid #000" width="700" height="500"></canvas>
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+            <div id="controlPanel">
+                <button class="srs"><span>SRS</span></button><button class="lrs"><span>LRS</span></button><button class="nav"><span>NAV</span></button><button class="com"><span>COM</span></button><button class="pha"><span>PHA</span></button><button class="tor"><span>TOR</span></button><button class="dmg"><span>DMG</span></button><button class="def"><span>DEF</span></button>
+            </div>
         </div>
         <!-- build:js scripts/main.js -->
         <script data-main="scripts/config" src="bower_components/requirejs/require.js"></script>

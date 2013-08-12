@@ -2,3 +2,46 @@ body
     background: #ddd
     padding: 0
     margin: 0
+    overflow: hidden
+
+#gameArea 
+    position: absolute
+    left:     50%
+    top:      50%
+    // border: 1px solid #000
+
+#gameCanvas
+    width: 100%
+    //height: 100%
+    height: 75%
+
+#controlPanel
+    position: absolute
+    width: 100%
+    height: 25%
+    bottom: 0
+
+#controlPanel button
+    background: #111
+    color: #eee
+    position: relative
+    cursor: pointer
+    width: 25%
+    height: 50%
+    border: none
+    margin: 0
+    padding: 0
+    
+#controlPanel button:hover,
+#controlPanel button:active
+    background: #222
+
+#controlPanel button::-moz-focus-inner 
+    padding: 0
+    border: 0
+
+#controlPanel button span
+    display: block
+    width: 100%
+    height: 100%
+    //border: 1px solid #000

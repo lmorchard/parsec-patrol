@@ -6,21 +6,48 @@ define [
 ) ->
 
     () ->
-        canvas = $('#display')[0]
-        return if not canvas
+        gameCanvas = document.getElementById('gameCanvas')
+        return if not gameCanvas
+
+        resizeGame = () ->
+
+            [new_w, new_h] = [window.innerWidth, window.innerHeight]
+
+            ###
+            ratio = 9 / 16 # 3/4
+            new_ratio = new_w / new_h
+            if new_ratio > ratio
+                new_w = new_h * ratio
+            else
+                new_h = new_w / ratio
+            ###
+
+            gameArea = document.getElementById('gameArea')
+            gameArea.style.width = "#{new_w}px"
+            gameArea.style.height = "#{new_h}px"
+            gameArea.style.marginLeft = "#{-new_w/2}px"
+            gameArea.style.marginTop = "#{-new_h/2}px"
+            
+            gameCanvas = document.getElementById('gameCanvas')
+            gameCanvas.width = new_w * 1.00
+            gameCanvas.height = new_h * 0.75
+
+        resizeGame()
+        window.addEventListener('resize', resizeGame, false)
+        window.addEventListener('orientationchange', resizeGame, false)
 
         world = new W.World
 
         world.tick_delay = 1000 / 60
         
-        world.width = canvas.width
-        world.height = canvas.height
+        world.width = gameCanvas.width
+        world.height = gameCanvas.height
 
         world.addSystem(
             new S.SpawnSystem,
             new S.BouncerSystem,
             new S.OrbiterSystem,
-            new S.RenderSystem canvas
+            new S.RenderSystem document.getElementById('gameCanvas')
         )
 
         em = world.entities
@@ -47,13 +74,26 @@ define [
         world.publish S.RenderSystem.MSG_SCENE_CHANGE,
             scene: scenes[0]
 
-        curr_scene_idx = 0
-        change_scene = () ->
-            curr_scene_idx = (curr_scene_idx + 1) % num_scenes
-            world.publish S.RenderSystem.MSG_SCENE_CHANGE,
-                scene: scenes[curr_scene_idx]
-        setInterval(change_scene, 3000)
+        $('#controlPanel').delegate 'button', 'click', (ev) ->
+            switch ev.target.className
+                when 'srs'
+                    scene = scenes[0]
+                when 'lrs'
+                    scene = scenes[1]
+                when 'nav'
+                    scene = scenes[2]
+                when 'com'
+                    scene = scenes[3]
+                when 'pha'
+                    scene = scenes[4]
+                when 'tor'
+                    scene = scenes[5]
+                when 'dmg'
+                    scene = scenes[6]
+                when 'def'
+                    scene = scenes[7]
 
+            world.publish S.RenderSystem.MSG_SCENE_CHANGE, {scene: scene}
 
         world.dump = () ->
             console.log JSON.stringify(world.entities.store)
