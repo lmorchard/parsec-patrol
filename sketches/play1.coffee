@@ -58,11 +58,14 @@ define [
         ) for idx in [0..num_scenes-1])
 
         for scene in scenes
+            
             sun = E.Star.create(em, "Star 1")
+
             num_planets = _.random(3,10)
             planets = (E.Planet.create(
                 em, "Planet #{idx}", sun
             ) for idx in [0..num_planets-1])
+            
             group = em.get(scene, C.EntityGroup)
             C.EntityGroup.add(group, sun, planets...)
 

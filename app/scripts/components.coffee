@@ -43,7 +43,7 @@ define ['entities', 'underscore'], (Entities, _) ->
         type: 'Orbit'
         constructor: (@orbited_id) ->
             @angle = 0.0
-            @rad_per_sec = _.random(Math.PI/16, Math.PI/2)
+            @rad_per_sec = _.random(Math.PI/32, Math.PI)
 
     class Bouncer extends Component
         type: 'Bouncer'

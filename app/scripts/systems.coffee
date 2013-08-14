@@ -25,14 +25,15 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             if @world
                 pos = @world.entities.get(eid, C.MapPosition)
                 switch spawn.position_logic
-                    when 'random'
-                        pos.x = _.random(0, @world.width)
-                        pos.y = _.random(0, @world.height)
                     when 'center'
-                        pos.x = @world.width / 2
-                        pos.y = @world.height / 2
+                        pos.x = 0
+                        pos.y = 0
+                    when 'random'
+                        pos.x = _.random(0-(@world.width / 2), @world.width / 2)
+                        pos.y = _.random(0-(@world.height / 2), @world.height / 2)
                     else
-                        pos.x = pos.y = 0
+                        pos.x = 0 - (@world.width / 2)
+                        pos.y = 0 - (@world.height / 2)
 
             spawn.spawned = true
             @world.publish @constructor.MSG_SPAWN,
@@ -51,31 +52,48 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @world.subscribe @constructor.MSG_SCENE_CHANGE, (msg, data) =>
                 @current_scene = data.scene
 
+        setViewportSize: (width, height) ->
+            @viewport_width = width
+            @viewport_height = height
+
         update: (t_delta) ->
+
+            return if not @current_scene
+
+            v_is_wide = @viewport_width > @viewport_height
+            w_is_wide = @world.width > @world.height
+
+            if v_is_wide
+                v_ratio = @viewport_width / @world.width
+            else
+                v_ratio = @viewport_height / @world.height
+
             @ctx.save()
             @ctx.fillStyle = "#000"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
-            return if not @current_scene
             scene = @world.entities.get(@current_scene, C.EntityGroup)
             for eid, ignore of scene.entities
 
-                [sprite, pos] = @world.entities.get(eid,
-                    C.Sprite, C.MapPosition)
+                [sprite, pos] = @world.entities.get(eid, C.Sprite, C.MapPosition)
 
                 @ctx.save()
+
+                vp_x = (pos.x * v_ratio) + (@viewport_width / 2)
+                vp_y = (pos.y * v_ratio) + (@viewport_height / 2)
+                sprite_size = 20 * v_ratio
 
                 switch sprite.shape
                     when 'star'
                         @ctx.fillStyle = "#fff"
                         @ctx.beginPath()
-                        @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
+                        @ctx.arc(vp_x, vp_y, sprite_size/2, 0, Math.PI*2, true)
                         @ctx.fill()
                     else
                         @ctx.strokeStyle = "#fff"
                         @ctx.beginPath()
-                        @ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2, true)
+                        @ctx.arc(vp_x, vp_y, sprite_size/2, 0, Math.PI*2, true)
                         @ctx.stroke()
 
                 @ctx.restore()
