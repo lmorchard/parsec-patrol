@@ -97,24 +97,6 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
                     when 'hero'
                         @ctx.beginPath()
-                        @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.lineTo(0-w*0.5, h*0.5)
-                        @ctx.arc(0, h*0.25, w*0.125, Math.PI, 0, false)
-                        @ctx.lineTo(w*0.5, h*0.5)
-                        @ctx.lineTo(0, 0-(h*0.5))
-                        @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.stroke()
-                        @ctx.beginPath()
-                        @ctx.arc(0, 0-(h*0.5), w*0.25, Math.PI * 2, 0, false)
-                        @ctx.fillStyle = "#000"
-                        @ctx.stroke()
-                        @ctx.fill()
-                        @ctx.beginPath()
-                        @ctx.arc(0, 0-(h*0.5), w*0.125, Math.PI * 2, 0, false)
-                        @ctx.stroke()
-
-                    when 'enemyscout'
-                        @ctx.beginPath()
                         @ctx.moveTo(0-(w*0.125), 0-(h/2))
                         @ctx.lineTo(0-(w*0.25), 0-(h/2))
                         @ctx.lineTo(0-(w*0.5), 0)
@@ -124,6 +106,16 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                         @ctx.lineTo(w*0.25, 0)
                         @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
                         @ctx.lineTo(0-(w*0.125), 0-(h/2))
+                        @ctx.stroke()
+                        
+                    when 'enemyscout'
+                        @ctx.beginPath()
+                        @ctx.moveTo(0, 0-(h*0.5))
+                        @ctx.lineTo(0-w*0.5, h*0.5)
+                        @ctx.arc(0, h*0.25, w*0.125, Math.PI, 0, true)
+                        @ctx.lineTo(w*0.5, h*0.5)
+                        @ctx.lineTo(0, 0-(h*0.5))
+                        @ctx.moveTo(0, 0-(h*0.5))
                         @ctx.stroke()
 
                     else
