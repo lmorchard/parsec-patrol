@@ -53,7 +53,7 @@ define [
             new C.EntityName('hero'),
             new C.Spawn('at', 100, -100),
             new C.MapPosition,
-            #new C.Orbit(sun, Math.PI/8),
+            new C.Orbit(sun, Math.PI/8),
             new C.Sprite('hero')
         )
 
@@ -62,7 +62,7 @@ define [
             new C.EntityName('enemy1'),
             new C.Spawn('at', -100, -100),
             new C.MapPosition,
-            #new C.Orbit(sun, Math.PI/8),
+            new C.Orbit(sun, Math.PI/8),
             new C.Sprite('enemyscout')
         )
 
@@ -71,7 +71,7 @@ define [
             new C.EntityName('asteroid1'),
             new C.Spawn('at', -100, 100),
             new C.MapPosition,
-            #new C.Orbit(sun, Math.PI/8),
+            new C.Orbit(sun, Math.PI/8),
             new C.Sprite('asteroid')
         )
 
@@ -80,7 +80,7 @@ define [
             new C.EntityName('torpedo1'),
             new C.Spawn('at', 100, 100),
             new C.MapPosition,
-            #new C.Orbit(sun, Math.PI/8),
+            new C.Orbit(sun, Math.PI/8),
             new C.Sprite('torpedo')
         )
 

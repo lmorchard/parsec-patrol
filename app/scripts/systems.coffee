@@ -84,10 +84,11 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
                 [w,h] = [30*v_ratio,30*v_ratio]
                 @ctx.translate(vp_x, vp_y)
+                @ctx.rotate(pos.rotation)
 
                 @ctx.fillStyle = "#fff"
                 @ctx.strokeStyle = "#fff"
-                @ctx.lineWidth = 1.25
+                @ctx.lineWidth = 1.5
 
                 switch sprite.shape
 
@@ -97,6 +98,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                         @ctx.fill()
 
                     when 'hero'
+                        @ctx.rotate(Math.PI)
                         @ctx.beginPath()
                         @ctx.moveTo(0-(w*0.125), 0-(h/2))
                         @ctx.lineTo(0-(w*0.25), 0-(h/2))
@@ -157,6 +159,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         constructor: () ->
             @v_orbited = new Vector2D()
             @v_orbiter = new Vector2D()
+            @v_old = new Vector2D()
 
         update_match: (dt, eid, orbiter) ->
             pos = @world.entities.get(eid, C.MapPosition)
@@ -168,8 +171,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             angle_delta = (dt / 1000) * orbiter.rad_per_sec
             @v_orbiter.rotateAround(@v_orbited, angle_delta)
 
+            @v_old.setValues(pos.x, pos.y)
             pos.x = @v_orbiter.x
             pos.y = @v_orbiter.y
+            pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
 
     return {
         System, SpawnSystem, BouncerSystem, OrbiterSystem, RenderSystem

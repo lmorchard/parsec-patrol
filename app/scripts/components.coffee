@@ -37,7 +37,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class MapPosition extends Component
         type: 'MapPosition'
-        constructor: (@map, @x, @y, @rotation) ->
+        constructor: (@map, @x, @y, @rotation=0) ->
     
     class Orbit extends Component
         type: 'Orbit'
