@@ -111,11 +111,25 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                     when 'enemyscout'
                         @ctx.beginPath()
                         @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.lineTo(0-w*0.5, h*0.5)
-                        @ctx.arc(0, h*0.25, w*0.125, Math.PI, 0, true)
-                        @ctx.lineTo(w*0.5, h*0.5)
+                        @ctx.lineTo(0-w*0.45, h*0.5)
+                        @ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
+                        @ctx.lineTo(w*0.45, h*0.5)
                         @ctx.lineTo(0, 0-(h*0.5))
                         @ctx.moveTo(0, 0-(h*0.5))
+                        @ctx.stroke()
+
+                    when 'torpedo'
+                        @ctx.beginPath()
+                        
+                        @ctx.moveTo(0-(w*0.5), 0)
+                        @ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0, true)
+                        @ctx.moveTo(0, 0-(h*0.5))
+                        @ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5, true)
+                        @ctx.moveTo(0, h*0.5)
+                        @ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5, false)
+                        @ctx.moveTo(0-w*0.5, 0)
+                        @ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0, false)
+
                         @ctx.stroke()
 
                     else

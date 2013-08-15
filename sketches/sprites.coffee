@@ -45,10 +45,6 @@ define [
         scene = E.Scene.create(em, "Scene 1")
         
         sun = E.Star.create(em, "Star 1")
-
-        #sprites = (E.Planet.create(
-        #    em, "Planet #{idx}", sun
-        #) for idx in [0..5])
         
         sprites = []
 
@@ -57,7 +53,7 @@ define [
             new C.EntityName('hero'),
             new C.Spawn('at', 100, -100),
             new C.MapPosition,
-            #new C.Orbit(sun, Math.PI/4),
+            new C.Orbit(sun, Math.PI/4),
             new C.Sprite('hero')
         )
 
@@ -66,8 +62,26 @@ define [
             new C.EntityName('enemy1'),
             new C.Spawn('at', -100, -100),
             new C.MapPosition,
-            #new C.Orbit(sun, Math.PI/4),
+            new C.Orbit(sun, Math.PI/4),
             new C.Sprite('enemyscout')
+        )
+
+        sprites.push em.create(
+            new C.TypeName('Asteroid'),
+            new C.EntityName('asteroid1'),
+            new C.Spawn('at', -100, 100),
+            new C.MapPosition,
+            new C.Orbit(sun, Math.PI/4),
+            new C.Sprite('asteroid')
+        )
+
+        sprites.push em.create(
+            new C.TypeName('Torpedo'),
+            new C.EntityName('torpedo1'),
+            new C.Spawn('at', 100, 100),
+            new C.MapPosition,
+            new C.Orbit(sun, Math.PI/4),
+            new C.Sprite('torpedo')
         )
 
         group = em.get(scene, C.EntityGroup)
