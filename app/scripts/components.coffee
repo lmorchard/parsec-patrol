@@ -15,9 +15,9 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class EntityGroup extends Component
         type: 'EntityGroup'
-        constructor: (to_add=[]) ->
+        constructor: (entities) ->
             @entities = {}
-            EntityGroup.add(@, e) for e in to_add
+            EntityGroup.add(@, entities...)
 
         @add: (group, entities...) ->
             for entity in entities
@@ -67,7 +67,11 @@ define ['entities', 'underscore'], (Entities, _) ->
         type: 'Renderable'
         constructor: () ->
 
+    class Collidable extends Component
+        type: 'Collidable'
+        constructor: () ->
+
     return {
         Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Spin, Bouncer, Spawn,
-        Renderable, Sprite
+        Collidable, Renderable, Sprite
     }

@@ -66,10 +66,10 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             return entity_manager.create()
 
     class Scene extends EntityTemplate
-        @create: (em, name='unnamed') -> em.create(
+        @create: (em, name='unnamed', entities...) -> em.create(
             new C.TypeName('Scene'),
             new C.EntityName(name),
-            new C.EntityGroup
+            new C.EntityGroup(entities...)
         )
 
     class SpaceEntity extends EntityTemplate

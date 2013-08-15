@@ -9,17 +9,15 @@ define [
         ticks: 0
         t_last: 0
 
-        width: 640
-        height: 480
-
-        constructor: () ->
+        constructor: (@width=640, @height=480, systems) ->
             @id = Utils.generateID()
 
             @is_running = false
             @is_paused = false
             
-            @systems = []
             @entities = new Entities.EntityManager
+            @systems = []
+            @addSystem(systems...)
 
         _psPrefix: (msg=null) ->
             msg = if not msg then '' else ".#{msg}"

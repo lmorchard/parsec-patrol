@@ -229,7 +229,14 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             pos.x = @v_orbiter.x
             pos.y = @v_orbiter.y
             pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
+    
+    class CollisionSystem extends System
+        match_component: C.Collidable
+
+        update_match: (dt, eid, collider) ->
+            pos = @world.entities.get(eid, C.MapPosition)
 
     return {
-        System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem, RenderSystem
+        System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
+        RenderSystem, CollisionSystem
     }
