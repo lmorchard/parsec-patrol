@@ -25,15 +25,14 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             if @world
                 pos = @world.entities.get(eid, C.MapPosition)
                 switch spawn.position_logic
-                    when 'center'
-                        pos.x = 0
-                        pos.y = 0
                     when 'random'
                         pos.x = _.random(0-(@world.width / 2), @world.width / 2)
                         pos.y = _.random(0-(@world.height / 2), @world.height / 2)
+                    when 'at'
+                        pos.x = spawn.x
+                        pos.y = spawn.y
                     else
-                        pos.x = 0 - (@world.width / 2)
-                        pos.y = 0 - (@world.height / 2)
+                        pos.x = pos.y = 0
 
             spawn.spawned = true
             @world.publish @constructor.MSG_SPAWN,
@@ -61,7 +60,6 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             return if not @current_scene
 
             v_is_wide = @viewport_width > @viewport_height
-            w_is_wide = @world.width > @world.height
 
             if v_is_wide
                 v_ratio = @viewport_width / @world.width
@@ -84,16 +82,53 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 vp_y = (pos.y * v_ratio) + (@viewport_height / 2)
                 sprite_size = 20 * v_ratio
 
+                [w,h] = [30,30]
+                @ctx.translate(vp_x, vp_y)
+
+                @ctx.fillStyle = "#fff"
+                @ctx.strokeStyle = "#fff"
+
                 switch sprite.shape
+
                     when 'star'
-                        @ctx.fillStyle = "#fff"
                         @ctx.beginPath()
-                        @ctx.arc(vp_x, vp_y, sprite_size/2, 0, Math.PI*2, true)
+                        @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
                         @ctx.fill()
-                    else
-                        @ctx.strokeStyle = "#fff"
+
+                    when 'hero'
                         @ctx.beginPath()
-                        @ctx.arc(vp_x, vp_y, sprite_size/2, 0, Math.PI*2, true)
+                        @ctx.moveTo(0, 0-(h*0.5))
+                        @ctx.lineTo(0-w*0.5, h*0.5)
+                        @ctx.arc(0, h*0.25, w*0.125, Math.PI, 0, false)
+                        @ctx.lineTo(w*0.5, h*0.5)
+                        @ctx.lineTo(0, 0-(h*0.5))
+                        @ctx.moveTo(0, 0-(h*0.5))
+                        @ctx.stroke()
+                        @ctx.beginPath()
+                        @ctx.arc(0, 0-(h*0.5), w*0.25, Math.PI * 2, 0, false)
+                        @ctx.fillStyle = "#000"
+                        @ctx.stroke()
+                        @ctx.fill()
+                        @ctx.beginPath()
+                        @ctx.arc(0, 0-(h*0.5), w*0.125, Math.PI * 2, 0, false)
+                        @ctx.stroke()
+
+                    when 'enemyscout'
+                        @ctx.beginPath()
+                        @ctx.moveTo(0-(w*0.125), 0-(h/2))
+                        @ctx.lineTo(0-(w*0.25), 0-(h/2))
+                        @ctx.lineTo(0-(w*0.5), 0)
+                        @ctx.arc(0, 0, w/2, Math.PI, 0, true)
+                        @ctx.lineTo(w*0.25, 0-(h/2))
+                        @ctx.lineTo(w*0.125, 0-(h/2))
+                        @ctx.lineTo(w*0.25, 0)
+                        @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
+                        @ctx.lineTo(0-(w*0.125), 0-(h/2))
+                        @ctx.stroke()
+
+                    else
+                        @ctx.beginPath()
+                        @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
                         @ctx.stroke()
 
                 @ctx.restore()

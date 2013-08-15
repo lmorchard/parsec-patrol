@@ -41,9 +41,9 @@ define ['entities', 'underscore'], (Entities, _) ->
     
     class Orbit extends Component
         type: 'Orbit'
-        constructor: (@orbited_id) ->
+        constructor: (@orbited_id, @rad_per_sec=null) ->
             @angle = 0.0
-            @rad_per_sec = _.random(Math.PI/32, Math.PI)
+            @rad_per_sec ?= _.random(Math.PI/32, Math.PI)
 
     class Bouncer extends Component
         type: 'Bouncer'
@@ -55,7 +55,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Spawn extends Component
         type: 'Spawn'
-        constructor: (@position_logic='random') ->
+        constructor: (@position_logic='random', @x=0, @y=0) ->
 
     class Sprite extends Component
         type: 'Sprite'

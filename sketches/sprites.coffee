@@ -11,8 +11,8 @@ define [
 
         world = new W.World
         world.tick_delay = 1000 / 60
-        world.width = 1600
-        world.height = 900
+        world.width = 640
+        world.height = 480
         world.addSystem(
             new S.SpawnSystem,
             new S.BouncerSystem,
@@ -23,15 +23,6 @@ define [
         resizeGame = () ->
 
             [new_w, new_h] = [window.innerWidth, window.innerHeight]
-
-            ###
-            ratio = 9 / 16 # 3/4
-            new_ratio = new_w / new_h
-            if new_ratio > ratio
-                new_w = new_h * ratio
-            else
-                new_h = new_w / ratio
-            ###
 
             game_area = document.getElementById('gameArea')
             game_area.style.width = "#{new_w}px"
@@ -51,33 +42,42 @@ define [
 
         em = world.entities
 
-        num_scenes = 10
-        scenes = (E.Scene.create(
-            em, "Scene #{idx}"
-        ) for idx in [0..num_scenes-1])
+        scene = E.Scene.create(em, "Scene 1")
+        
+        sun = E.Star.create(em, "Star 1")
 
-        for scene in scenes
-            
-            sun = E.Star.create(em, "Star 1")
+        #sprites = (E.Planet.create(
+        #    em, "Planet #{idx}", sun
+        #) for idx in [0..5])
+        
+        sprites = []
 
-            num_planets = _.random(3,30)
-            planets = (E.Planet.create(
-                em, "Planet #{idx}", sun
-            ) for idx in [0..num_planets-1])
-            
-            group = em.get(scene, C.EntityGroup)
-            C.EntityGroup.add(group, sun, planets...)
+        sprites.push em.create(
+            new C.TypeName('HeroShip'),
+            new C.EntityName('hero'),
+            new C.Spawn('at', 100, -100),
+            new C.MapPosition,
+            #new C.Orbit(sun, Math.PI/4),
+            new C.Sprite('hero')
+        )
+
+        sprites.push em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy1'),
+            new C.Spawn('at', -100, -100),
+            new C.MapPosition,
+            #new C.Orbit(sun, Math.PI/4),
+            new C.Sprite('enemyscout')
+        )
+
+        group = em.get(scene, C.EntityGroup)
+        C.EntityGroup.add(group, sun, sprites...)
 
         world.subscribe '', (msg, data) ->
             console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
-        s_idx = 0
-        change_scene = () ->
-            world.publish S.RenderSystem.MSG_SCENE_CHANGE,
-                scene: scenes[s_idx]
-            s_idx = (s_idx + 1) % scenes.length
-        change_scene()
-        setInterval(change_scene, 4000)
+        world.publish S.RenderSystem.MSG_SCENE_CHANGE,
+            scene: scene
 
         world.dump = () ->
             console.log JSON.stringify(world.entities.store)
