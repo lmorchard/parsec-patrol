@@ -15,7 +15,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class EntityGroup extends Component
         type: 'EntityGroup'
-        constructor: (entities) ->
+        constructor: (entities...) ->
             @entities = {}
             EntityGroup.add(@, entities...)
 

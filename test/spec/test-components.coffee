@@ -28,7 +28,7 @@ define [
                 @g1 = @world.entities.create(
                     new C.TypeName('SolarSystem'),
                     new C.EntityName('System 1'),
-                    new C.EntityGroup(@planets_g1)
+                    new C.EntityGroup(@planets_g1...)
                 )
                 @g2 = @world.entities.create(
                     new C.TypeName('SolarSystem'),

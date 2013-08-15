@@ -9,7 +9,7 @@ define [
         ticks: 0
         t_last: 0
 
-        constructor: (@width=640, @height=480, systems) ->
+        constructor: (@width=640, @height=480, systems...) ->
             @id = Utils.generateID()
 
             @is_running = false
