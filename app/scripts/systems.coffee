@@ -43,7 +43,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         
         match_component: C.Sprite
 
-        constructor: (@canvas) ->
+        constructor: (@window, @game_area, @canvas, @scale_x=1.0, @scale_y=1.0) ->
             @ctx = @canvas.getContext('2d')
 
         setWorld: (world) ->
@@ -51,9 +51,29 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @world.subscribe @constructor.MSG_SCENE_CHANGE, (msg, data) =>
                 @current_scene = data.scene
 
+            @resize()
+
+            bound_resize = () => @resize()
+            @window.addEventListener('resize', bound_resize, false)
+            @window.addEventListener('orientationchange', bound_resize, false)
+
         setViewportSize: (width, height) ->
             @viewport_width = width
             @viewport_height = height
+
+        resize: () ->
+
+            [new_w, new_h] = [@window.innerWidth, @window.innerHeight]
+
+            @game_area.style.width = "#{new_w}px"
+            @game_area.style.height = "#{new_h}px"
+            @game_area.style.marginLeft = "#{-new_w/2}px"
+            @game_area.style.marginTop = "#{-new_h/2}px"
+            
+            @canvas.width = new_w * @scale_x
+            @canvas.height = new_h * @scale_y
+
+            @setViewportSize(@canvas.width, @canvas.height)
 
         update: (t_delta) ->
 
@@ -87,9 +107,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 @ctx.rotate(pos.rotation)
 
                 @ctx.fillStyle = "#fff"
-                @ctx.strokeStyle = "#fff"
-                @ctx.lineWidth = 1.5
+                @ctx.strokeStyle = sprite.stroke_style
+                @ctx.lineWidth = 1.25
 
+                # TODO: Yes, I know, this sucks. Refactor into something better
                 switch sprite.shape
 
                     when 'star'
@@ -121,6 +142,26 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                         @ctx.moveTo(0, 0-(h*0.5))
                         @ctx.stroke()
 
+                    when 'enemycruiser'
+                        hu = h / 5
+                        wu = w / 4
+
+                        @ctx.beginPath()
+                        @ctx.moveTo(0, 0-hu*2.5)
+                        @ctx.lineTo(-(wu*1), hu*0.5)
+                        @ctx.lineTo(-(wu*1.25), 0-hu*1.5)
+                        @ctx.lineTo(-(wu*2), hu*2.5)
+                        @ctx.arc(0-wu, hu*2.5, w*0.25, Math.PI, Math.PI/2, true)
+                        @ctx.lineTo(-wu*0.5, hu*2.5)
+                        @ctx.arc(0, hu*2.5, w*0.125, Math.PI, 0, true)
+                        @ctx.lineTo(wu, hu*3.75)
+                        @ctx.arc(wu, hu*2.5, w*0.25, Math.PI/2, 0, true)
+                        @ctx.lineTo(wu*1.25, 0-hu*1.5)
+                        @ctx.lineTo(wu*1, hu*0.5)
+                        @ctx.lineTo(0, 0-hu*2.5)
+
+                        @ctx.stroke()
+
                     when 'torpedo'
                         @ctx.beginPath()
                         
@@ -146,13 +187,26 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         match_component: C.Bouncer
         update_match: (dt, eid, bouncer) ->
             pos = @world.entities.get(eid, C.MapPosition)
+
             pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
             pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
-            if pos.x > @world.width then bouncer.x_dir = -1
-            if pos.x < 0 then bouncer.x_dir = 1
-            if pos.y > @world.height then bouncer.y_dir = -1
-            if pos.y < 0 then bouncer.y_dir = 1
+            
+            xb = @world.width / 2
+            yb = @world.height / 2
+
+            if pos.x > xb then bouncer.x_dir = -1
+            if pos.x < -xb then bouncer.x_dir = 1
+            if pos.y > yb then bouncer.y_dir = -1
+            if pos.y < -yb then bouncer.y_dir = 1
                 
+    class SpinSystem extends System
+        match_component: C.Spin
+
+        update_match: (dt, eid, spin) ->
+            pos = @world.entities.get(eid, C.MapPosition)
+            d_angle = (dt / 1000) * spin.rad_per_sec
+            pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
+            
     class OrbiterSystem extends System
         match_component: C.Orbit
 
@@ -177,5 +231,5 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
 
     return {
-        System, SpawnSystem, BouncerSystem, OrbiterSystem, RenderSystem
+        System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem, RenderSystem
     }

@@ -45,13 +45,15 @@ define ['entities', 'underscore'], (Entities, _) ->
             @angle = 0.0
             @rad_per_sec ?= _.random(Math.PI/32, Math.PI)
 
+    class Spin extends Component
+        type: 'Spin'
+        constructor: (@rad_per_sec=null) ->
+
     class Bouncer extends Component
         type: 'Bouncer'
-        constructor: () ->
-            @x_dir = 1
-            @y_dir = 1
-            @x_sec = _.random(20, 200)
-            @y_sec = _.random(20, 200)
+        constructor: (@x_dir=1, @y_dir=1, @x_sec=null, @y_sec=null) ->
+            @x_sec ?= _.random(20, 200)
+            @y_sec ?= _.random(20, 200)
 
     class Spawn extends Component
         type: 'Spawn'
@@ -59,13 +61,13 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Sprite extends Component
         type: 'Sprite'
-        constructor: (@shape) ->
+        constructor: (@shape, @stroke_style='#fff') ->
 
     class Renderable extends Component
         type: 'Renderable'
         constructor: () ->
 
     return {
-        Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Bouncer, Spawn,
+        Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Spin, Bouncer, Spawn,
         Renderable, Sprite
     }
