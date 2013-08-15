@@ -82,11 +82,12 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 vp_y = (pos.y * v_ratio) + (@viewport_height / 2)
                 sprite_size = 20 * v_ratio
 
-                [w,h] = [30,30]
+                [w,h] = [30*v_ratio,30*v_ratio]
                 @ctx.translate(vp_x, vp_y)
 
                 @ctx.fillStyle = "#fff"
                 @ctx.strokeStyle = "#fff"
+                @ctx.lineWidth = 1.25
 
                 switch sprite.shape
 
