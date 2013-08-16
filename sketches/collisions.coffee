@@ -8,10 +8,10 @@ define [
     () ->
         world = new W.World(320, 240,
             new S.SpawnSystem,
-            new S.CollisionSystem,
             new S.BouncerSystem,
             new S.SpinSystem,
             new S.OrbiterSystem,
+            new S.CollisionSystem,
             render_system = new S.RenderSystem(
                 window,
                 document.getElementById('gameArea'),
@@ -32,6 +32,7 @@ define [
                 new C.Spawn('at', 80, 0),
                 new C.MapPosition,
                 new C.Collidable,
+                new C.Spin(Math.PI / 4),
                 new C.Sprite('hero')
             ),
             e_enemy = em.create(
@@ -40,6 +41,7 @@ define [
                 new C.Spawn('at', -80, 0),
                 new C.MapPosition,
                 new C.Collidable,
+                new C.Spin(Math.PI / 4),
                 new C.Sprite('enemyscout', '#fff', 15, 15)
             ),
             e_enemy2 = em.create(
@@ -48,7 +50,8 @@ define [
                 new C.Spawn('at', 0, -60),
                 new C.MapPosition,
                 new C.Collidable,
-                new C.Sprite('enemycruiser', '#fff', 40, 40)
+                new C.Spin(Math.PI / 4),
+                new C.Sprite('enemycruiser', '#fff', 50, 50)
             ),
             em.create(
                 new C.TypeName('Torpedo'),
@@ -57,7 +60,7 @@ define [
                 new C.MapPosition,
                 new C.Collidable,
                 new C.Spin(Math.PI * 2),
-                new C.Bouncer(1, 1, 50, 50),
+                new C.Bouncer(1, 1, 25, 25),
                 new C.Sprite('torpedo', '#f33', 10, 10)
             ),
             em.create(
@@ -67,7 +70,7 @@ define [
                 new C.MapPosition,
                 new C.Collidable,
                 new C.Spin(Math.PI * 4),
-                new C.Bouncer(-1, 1, 50, 50),
+                new C.Bouncer(-1, 1, 25, 50),
                 new C.Sprite('torpedo', '#f33', 10, 10)
             ),
             em.create(
@@ -77,7 +80,7 @@ define [
                 new C.MapPosition,
                 new C.Collidable,
                 new C.Spin(Math.PI * 6),
-                new C.Bouncer(-1, -1, 50, 50),
+                new C.Bouncer(-1, -1, 50, 25),
                 new C.Sprite('torpedo', '#f33', 10, 10)
             )
         )

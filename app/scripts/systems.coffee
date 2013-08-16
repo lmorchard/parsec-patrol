@@ -267,8 +267,8 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 pos = @world.entities.get(eid, C.MapPosition)
                 sprite = @world.entities.get(eid, C.Sprite)
                 boxes[eid] = [
-                    pos.x - sprite.width / 2,
-                    pos.y - sprite.height / 2,
+                    pos.x,
+                    pos.y,
                     sprite.width,
                     sprite.height
                 ]
