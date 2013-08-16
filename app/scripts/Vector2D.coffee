@@ -107,12 +107,3 @@ define [], ()->
       @x = Math.round @x
       @y = Math.round @y
       @
-
-
-
-
-
-
-
-
-
