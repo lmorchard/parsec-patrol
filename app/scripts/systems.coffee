@@ -7,9 +7,11 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         setWorld: (world) ->
             @world = world
         
+        getMatches: () ->
+            return @world.entities.getComponents(@match_component)
+
         update: (t_delta) ->
-            return if not @match_component
-            matches = @world.entities.getComponents(@match_component)
+            matches = @getMatches()
             for entity_id, component of matches
                 @update_match(t_delta, entity_id, component)
 
@@ -195,11 +197,16 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
     class BouncerSystem extends System
         match_component: C.Bouncer
-        update_match: (dt, eid, bouncer) ->
-            pos = @world.entities.get(eid, C.MapPosition)
 
-            pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
-            pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
+        update_match: (dt, eid, bouncer) ->
+            [pos, collidable] = @world.entities.get(eid, C.MapPosition,
+                                                         C.Collidable)
+
+            if collidable
+                # TODO: This is a horrible bounce-on-collision algo
+                if _.keys(collidable.in_collision_with).length > 0
+                    bouncer.x_dir = 0 - bouncer.x_dir
+                    bouncer.y_dir = 0 - bouncer.y_dir
             
             xb = @world.width / 2
             yb = @world.height / 2
@@ -208,6 +215,9 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             if pos.x < -xb then bouncer.x_dir = 1
             if pos.y > yb then bouncer.y_dir = -1
             if pos.y < -yb then bouncer.y_dir = 1
+
+            pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
+            pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
                 
     class SpinSystem extends System
         match_component: C.Spin
@@ -241,56 +251,59 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
     
     class CollisionSystem extends System
-        @MSG_COLLISION = 'collision'
-
         constructor: () ->
-            @in_collision = {}
 
         match_component: C.Collidable
-
-        publish: (a_eid, b_eid, state) ->
-            type_name = @world.entities.get(b_eid, C.TypeName)
-            @world.publish "#{@constructor.MSG_COLLISION}.#{a_eid}.#{type_name.name}",
-                entity: a_eid,
-                other: b_eid,
-                type: type_name.name,
-                state: state
 
         update: (t_delta) ->
             matches = @world.entities.getComponents(@match_component)
 
             # TODO: Fix this horrible, naive collision detection
+            # No account for shape or rotation. Probably good-enough for now
             
             boxes = {}
-            [LEFT, TOP, HEIGHT, WIDTH] = [0, 1, 2, 3]
-            for eid, component of matches
-                pos = @world.entities.get(eid, C.MapPosition)
-                sprite = @world.entities.get(eid, C.Sprite)
-                boxes[eid] = [
-                    pos.x,
-                    pos.y,
-                    sprite.width,
-                    sprite.height
-                ]
+            [COLLIDABLE, LEFT, TOP, HEIGHT, WIDTH] = [0..4]
+            for eid, collidable of matches
+                [pos, sprite] = @world.entities.get(eid, C.MapPosition, C.Sprite)
+                boxes[eid] = [collidable, pos.x, pos.y, sprite.width, sprite.height]
 
-            for a_eid, a_box of boxes
-                for b_eid, b_box of boxes
-                    continue if a_eid is b_eid
+            for combo in @combinations(_.keys(boxes), 2)
+                [a_eid, b_eid] = combo
+                a_box = boxes[a_eid]
+                b_box = boxes[b_eid]
 
-                    dist_lefts = Math.abs(a_box[LEFT] - b_box[LEFT]) * 2
-                    dist_tops = Math.abs(a_box[TOP] - b_box[TOP]) * 2
-                    width_total = a_box[WIDTH] + b_box[WIDTH]
-                    height_total = (a_box[HEIGHT] + b_box[HEIGHT])
-                    
-                    key = "#{a_eid}::#{b_eid}"
-                    if dist_lefts < width_total and dist_tops < height_total
-                        if not (key of @in_collision)
-                            @in_collision[key] = true
-                            @publish(a_eid, b_eid, 'enter')
+                left_dist    = Math.abs(a_box[LEFT] - b_box[LEFT]) * 2
+                top_dist     = Math.abs(a_box[TOP] - b_box[TOP]) * 2
+                width_total  = a_box[WIDTH] + b_box[WIDTH]
+                height_total = a_box[HEIGHT] + b_box[HEIGHT]
+                
+                already_in_collision = (
+                    a_box[COLLIDABLE].in_collision_with[b_eid] and
+                    b_box[COLLIDABLE].in_collision_with[a_eid]
+                )
 
-                    else if key of @in_collision
-                        delete @in_collision[key]
-                        @publish(a_eid, b_eid, 'leave')
+                if left_dist < width_total and top_dist < height_total and
+                        not already_in_collision
+                    a_box[COLLIDABLE].in_collision_with[b_eid] = true
+                    b_box[COLLIDABLE].in_collision_with[a_eid] = true
+
+                else if already_in_collision
+                    delete a_box[COLLIDABLE].in_collision_with[b_eid]
+                    delete b_box[COLLIDABLE].in_collision_with[a_eid]
+
+        combinations: (arr, k) ->
+            # Stolen from http://rosettacode.org/wiki/Combinations#JavaScript
+            ret = []
+            if arr.length > 0 then for i in [0..arr.length-1]
+                if k is 1
+                    ret.push([arr[i]])
+                else
+                    sub = @combinations(arr.slice(i+1, arr.length), k-1)
+                    if sub.length > 0 then for subI in [0..sub.length-1]
+                        next = sub[subI]
+                        next.unshift(arr[i])
+                        ret.push(next)
+            return ret
 
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,

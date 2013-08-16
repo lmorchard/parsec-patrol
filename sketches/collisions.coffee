@@ -11,7 +11,7 @@ define [
             new S.BouncerSystem,
             new S.SpinSystem,
             new S.OrbiterSystem,
-            new S.CollisionSystem,
+            window.coll = new S.CollisionSystem,
             render_system = new S.RenderSystem(
                 window,
                 document.getElementById('gameArea'),
@@ -56,7 +56,7 @@ define [
             em.create(
                 new C.TypeName('Torpedo'),
                 new C.EntityName('torpedo1'),
-                new C.Spawn('at', 0, 0),
+                new C.Spawn('at', 30, 0),
                 new C.MapPosition,
                 new C.Collidable,
                 new C.Spin(Math.PI * 2),
@@ -66,7 +66,7 @@ define [
             em.create(
                 new C.TypeName('Torpedo'),
                 new C.EntityName('torpedo1'),
-                new C.Spawn('at', 0, 0),
+                new C.Spawn('at', 0, 30),
                 new C.MapPosition,
                 new C.Collidable,
                 new C.Spin(Math.PI * 4),
@@ -76,7 +76,7 @@ define [
             em.create(
                 new C.TypeName('Torpedo'),
                 new C.EntityName('torpedo1'),
-                new C.Spawn('at', 0, 0),
+                new C.Spawn('at', 30, 30),
                 new C.MapPosition,
                 new C.Collidable,
                 new C.Spin(Math.PI * 6),
@@ -90,11 +90,12 @@ define [
 
         world.subscribe "collision", (msg, data) ->
             [sprite, type_name] = em.get(data.entity, C.Sprite, C.TypeName)
-            return if 'Torpedo' == type_name.name
-            if data.state is 'enter'
-                sprite.stroke_style = '#f33'
-            else
-                sprite.stroke_style = '#fff'
+            bouncer = em.get(data.entity, C.Bouncer)
+            if not bouncer
+                if data.state is 'enter'
+                    sprite.stroke_style = '#f33'
+                else
+                    sprite.stroke_style = '#fff'
 
         world.dump = () ->
             console.log JSON.stringify(world.entities.store)

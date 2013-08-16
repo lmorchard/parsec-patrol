@@ -70,6 +70,7 @@ define ['entities', 'underscore'], (Entities, _) ->
     class Collidable extends Component
         type: 'Collidable'
         constructor: () ->
+            @in_collision_with = {}
 
     return {
         Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Spin, Bouncer, Spawn,
