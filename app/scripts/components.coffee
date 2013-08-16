@@ -61,7 +61,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Sprite extends Component
         type: 'Sprite'
-        constructor: (@shape, @stroke_style='#fff') ->
+        constructor: (@shape, @stroke_style='#fff', @width=30, @height=30) ->
 
     class Renderable extends Component
         type: 'Renderable'

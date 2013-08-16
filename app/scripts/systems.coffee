@@ -45,6 +45,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
         constructor: (@window, @game_area, @canvas, @scale_x=1.0, @scale_y=1.0) ->
             @ctx = @canvas.getContext('2d')
+            @draw_bounding_boxes=false
 
         setWorld: (world) ->
             super world
@@ -102,8 +103,17 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 vp_y = (pos.y * v_ratio) + (@viewport_height / 2)
                 sprite_size = 20 * v_ratio
 
-                [w,h] = [30*v_ratio,30*v_ratio]
+                w = sprite.width * v_ratio
+                h = sprite.height * v_ratio
+
                 @ctx.translate(vp_x, vp_y)
+
+                if @draw_bounding_boxes
+                    @ctx.strokeStyle = "#33c"
+                    wb = w / 2
+                    hb = h / 2
+                    @ctx.strokeRect(0-wb, 0-wb, w, h)
+
                 @ctx.rotate(pos.rotation)
 
                 @ctx.fillStyle = "#fff"
@@ -231,10 +241,56 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
     
     class CollisionSystem extends System
+        @MSG_COLLISION = 'collision'
+
+        constructor: () ->
+            @in_collision = {}
+
         match_component: C.Collidable
 
-        update_match: (dt, eid, collider) ->
-            pos = @world.entities.get(eid, C.MapPosition)
+        publish: (a_eid, b_eid, state) ->
+            type_name = @world.entities.get(b_eid, C.TypeName)
+            @world.publish "#{@constructor.MSG_COLLISION}.#{a_eid}.#{type_name.name}",
+                entity: a_eid,
+                other: b_eid,
+                type: type_name.name,
+                state: state
+
+        update: (t_delta) ->
+            matches = @world.entities.getComponents(@match_component)
+
+            # TODO: Fix this horrible, naive collision detection
+            
+            boxes = {}
+            [LEFT, TOP, HEIGHT, WIDTH] = [0, 1, 2, 3]
+            for eid, component of matches
+                pos = @world.entities.get(eid, C.MapPosition)
+                sprite = @world.entities.get(eid, C.Sprite)
+                boxes[eid] = [
+                    pos.x - sprite.width / 2,
+                    pos.y - sprite.height / 2,
+                    sprite.width,
+                    sprite.height
+                ]
+
+            for a_eid, a_box of boxes
+                for b_eid, b_box of boxes
+                    continue if a_eid is b_eid
+
+                    dist_lefts = Math.abs(a_box[LEFT] - b_box[LEFT]) * 2
+                    dist_tops = Math.abs(a_box[TOP] - b_box[TOP]) * 2
+                    width_total = a_box[WIDTH] + b_box[WIDTH]
+                    height_total = (a_box[HEIGHT] + b_box[HEIGHT])
+                    
+                    key = "#{a_eid}::#{b_eid}"
+                    if dist_lefts < width_total and dist_tops < height_total
+                        if not (key of @in_collision)
+                            @in_collision[key] = true
+                            @publish(a_eid, b_eid, 'enter')
+
+                    else if key of @in_collision
+                        delete @in_collision[key]
+                        @publish(a_eid, b_eid, 'leave')
 
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
