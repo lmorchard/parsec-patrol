@@ -41,7 +41,7 @@ define ['entities', 'underscore'], (Entities, _) ->
     
     class Orbit extends Component
         type: 'Orbit'
-        constructor: (@orbited_id, @rad_per_sec=null) ->
+        constructor: (@orbited_id, @rad_per_sec=null, @rotate=true) ->
             @angle = 0.0
             @rad_per_sec ?= _.random(Math.PI/32, Math.PI)
 

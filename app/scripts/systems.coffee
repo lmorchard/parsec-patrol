@@ -328,7 +328,8 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @v_old.setValues(pos.x, pos.y)
             pos.x = @v_orbiter.x
             pos.y = @v_orbiter.y
-            pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
+            if orbiter.rotate
+                pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
 
     class CollisionSystem extends System
         constructor: () ->

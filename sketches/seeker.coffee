@@ -5,15 +5,6 @@ define [
     W, E, C, S, PubSub, $, _
 ) ->
 
-    class ColorCollideSystem extends S.System
-        match_component: C.Collidable
-        update_match: (dt, eid, collidable) ->
-            sprite = @world.entities.get(eid, C.Sprite)
-            if _.keys(collidable.in_collision_with).length > 0
-                sprite.stroke_style = "#f33"
-            else
-                sprite.stroke_style = "#fff"
-
     class PointerFollower extends C.Component
     
     class PointerFollowerSystem extends S.System
@@ -35,7 +26,6 @@ define [
         new S.SeekerSystem,
         new S.ThrusterSystem,
         new S.CollisionSystem,
-        new ColorCollideSystem,
         new PointerFollowerSystem,
         vp_system = new S.ViewportSystem(
             window, area, canvas, 1.0, 1.0, true
@@ -58,46 +48,34 @@ define [
             new C.Spin(Math.PI * 2),
             new C.Sprite('torpedo', '#f33', 10, 10)
         ),
-        e_enemy1 = em.create(
-            new C.TypeName('EnemyCruiser'),
-            new C.EntityName('enemy1'),
-            new C.Sprite('enemycruiser', '#fff', 50, 50)
-            new C.Spawn('at', 0, -60),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI / 4),
-            new C.Thruster(30, 20, 0, 0),
-            new C.Seeker(e_sun, Math.PI/2)
-        ),
-        e_enemy2 = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy2'),
-            new C.Sprite('enemyscout', '#fff', 15, 15),
-            new C.Spawn('at', -80, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(75, 50, 0, 0),
-            new C.Seeker(e_sun, Math.PI)
-        ),
         e_enemy3 = em.create(
             new C.TypeName('EnemyScout'),
             new C.EntityName('enemy3'),
-            new C.Sprite('enemyscout', '#fff', 15, 15),
+            new C.Sprite('enemyscout', '#3ff', 15, 15),
             new C.Spawn('at', -80, 0),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(75, 50, 0, 0),
             new C.Seeker(e_torp, Math.PI)
         ),
-        e_hero = em.create(
-            new C.TypeName('HeroShip'),
-            new C.EntityName('hero'),
-            new C.Sprite('hero')
+        e_enemy4 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy3'),
+            new C.Sprite('enemyscout', '#f3f', 15, 15),
+            new C.Spawn('at', 0, 80),
+            new C.Position,
+            new C.Collidable,
+            new C.Orbit(e_sun, Math.PI/8, false),
+            new C.Seeker(e_sun, Math.PI)
+        ),
+        e_enemy5 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy3'),
+            new C.Sprite('enemyscout', '#ff3', 15, 15),
             new C.Spawn('at', 80, 0),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(50, 50, 0, 0),
-            new C.Seeker(e_enemy1, Math.PI)
+            new C.Thruster(85, 50, 0, 0),
+            new C.Seeker(e_enemy4, Math.PI)
         ),
     )
 
