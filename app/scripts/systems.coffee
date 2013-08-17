@@ -268,11 +268,15 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             target_pos = @world.entities.get(seeker.target, C.Position)
 
             @v_seeker.setValues(pos.x, pos.y)
-            @v_target.setValues(target_pos.x || 0, target_pos.y || 0)
+            @v_target.setValues(target_pos.x, target_pos.y)
 
-            target_angle = @v_seeker.angleTo(@v_target) + Math.PI / 2
+            target_angle = @v_seeker.angleTo(@v_target) + (Math.PI / 2)
 
+            # Minimize the attempted rotation, if we're almost on target
             d_angle = (dt / 1000) * seeker.rad_per_sec
+            offset = Math.abs(target_angle - pos.rotation)
+            if offset < d_angle
+                d_angle = offset
 
             if target_angle < pos.rotation
                 d_angle = 0 - d_angle
@@ -285,25 +289,29 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         match_component: C.Thruster
 
         constructor: () ->
-            @v_curr   = new Vector2D()
+            @v_inertia = new Vector2D()
             @v_thrust = new Vector2D()
 
         update_match: (dt, eid, thruster) ->
             pos = @world.entities.get(eid, C.Position)
 
-            @v_curr.setValues(thruster.dx, thruster.dy)
-
+            # Create a thrust vector pointing straight up, then rotate it to
+            # correspond with entity
             tick_dv = (dt / 1000) * thruster.dv
             @v_thrust.setValues(0, 0-tick_dv)
             @v_thrust.rotate(pos.rotation)
 
-            @v_curr.add(@v_thrust)
-            velocity = @v_curr.magnitude()
+            # Try adding thrust to our current inertia
+            @v_inertia.setValues(thruster.dx, thruster.dy)
+            @v_inertia.add(@v_thrust)
 
-            if velocity < thruster.max_v
-                thruster.dx = @v_curr.x
-                thruster.dy = @v_curr.y
+            # If the addition doesn't exceed max V, then update inertia
+            curr_v = @v_inertia.magnitude()
+            if curr_v < thruster.max_v
+                thruster.dx = @v_inertia.x
+                thruster.dy = @v_inertia.y
 
+            # Finally, update position based on inertia
             pos.x += (dt / 1000) * thruster.dx
             pos.y += (dt / 1000) * thruster.dy
             
