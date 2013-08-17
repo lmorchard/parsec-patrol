@@ -26,7 +26,7 @@ define [
                 spawnable_entities = (@world.entities.create(
                     new C.TypeName('SpawnableEntity'),
                     new C.EntityName("test#{idx}"),
-                    new C.MapPosition,
+                    new C.Position,
                     new C.Spawn
                 ) for idx in [0..3])
 

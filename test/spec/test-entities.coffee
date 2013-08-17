@@ -6,7 +6,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
             @em = new Entities.EntityManager
             @entity_0 = @em.create(
                 new C.TypeName('test0'),
-                new C.MapPosition(null, 4, 8)
+                new C.Position(null, 4, 8)
             )
 
         test 'Module should be defined', () ->
@@ -15,12 +15,12 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
         suite 'EntityManager', () ->
 
             test "EntityManager.get should give quick access to a component", () ->
-                mp = @em.get(@entity_0, C.MapPosition)
+                mp = @em.get(@entity_0, C.Position)
                 assert.equal(mp.x, 4)
                 assert.equal(mp.y, 8)
 
             test "EntityManager.get should accept multiple components", () ->
-                [mp, tn] = @em.get(@entity_0, C.MapPosition, C.TypeName)
+                [mp, tn] = @em.get(@entity_0, C.Position, C.TypeName)
                 assert.equal(mp.x, 4)
                 assert.equal(mp.y, 8)
                 assert.equal(tn.name, 'test0')
@@ -35,7 +35,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
                 all_keys = _.keys(all)
                 all_keys.sort()
-                expected_keys = ["EntityName","MapPosition","TypeName"]
+                expected_keys = ["EntityName","Position","TypeName"]
                 for idx in [0..all_keys.length-1]
                     assert.equal(all_keys[idx], expected_keys[idx])
 
@@ -57,7 +57,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
             test "create/destroyEntity should properly manage component indexes", () ->
                 components = [
                     new C.TypeName('test1'),
-                    new C.MapPosition(null, 4, 8)
+                    new C.Position(null, 4, 8)
                 ]
 
                 entity_1 = @em.create components...

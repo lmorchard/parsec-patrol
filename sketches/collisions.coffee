@@ -22,7 +22,7 @@ define [
             new S.OrbiterSystem,
             new S.CollisionSystem,
             new ColorCollideSystem,
-            render_system = new S.RenderSystem(
+            render_system = new S.ViewportSystem(
                 window,
                 document.getElementById('gameArea'),
                 document.getElementById('gameCanvas'),
@@ -40,7 +40,7 @@ define [
                 new C.TypeName('HeroShip'),
                 new C.EntityName('hero'),
                 new C.Spawn('at', 80, 0),
-                new C.MapPosition,
+                new C.Position,
                 new C.Collidable,
                 new C.Spin(Math.PI / 4),
                 new C.Sprite('hero')
@@ -49,7 +49,7 @@ define [
                 new C.TypeName('EnemyScout'),
                 new C.EntityName('enemy1'),
                 new C.Spawn('at', -80, 0),
-                new C.MapPosition,
+                new C.Position,
                 new C.Collidable,
                 new C.Spin(Math.PI / 4),
                 new C.Sprite('enemyscout', '#fff', 15, 15)
@@ -58,7 +58,7 @@ define [
                 new C.TypeName('EnemyCruiser'),
                 new C.EntityName('enemy1'),
                 new C.Spawn('at', 0, -60),
-                new C.MapPosition,
+                new C.Position,
                 new C.Collidable,
                 new C.Spin(Math.PI / 4),
                 new C.Sprite('enemycruiser', '#fff', 50, 50)
@@ -67,7 +67,7 @@ define [
                 new C.TypeName('Torpedo'),
                 new C.EntityName('torpedo1'),
                 new C.Spawn('at', 30, 0),
-                new C.MapPosition,
+                new C.Position,
                 new C.Collidable,
                 new C.Spin(Math.PI * 2),
                 new C.Bouncer(1, 1, 25, 25),
@@ -77,7 +77,7 @@ define [
                 new C.TypeName('Torpedo'),
                 new C.EntityName('torpedo1'),
                 new C.Spawn('at', 0, 30),
-                new C.MapPosition,
+                new C.Position,
                 new C.Collidable,
                 new C.Spin(Math.PI * 4),
                 new C.Bouncer(-1, 1, 25, 50),
@@ -87,7 +87,7 @@ define [
                 new C.TypeName('Torpedo'),
                 new C.EntityName('torpedo1'),
                 new C.Spawn('at', 30, 30),
-                new C.MapPosition,
+                new C.Position,
                 new C.Collidable,
                 new C.Spin(Math.PI * 6),
                 new C.Bouncer(-1, -1, 50, 25),
@@ -105,5 +105,5 @@ define [
 
         world.start()
 
-        world.publish S.RenderSystem.MSG_SCENE_CHANGE,
+        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
             scene: scene

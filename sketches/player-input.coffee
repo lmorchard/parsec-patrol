@@ -19,7 +19,7 @@ define [
     class PointerFollowerSystem extends S.System
         match_component: PointerFollower
         update_match: (dt, eid, pointer_follower) ->
-            pos = @world.entities.get(eid, C.MapPosition)
+            pos = @world.entities.get(eid, C.Position)
             observer = @world.entities.get(eid, C.ViewportObserver)
             pos.x = observer.pointer_x
             pos.y = observer.pointer_y
@@ -50,7 +50,7 @@ define [
             new C.TypeName('HeroShip'),
             new C.EntityName('hero'),
             new C.Spawn('at', 80, 0),
-            new C.MapPosition,
+            new C.Position,
             new C.Collidable,
             new C.Spin(Math.PI / 4),
             new C.Sprite('hero')
@@ -59,7 +59,7 @@ define [
             new C.TypeName('EnemyScout'),
             new C.EntityName('enemy1'),
             new C.Spawn('at', -80, 0),
-            new C.MapPosition,
+            new C.Position,
             new C.Collidable,
             new C.Spin(Math.PI / 4),
             new C.Sprite('enemyscout', '#fff', 15, 15)
@@ -68,7 +68,7 @@ define [
             new C.TypeName('EnemyCruiser'),
             new C.EntityName('enemy1'),
             new C.Spawn('at', 0, -60),
-            new C.MapPosition,
+            new C.Position,
             new C.Collidable,
             new C.Spin(Math.PI / 4),
             new C.Sprite('enemycruiser', '#fff', 50, 50)
@@ -77,7 +77,7 @@ define [
             new C.TypeName('Torpedo'),
             new C.EntityName('torpedo1'),
             new C.Spawn('at', 30, 0),
-            new C.MapPosition,
+            new C.Position,
             new C.Collidable,
             new C.ViewportObserver,
             new PointerFollower,

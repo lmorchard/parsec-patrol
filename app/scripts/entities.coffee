@@ -81,7 +81,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             new C.TypeName('Star'),
             new C.EntityName(name),
             new C.Spawn('center'),
-            new C.MapPosition,
+            new C.Position,
             # new C.Bouncer(),
             new C.Sprite('star')
         )
@@ -91,7 +91,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             new C.TypeName('Asteroid'),
             new C.EntityName(name),
             new C.Spawn('random'),
-            new C.MapPosition,
+            new C.Position,
             new C.Sprite('asteroid')
         )
 
@@ -100,7 +100,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             new C.TypeName('Planet'),
             new C.EntityName(name),
             new C.Spawn('random'),
-            new C.MapPosition,
+            new C.Position,
             new C.Orbit(sun),
             new C.Sprite('planet')
         )

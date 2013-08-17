@@ -47,7 +47,7 @@ define [
             new S.SpawnSystem,
             new S.BouncerSystem,
             new S.OrbiterSystem,
-            new S.RenderSystem document.getElementById('gameCanvas')
+            new S.ViewportSystem document.getElementById('gameCanvas')
         )
 
         em = world.entities
@@ -71,7 +71,7 @@ define [
         world.subscribe '', (msg, data) ->
             console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
-        world.publish S.RenderSystem.MSG_SCENE_CHANGE,
+        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
             scene: scenes[0]
 
         $('#controlPanel').delegate 'button', 'click', (ev) ->
@@ -93,7 +93,7 @@ define [
                 when 'def'
                     scene = scenes[7]
 
-            world.publish S.RenderSystem.MSG_SCENE_CHANGE, {scene: scene}
+            world.publish S.ViewportSystem.MSG_SCENE_CHANGE, {scene: scene}
 
         world.dump = () ->
             console.log JSON.stringify(world.entities.store)

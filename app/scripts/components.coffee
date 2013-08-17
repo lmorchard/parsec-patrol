@@ -35,8 +35,8 @@ define ['entities', 'underscore'], (Entities, _) ->
                     return false
             return true
 
-    class MapPosition extends Component
-        type: 'MapPosition'
+    class Position extends Component
+        type: 'Position'
         constructor: (@map, @x, @y, @rotation=0) ->
     
     class Orbit extends Component
@@ -76,6 +76,6 @@ define ['entities', 'underscore'], (Entities, _) ->
             @in_collision_with = {}
 
     return {
-        Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Spin, Bouncer, Spawn,
+        Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin, Bouncer, Spawn,
         Collidable, Renderable, Sprite, ViewportObserver
     }

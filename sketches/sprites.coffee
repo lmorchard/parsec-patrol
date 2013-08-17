@@ -17,7 +17,7 @@ define [
             new S.SpawnSystem,
             new S.BouncerSystem,
             new S.OrbiterSystem,
-            render_system = new S.RenderSystem(
+            render_system = new S.ViewportSystem(
                 window,
                 document.getElementById('gameArea'),
                 document.getElementById('gameCanvas')
@@ -36,7 +36,7 @@ define [
             new C.TypeName('HeroShip'),
             new C.EntityName('hero'),
             new C.Spawn('at', 100, -100),
-            new C.MapPosition,
+            new C.Position,
             new C.Orbit(sun, Math.PI/16),
             new C.Sprite('hero')
         )
@@ -45,7 +45,7 @@ define [
             new C.TypeName('EnemyScout'),
             new C.EntityName('enemy1'),
             new C.Spawn('at', -100, -100),
-            new C.MapPosition,
+            new C.Position,
             new C.Orbit(sun, Math.PI/16),
             new C.Sprite('enemyscout')
         )
@@ -54,7 +54,7 @@ define [
             new C.TypeName('EnemyCruiser'),
             new C.EntityName('enemy1'),
             new C.Spawn('at', -150, 0),
-            new C.MapPosition,
+            new C.Position,
             new C.Orbit(sun, Math.PI/16),
             new C.Sprite('enemycruiser')
         )
@@ -63,7 +63,7 @@ define [
             new C.TypeName('Asteroid'),
             new C.EntityName('asteroid1'),
             new C.Spawn('at', -100, 100),
-            new C.MapPosition,
+            new C.Position,
             new C.Orbit(sun, Math.PI/16),
             new C.Sprite('asteroid')
         )
@@ -72,7 +72,7 @@ define [
             new C.TypeName('Torpedo'),
             new C.EntityName('torpedo1'),
             new C.Spawn('at', 100, 100),
-            new C.MapPosition,
+            new C.Position,
             new C.Orbit(sun, Math.PI/16),
             new C.Sprite('torpedo')
         )
@@ -83,7 +83,7 @@ define [
         world.subscribe '', (msg, data) ->
             console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
-        world.publish S.RenderSystem.MSG_SCENE_CHANGE,
+        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
             scene: scene
 
         world.dump = () ->

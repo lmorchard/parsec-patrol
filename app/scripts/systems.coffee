@@ -25,7 +25,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         update_match: (t_delta, eid, spawn) ->
             return if spawn.spawned
             if @world
-                pos = @world.entities.get(eid, C.MapPosition)
+                pos = @world.entities.get(eid, C.Position)
                 switch spawn.position_logic
                     when 'random'
                         pos.x = _.random(0-(@world.width / 2), @world.width / 2)
@@ -112,7 +112,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             scene = @world.entities.get(@current_scene, C.EntityGroup)
             for eid, ignore of scene.entities
 
-                [sprite, pos] = @world.entities.get(eid, C.Sprite, C.MapPosition)
+                [sprite, pos] = @world.entities.get(eid, C.Sprite, C.Position)
 
                 @ctx.save()
 
@@ -214,7 +214,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         match_component: C.Bouncer
 
         update_match: (dt, eid, bouncer) ->
-            [pos, collidable] = @world.entities.get(eid, C.MapPosition,
+            [pos, collidable] = @world.entities.get(eid, C.Position,
                                                          C.Collidable)
 
             if collidable
@@ -238,7 +238,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         match_component: C.Spin
 
         update_match: (dt, eid, spin) ->
-            pos = @world.entities.get(eid, C.MapPosition)
+            pos = @world.entities.get(eid, C.Position)
             d_angle = (dt / 1000) * spin.rad_per_sec
             pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
             
@@ -251,8 +251,8 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @v_old = new Vector2D()
 
         update_match: (dt, eid, orbiter) ->
-            pos = @world.entities.get(eid, C.MapPosition)
-            o_pos = @world.entities.get(orbiter.orbited_id, C.MapPosition)
+            pos = @world.entities.get(eid, C.Position)
+            o_pos = @world.entities.get(orbiter.orbited_id, C.Position)
 
             @v_orbited.setValues(o_pos.x, o_pos.y)
             @v_orbiter.setValues(pos.x, pos.y)
@@ -281,7 +281,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             boxes = {}
             [COLLIDABLE, LEFT, TOP, HEIGHT, WIDTH] = [0..4]
             for eid, collidable of matches
-                [pos, sprite] = @world.entities.get(eid, C.MapPosition, C.Sprite)
+                [pos, sprite] = @world.entities.get(eid, C.Position, C.Sprite)
                 boxes[eid] = [collidable, pos.x, pos.y, sprite.width, sprite.height]
 
             for [a_eid, b_eid] in @combinations(_.keys(boxes), 2)
@@ -321,10 +321,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                         ret.push(next)
             return ret
 
-    # TODO: Temporary alias, fix me & change references
-    RenderSystem = ViewportSystem
-    
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
-        ViewportSystem, RenderSystem, CollisionSystem
+        ViewportSystem, CollisionSystem
     }
