@@ -65,17 +65,21 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Renderable extends Component
         type: 'Renderable'
-    
-    class ViewportObserver extends Component
-        type: 'ViewportObserver'
-        constructor: (@pointer_x=0, @pointer_y=0) ->
 
     class Collidable extends Component
         type: 'Collidable'
         constructor: () ->
             @in_collision_with = {}
 
+    class Thruster extends Component
+        type: 'Thruster'
+        constructor: (@dv=0, @max_v=0, @dx=0, @dy=0)->
+
+    class Seeker extends Component
+        type: 'Seeker'
+        constructor: (@target, @rad_per_sec=0)->
+
     return {
         Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin, Bouncer, Spawn,
-        Collidable, Renderable, Sprite, ViewportObserver
+        Collidable, Renderable, Sprite, Thruster, Seeker
     }

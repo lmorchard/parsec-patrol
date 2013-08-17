@@ -40,6 +40,17 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @world.publish @constructor.MSG_SPAWN,
                 entity_id: eid, spawn: spawn
 
+    class PointerInputSystem extends System
+        constructor: (@canvas) ->
+
+        setWorld: (world) ->
+            super world
+            @canvas.addEventListener "mousemove", (ev) =>
+                @world.inputs.pointer_x = ev.pageX - @canvas.offsetLeft
+                @world.inputs.pointer_y = ev.pageY - @canvas.offsetTop
+
+        update: (dt) ->
+
     class ViewportSystem extends System
         @MSG_SCENE_CHANGE = 'scene.change'
         
@@ -104,10 +115,13 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
-            pointer_observers = @world.entities.getComponents(C.ViewportObserver)
-            for eid, observer of pointer_observers
-                observer.pointer_x = @pointer_world_x
-                observer.pointer_y = @pointer_world_y
+            if @world.inputs.pointer_x
+                @world.inputs.pointer_world_x = (
+                    @world.inputs.pointer_x - (@viewport_width / 2)
+                ) / @viewport_ratio
+                @world.inputs.pointer_world_y = (
+                    @world.inputs.pointer_y - (@viewport_height / 2)
+                ) / @viewport_ratio
 
             scene = @world.entities.get(@current_scene, C.EntityGroup)
             for eid, ignore of scene.entities
@@ -241,6 +255,57 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             pos = @world.entities.get(eid, C.Position)
             d_angle = (dt / 1000) * spin.rad_per_sec
             pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
+
+    class SeekerSystem extends System
+        match_component: C.Seeker
+
+        constructor: () ->
+            @v_seeker = new Vector2D()
+            @v_target = new Vector2D()
+
+        update_match: (dt, eid, seeker) ->
+            pos = @world.entities.get(eid, C.Position)
+            target_pos = @world.entities.get(seeker.target, C.Position)
+
+            @v_seeker.setValues(pos.x, pos.y)
+            @v_target.setValues(target_pos.x || 0, target_pos.y || 0)
+
+            target_angle = @v_seeker.angleTo(@v_target) + Math.PI / 2
+
+            d_angle = (dt / 1000) * seeker.rad_per_sec
+
+            if target_angle < pos.rotation
+                d_angle = 0 - d_angle
+            else if target_angle is pos.rotation
+                d_angle = 0
+
+            pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
+
+    class ThrusterSystem extends System
+        match_component: C.Thruster
+
+        constructor: () ->
+            @v_curr   = new Vector2D()
+            @v_thrust = new Vector2D()
+
+        update_match: (dt, eid, thruster) ->
+            pos = @world.entities.get(eid, C.Position)
+
+            @v_curr.setValues(thruster.dx, thruster.dy)
+
+            tick_dv = (dt / 1000) * thruster.dv
+            @v_thrust.setValues(0, 0-tick_dv)
+            @v_thrust.rotate(pos.rotation)
+
+            @v_curr.add(@v_thrust)
+            velocity = @v_curr.magnitude()
+
+            if velocity < thruster.max_v
+                thruster.dx = @v_curr.x
+                thruster.dy = @v_curr.y
+
+            pos.x += (dt / 1000) * thruster.dx
+            pos.y += (dt / 1000) * thruster.dy
             
     class OrbiterSystem extends System
         match_component: C.Orbit
@@ -323,5 +388,6 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
-        ViewportSystem, CollisionSystem
+        ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
+        ThrusterSystem
     }

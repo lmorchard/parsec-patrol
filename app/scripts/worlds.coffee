@@ -15,6 +15,7 @@ define [
             @is_running = false
             @is_paused = false
             
+            @inputs = {}
             @entities = new Entities.EntityManager
             @systems = []
             @addSystem(systems...)
