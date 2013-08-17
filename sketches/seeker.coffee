@@ -48,15 +48,6 @@ define [
 
     scene = E.Scene.create(em, "Scene 1",
         e_sun = E.Star.create(em, 'Sun'),
-        e_hero = em.create(
-            new C.TypeName('HeroShip'),
-            new C.EntityName('hero'),
-            new C.Spawn('at', 80, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI / 4),
-            new C.Sprite('hero')
-        ),
         e_torp = em.create(
             new C.TypeName('Torpedo'),
             new C.EntityName('torpedo1'),
@@ -67,7 +58,7 @@ define [
             new C.Spin(Math.PI * 2),
             new C.Sprite('torpedo', '#f33', 10, 10)
         ),
-        e_enemy2 = em.create(
+        e_enemy1 = em.create(
             new C.TypeName('EnemyCruiser'),
             new C.EntityName('enemy1'),
             new C.Sprite('enemycruiser', '#fff', 50, 50)
@@ -75,20 +66,38 @@ define [
             new C.Position,
             new C.Collidable,
             new C.Spin(Math.PI / 4),
-            #new C.Thruster(40, 20, 0, 0),
-            #new C.Seeker(e_torp, Math.PI/2)
             new C.Thruster(30, 20, 0, 0),
             new C.Seeker(e_sun, Math.PI/2)
         ),
-        e_enemy = em.create(
+        e_enemy2 = em.create(
             new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy1'),
+            new C.EntityName('enemy2'),
             new C.Sprite('enemyscout', '#fff', 15, 15),
             new C.Spawn('at', -80, 0),
             new C.Position,
             new C.Collidable,
             new C.Thruster(75, 50, 0, 0),
             new C.Seeker(e_sun, Math.PI)
+        ),
+        e_enemy3 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy3'),
+            new C.Sprite('enemyscout', '#fff', 15, 15),
+            new C.Spawn('at', -80, 0),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(75, 50, 0, 0),
+            new C.Seeker(e_torp, Math.PI)
+        ),
+        e_hero = em.create(
+            new C.TypeName('HeroShip'),
+            new C.EntityName('hero'),
+            new C.Sprite('hero')
+            new C.Spawn('at', 80, 0),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(50, 50, 0, 0),
+            new C.Seeker(e_enemy1, Math.PI)
         ),
     )
 
