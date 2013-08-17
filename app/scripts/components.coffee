@@ -65,7 +65,10 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Renderable extends Component
         type: 'Renderable'
-        constructor: () ->
+    
+    class ViewportObserver extends Component
+        type: 'ViewportObserver'
+        constructor: (@pointer_x=0, @pointer_y=0) ->
 
     class Collidable extends Component
         type: 'Collidable'
@@ -74,5 +77,5 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     return {
         Component, TypeName, EntityName, EntityGroup, MapPosition, Orbit, Spin, Bouncer, Spawn,
-        Collidable, Renderable, Sprite
+        Collidable, Renderable, Sprite, ViewportObserver
     }

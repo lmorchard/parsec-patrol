@@ -40,29 +40,46 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @world.publish @constructor.MSG_SPAWN,
                 entity_id: eid, spawn: spawn
 
-    class RenderSystem extends System
+    class ViewportSystem extends System
         @MSG_SCENE_CHANGE = 'scene.change'
         
         match_component: C.Sprite
 
         constructor: (@window, @game_area, @canvas, @scale_x=1.0, @scale_y=1.0) ->
             @ctx = @canvas.getContext('2d')
-            @draw_bounding_boxes=false
+            @draw_bounding_boxes = false
+            @viewport_ratio = 1.0
+
+            @pointer_x = 0
+            @pointer_world_x = 0
+            @pointer_y = 0
+            @pointer_world_y = 0
 
         setWorld: (world) ->
             super world
             @world.subscribe @constructor.MSG_SCENE_CHANGE, (msg, data) =>
                 @current_scene = data.scene
 
-            @resize()
+            @canvas.addEventListener "mousemove", (ev) =>
+                @pointer_x = ev.pageX - @canvas.offsetLeft
+                @pointer_y = ev.pageY - @canvas.offsetTop
 
+                @pointer_world_x = (@pointer_x - (@viewport_width / 2)) / @viewport_ratio
+                @pointer_world_y = (@pointer_y - (@viewport_height / 2)) / @viewport_ratio
+
+            @resize()
             bound_resize = () => @resize()
-            @window.addEventListener('resize', bound_resize, false)
-            @window.addEventListener('orientationchange', bound_resize, false)
+            @window.addEventListener 'resize', bound_resize, false
+            @window.addEventListener 'orientationchange', bound_resize, false
 
         setViewportSize: (width, height) ->
             @viewport_width = width
             @viewport_height = height
+
+            if @viewport_width > @viewport_height
+                @viewport_ratio = @viewport_width / @world.width
+            else
+                @viewport_ratio = @viewport_height / @world.height
 
         resize: () ->
 
@@ -82,17 +99,15 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
             return if not @current_scene
 
-            v_is_wide = @viewport_width > @viewport_height
-
-            if v_is_wide
-                v_ratio = @viewport_width / @world.width
-            else
-                v_ratio = @viewport_height / @world.height
-
             @ctx.save()
             @ctx.fillStyle = "#000"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
+
+            pointer_observers = @world.entities.getComponents(C.ViewportObserver)
+            for eid, observer of pointer_observers
+                observer.pointer_x = @pointer_world_x
+                observer.pointer_y = @pointer_world_y
 
             scene = @world.entities.get(@current_scene, C.EntityGroup)
             for eid, ignore of scene.entities
@@ -101,12 +116,12 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
 
                 @ctx.save()
 
-                vp_x = (pos.x * v_ratio) + (@viewport_width / 2)
-                vp_y = (pos.y * v_ratio) + (@viewport_height / 2)
-                sprite_size = 20 * v_ratio
+                vp_x = (pos.x * @viewport_ratio) + (@viewport_width / 2)
+                vp_y = (pos.y * @viewport_ratio) + (@viewport_height / 2)
+                sprite_size = 20 * @viewport_ratio
 
-                w = sprite.width * v_ratio
-                h = sprite.height * v_ratio
+                w = sprite.width * @viewport_ratio
+                h = sprite.height * @viewport_ratio
 
                 @ctx.translate(vp_x, vp_y)
 
@@ -249,7 +264,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             pos.x = @v_orbiter.x
             pos.y = @v_orbiter.y
             pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
-    
+
     class CollisionSystem extends System
         constructor: () ->
 
@@ -259,7 +274,9 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             matches = @world.entities.getComponents(@match_component)
 
             # TODO: Fix this horrible, naive collision detection
-            # No account for shape or rotation. Probably good-enough for now
+            # No account for shape or rotation. No quadtrees, etc.
+            # Probably good-enough for now
+            # See also: http://www.mikechambers.com/blog/2011/03/21/javascript-quadtree-implementation/
             
             boxes = {}
             [COLLIDABLE, LEFT, TOP, HEIGHT, WIDTH] = [0..4]
@@ -267,8 +284,7 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 [pos, sprite] = @world.entities.get(eid, C.MapPosition, C.Sprite)
                 boxes[eid] = [collidable, pos.x, pos.y, sprite.width, sprite.height]
 
-            for combo in @combinations(_.keys(boxes), 2)
-                [a_eid, b_eid] = combo
+            for [a_eid, b_eid] in @combinations(_.keys(boxes), 2)
                 a_box = boxes[a_eid]
                 b_box = boxes[b_eid]
 
@@ -282,10 +298,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                     b_box[COLLIDABLE].in_collision_with[a_eid]
                 )
 
-                if left_dist < width_total and top_dist < height_total and
-                        not already_in_collision
-                    a_box[COLLIDABLE].in_collision_with[b_eid] = true
-                    b_box[COLLIDABLE].in_collision_with[a_eid] = true
+                if left_dist < width_total and top_dist < height_total
+                    if not already_in_collision
+                        a_box[COLLIDABLE].in_collision_with[b_eid] = true
+                        b_box[COLLIDABLE].in_collision_with[a_eid] = true
 
                 else if already_in_collision
                     delete a_box[COLLIDABLE].in_collision_with[b_eid]
@@ -305,7 +321,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                         ret.push(next)
             return ret
 
+    # TODO: Temporary alias, fix me & change references
+    RenderSystem = ViewportSystem
+    
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
-        RenderSystem, CollisionSystem
+        ViewportSystem, RenderSystem, CollisionSystem
     }

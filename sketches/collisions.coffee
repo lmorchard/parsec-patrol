@@ -5,13 +5,23 @@ define [
     W, E, C, S, PubSub, $, _
 ) ->
 
+    class ColorCollideSystem extends S.System
+        match_component: C.Collidable
+        update_match: (dt, eid, collidable) ->
+            sprite = @world.entities.get(eid, C.Sprite)
+            if _.keys(collidable.in_collision_with).length > 0
+                sprite.stroke_style = "#f33"
+            else
+                sprite.stroke_style = "#fff"
+
     () ->
         world = new W.World(320, 240,
             new S.SpawnSystem,
             new S.BouncerSystem,
             new S.SpinSystem,
             new S.OrbiterSystem,
-            window.coll = new S.CollisionSystem,
+            new S.CollisionSystem,
+            new ColorCollideSystem,
             render_system = new S.RenderSystem(
                 window,
                 document.getElementById('gameArea'),
@@ -87,15 +97,6 @@ define [
 
         world.subscribe '', (msg, data) ->
             console.log("MSG #{msg} <- #{JSON.stringify(data)}")
-
-        world.subscribe "collision", (msg, data) ->
-            [sprite, type_name] = em.get(data.entity, C.Sprite, C.TypeName)
-            bouncer = em.get(data.entity, C.Bouncer)
-            if not bouncer
-                if data.state is 'enter'
-                    sprite.stroke_style = '#f33'
-                else
-                    sprite.stroke_style = '#fff'
 
         world.dump = () ->
             console.log JSON.stringify(world.entities.store)
