@@ -1,4 +1,8 @@
-define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector2D) ->
+define [
+    'components', 'utils', 'underscore', 'pubsub', 'Vector2D'
+], (
+    C, Utils, _, PubSub, Vector2D
+) ->
 
     class System
         world: null
@@ -231,11 +235,10 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             [pos, collidable] = @world.entities.get(eid, C.Position,
                                                          C.Collidable)
 
-            if collidable
-                # TODO: This is a horrible bounce-on-collision algo
-                if _.keys(collidable.in_collision_with).length > 0
-                    bouncer.x_dir = 0 - bouncer.x_dir
-                    bouncer.y_dir = 0 - bouncer.y_dir
+            # TODO: This is a horrible bounce-on-collision algo
+            if collidable and _.keys(collidable.in_collision_with).length > 0
+                bouncer.x_dir = 0 - bouncer.x_dir
+                bouncer.y_dir = 0 - bouncer.y_dir
             
             xb = @world.width / 2
             yb = @world.height / 2
@@ -305,11 +308,15 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
             @v_inertia.setValues(thruster.dx, thruster.dy)
             @v_inertia.add(@v_thrust)
 
-            # If the addition doesn't exceed max V, then update inertia
+            # Enforce the speed limit by scaling the inertia vector back
             curr_v = @v_inertia.magnitude()
-            if curr_v < thruster.max_v
-                thruster.dx = @v_inertia.x
-                thruster.dy = @v_inertia.y
+            if curr_v > thruster.max_v
+                drag = thruster.max_v / curr_v
+                @v_inertia.multiplyScalar(drag)
+
+            # Update inertia
+            thruster.dx = @v_inertia.x
+            thruster.dy = @v_inertia.y
 
             # Finally, update position based on inertia
             pos.x += (dt / 1000) * thruster.dx
@@ -368,14 +375,14 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
                 height_total = a_box[HEIGHT] + b_box[HEIGHT]
                 
                 already_in_collision = (
-                    a_box[COLLIDABLE].in_collision_with[b_eid] and
-                    b_box[COLLIDABLE].in_collision_with[a_eid]
+                    (b_eid of a_box[COLLIDABLE].in_collision_with) and
+                    (a_eid of b_box[COLLIDABLE].in_collision_with)
                 )
 
                 if left_dist < width_total and top_dist < height_total
                     if not already_in_collision
-                        a_box[COLLIDABLE].in_collision_with[b_eid] = true
-                        b_box[COLLIDABLE].in_collision_with[a_eid] = true
+                        a_box[COLLIDABLE].in_collision_with[b_eid] = Utils.now()
+                        b_box[COLLIDABLE].in_collision_with[a_eid] = Utils.now()
 
                 else if already_in_collision
                     delete a_box[COLLIDABLE].in_collision_with[b_eid]

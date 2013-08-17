@@ -29,7 +29,7 @@ define [], ()->
     eq: (vector)->
       vector.x == @x and vector.y == @y
 
-    substract: (vector) ->
+    subtract: (vector) ->
       @x -= vector.x
       @y -= vector.y
       @
@@ -81,7 +81,7 @@ define [], ()->
       Math.atan2 vector.y - @y, vector.x - @x
 
     rotateAround: (point, angle)->
-      @substract(point).rotate(angle).add(point)
+      @subtract(point).rotate(angle).add(point)
 
     multiplyScalar: (val)->
       @x *= val

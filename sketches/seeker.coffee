@@ -27,12 +27,10 @@ define [
         new S.ThrusterSystem,
         new S.CollisionSystem,
         new PointerFollowerSystem,
-        vp_system = new S.ViewportSystem(
-            window, area, canvas, 1.0, 1.0, true
+        new S.ViewportSystem(
+            window, area, canvas, 1.0, 1.0
         ),
     )
-
-    vp_system.draw_bounding_boxes = true
 
     em = world.entities
 
@@ -64,11 +62,9 @@ define [
             new C.Spawn('at', 0, 80),
             new C.Position,
             new C.Collidable,
-            new C.Orbit(e_sun, Math.PI/8, false),
+            new C.Orbit(e_sun, Math.PI/4, false),
             new C.Seeker(e_torp, Math.PI)
         ),
-    )
-    ###
         e_enemy5 = em.create(
             new C.TypeName('EnemyScout'),
             new C.EntityName('enemy3'),
@@ -76,10 +72,10 @@ define [
             new C.Spawn('at', 80, 0),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
+            new C.Thruster(150, 75, 0, 0),
             new C.Seeker(e_enemy4, Math.PI * 2)
         ),
-    ###
+    )
     world.subscribe '', (msg, data) ->
         console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
