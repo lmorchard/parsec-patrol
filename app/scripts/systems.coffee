@@ -275,18 +275,22 @@ define [
             @v_target.setValues(target_pos.x, target_pos.y)
 
             target_angle = @v_seeker.angleTo(@v_target) + (Math.PI * 0.5)
+            target_angle += 2 * Math.PI if target_angle < 0
 
-            # Minimize the attempted rotation, if we're almost on target
-            offset = target_angle - pos.rotation
-            a_offset = Math.abs(offset)
+            direction =
+                if target_angle < pos.rotation then -1
+                else 1
+   
+            offset = Math.abs(target_angle - pos.rotation)
+            if offset > Math.PI
+                direction = 0 - direction
 
             d_angle = (dt / 1000) * seeker.rad_per_sec
-            if a_offset < d_angle
-                d_angle = a_offset
-            if offset < 0
-                d_angle = 0 - d_angle
+            if d_angle > offset
+                d_angle = offset
 
-            pos.rotation = (pos.rotation + d_angle) % (Math.PI * 2)
+            pos.rotation = (pos.rotation + (direction * d_angle)) % (Math.PI * 2)
+            pos.rotation += 2 * Math.PI if pos.rotation < 0
 
     class ThrusterSystem extends System
         match_component: C.Thruster

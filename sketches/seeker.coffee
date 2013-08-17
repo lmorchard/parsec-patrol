@@ -53,6 +53,7 @@ define [
             new C.Spawn('at', -80, 0),
             new C.Position,
             new C.Collidable,
+            new C.Thruster(150, 75, 0, 0),
             new C.Seeker(e_torp, Math.PI)
         ),
         e_enemy4 = em.create(
@@ -62,12 +63,12 @@ define [
             new C.Spawn('at', 0, 80),
             new C.Position,
             new C.Collidable,
-            new C.Orbit(e_sun, Math.PI/4, false),
-            new C.Seeker(e_torp, Math.PI)
+            new C.Thruster(150, 75, 0, 0),
+            new C.Seeker(e_enemy3, Math.PI)
         ),
         e_enemy5 = em.create(
             new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy3'),
+            new C.EntityName('enemy5'),
             new C.Sprite('enemyscout', '#ff3', 15, 15),
             new C.Spawn('at', 80, 0),
             new C.Position,
@@ -75,7 +76,19 @@ define [
             new C.Thruster(150, 75, 0, 0),
             new C.Seeker(e_enemy4, Math.PI * 2)
         ),
+        e_enemy6 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy6'),
+            new C.Sprite('enemyscout', '#3f3', 15, 15),
+            new C.Spawn('at', 80, -80),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(150, 75, 0, 0),
+            new C.Seeker(e_enemy5, Math.PI * 2)
+        ),
     )
+    ###
+    ###
     world.subscribe '', (msg, data) ->
         console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
