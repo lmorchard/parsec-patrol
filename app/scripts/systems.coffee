@@ -266,24 +266,24 @@ define ['components', 'underscore', 'pubsub', 'Vector2D'], (C, _, PubSub, Vector
         update_match: (dt, eid, seeker) ->
             pos = @world.entities.get(eid, C.Position)
             target_pos = @world.entities.get(seeker.target, C.Position)
+            return if not target_pos.x and target_pos.y
 
             @v_seeker.setValues(pos.x, pos.y)
             @v_target.setValues(target_pos.x, target_pos.y)
 
-            target_angle = @v_seeker.angleTo(@v_target) + (Math.PI / 2)
+            target_angle = @v_seeker.angleTo(@v_target) + (Math.PI * 0.5)
 
             # Minimize the attempted rotation, if we're almost on target
+            offset = target_angle - pos.rotation
+            a_offset = Math.abs(offset)
+
             d_angle = (dt / 1000) * seeker.rad_per_sec
-            offset = Math.abs(target_angle - pos.rotation)
-            if offset < d_angle
-                d_angle = offset
-
-            if target_angle < pos.rotation
+            if a_offset < d_angle
+                d_angle = a_offset
+            if offset < 0
                 d_angle = 0 - d_angle
-            else if target_angle is pos.rotation
-                d_angle = 0
 
-            pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
+            pos.rotation = (pos.rotation + d_angle) % (Math.PI * 2)
 
     class ThrusterSystem extends System
         match_component: C.Thruster
