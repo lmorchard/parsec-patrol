@@ -1,7 +1,7 @@
 define [
-    'components', 'utils', 'underscore', 'pubsub', 'Vector2D'
+    'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D'
 ], (
-    C, Utils, _, PubSub, Vector2D
+    C, Utils, $, _, PubSub, Vector2D
 ) ->
 
     class System
@@ -49,9 +49,23 @@ define [
 
         setWorld: (world) ->
             super world
-            @canvas.addEventListener "mousemove", (ev) =>
-                @world.inputs.pointer_x = ev.pageX - @canvas.offsetLeft
-                @world.inputs.pointer_y = ev.pageY - @canvas.offsetTop
+
+            button_names = ['left', 'middle', 'right']
+            button_ev = (is_down) => (ev) =>
+                name = "pointer_button_#{button_names[ev.button]}"
+                @world.inputs[name] =
+                    if is_down then Utils.now()
+                    else null
+                return false
+
+            $(@canvas)
+                .bind("contextmenu", (ev) -> false)
+                .bind("mousedown", button_ev(true))
+                .bind("mouseup", button_ev(false))
+                .bind("mousemove", (ev) =>
+                    @world.inputs.pointer_x = ev.pageX - @canvas.offsetLeft
+                    @world.inputs.pointer_y = ev.pageY - @canvas.offsetTop
+                )
 
         update: (dt) ->
 
@@ -65,22 +79,10 @@ define [
             @draw_bounding_boxes = false
             @viewport_ratio = 1.0
 
-            @pointer_x = 0
-            @pointer_world_x = 0
-            @pointer_y = 0
-            @pointer_world_y = 0
-
         setWorld: (world) ->
             super world
             @world.subscribe @constructor.MSG_SCENE_CHANGE, (msg, data) =>
                 @current_scene = data.scene
-
-            @canvas.addEventListener "mousemove", (ev) =>
-                @pointer_x = ev.pageX - @canvas.offsetLeft
-                @pointer_y = ev.pageY - @canvas.offsetTop
-
-                @pointer_world_x = (@pointer_x - (@viewport_width / 2)) / @viewport_ratio
-                @pointer_world_y = (@pointer_y - (@viewport_height / 2)) / @viewport_ratio
 
             @resize()
             bound_resize = () => @resize()
@@ -228,128 +230,6 @@ define [
 
                 @ctx.restore()
 
-    class BouncerSystem extends System
-        match_component: C.Bouncer
-
-        update_match: (dt, eid, bouncer) ->
-            [pos, collidable] = @world.entities.get(eid, C.Position,
-                                                         C.Collidable)
-
-            # TODO: This is a horrible bounce-on-collision algo
-            if collidable and _.keys(collidable.in_collision_with).length > 0
-                bouncer.x_dir = 0 - bouncer.x_dir
-                bouncer.y_dir = 0 - bouncer.y_dir
-            
-            xb = @world.width / 2
-            yb = @world.height / 2
-
-            if pos.x > xb then bouncer.x_dir = -1
-            if pos.x < -xb then bouncer.x_dir = 1
-            if pos.y > yb then bouncer.y_dir = -1
-            if pos.y < -yb then bouncer.y_dir = 1
-
-            pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
-            pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
-                
-    class SpinSystem extends System
-        match_component: C.Spin
-
-        update_match: (dt, eid, spin) ->
-            pos = @world.entities.get(eid, C.Position)
-            d_angle = (dt / 1000) * spin.rad_per_sec
-            pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
-
-    class SeekerSystem extends System
-        match_component: C.Seeker
-
-        constructor: () ->
-            @v_seeker = new Vector2D()
-            @v_target = new Vector2D()
-
-        update_match: (dt, eid, seeker) ->
-            pos = @world.entities.get(eid, C.Position)
-            target_pos = @world.entities.get(seeker.target, C.Position)
-            return if not target_pos.x and target_pos.y
-
-            @v_seeker.setValues(pos.x, pos.y)
-            @v_target.setValues(target_pos.x, target_pos.y)
-
-            target_angle = @v_seeker.angleTo(@v_target) + (Math.PI * 0.5)
-            target_angle += 2 * Math.PI if target_angle < 0
-
-            direction =
-                if target_angle < pos.rotation then -1
-                else 1
-   
-            offset = Math.abs(target_angle - pos.rotation)
-            if offset > Math.PI
-                direction = 0 - direction
-
-            d_angle = (dt / 1000) * seeker.rad_per_sec
-            if d_angle > offset
-                d_angle = offset
-
-            pos.rotation = (pos.rotation + (direction * d_angle)) % (Math.PI * 2)
-            pos.rotation += 2 * Math.PI if pos.rotation < 0
-
-    class ThrusterSystem extends System
-        match_component: C.Thruster
-
-        constructor: () ->
-            @v_inertia = new Vector2D()
-            @v_thrust = new Vector2D()
-
-        update_match: (dt, eid, thruster) ->
-            pos = @world.entities.get(eid, C.Position)
-
-            # Create a thrust vector pointing straight up, then rotate it to
-            # correspond with entity
-            tick_dv = (dt / 1000) * thruster.dv
-            @v_thrust.setValues(0, 0-tick_dv)
-            @v_thrust.rotate(pos.rotation)
-
-            # Try adding thrust to our current inertia
-            @v_inertia.setValues(thruster.dx, thruster.dy)
-            @v_inertia.add(@v_thrust)
-
-            # Enforce the speed limit by scaling the inertia vector back
-            curr_v = @v_inertia.magnitude()
-            if curr_v > thruster.max_v
-                drag = thruster.max_v / curr_v
-                @v_inertia.multiplyScalar(drag)
-
-            # Update inertia
-            thruster.dx = @v_inertia.x
-            thruster.dy = @v_inertia.y
-
-            # Finally, update position based on inertia
-            pos.x += (dt / 1000) * thruster.dx
-            pos.y += (dt / 1000) * thruster.dy
-            
-    class OrbiterSystem extends System
-        match_component: C.Orbit
-
-        constructor: () ->
-            @v_orbited = new Vector2D()
-            @v_orbiter = new Vector2D()
-            @v_old = new Vector2D()
-
-        update_match: (dt, eid, orbiter) ->
-            pos = @world.entities.get(eid, C.Position)
-            o_pos = @world.entities.get(orbiter.orbited_id, C.Position)
-
-            @v_orbited.setValues(o_pos.x, o_pos.y)
-            @v_orbiter.setValues(pos.x, pos.y)
-
-            angle_delta = (dt / 1000) * orbiter.rad_per_sec
-            @v_orbiter.rotateAround(@v_orbited, angle_delta)
-
-            @v_old.setValues(pos.x, pos.y)
-            pos.x = @v_orbiter.x
-            pos.y = @v_orbiter.y
-            if orbiter.rotate
-                pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
-
     class CollisionSystem extends System
         constructor: () ->
 
@@ -406,8 +286,175 @@ define [
                         ret.push(next)
             return ret
 
+    class BouncerSystem extends System
+        match_component: C.Bouncer
+
+        update_match: (dt, eid, bouncer) ->
+            [pos, collidable] = @world.entities.get(eid, C.Position,
+                                                         C.Collidable)
+
+            # TODO: This is a horrible bounce-on-collision algo
+            if collidable and _.keys(collidable.in_collision_with).length > 0
+                bouncer.x_dir = 0 - bouncer.x_dir
+                bouncer.y_dir = 0 - bouncer.y_dir
+            
+            xb = @world.width / 2
+            yb = @world.height / 2
+
+            if pos.x > xb then bouncer.x_dir = -1
+            if pos.x < -xb then bouncer.x_dir = 1
+            if pos.y > yb then bouncer.y_dir = -1
+            if pos.y < -yb then bouncer.y_dir = 1
+
+            pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
+            pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
+                
+    class SpinSystem extends System
+        match_component: C.Spin
+
+        update_match: (dt, eid, spin) ->
+            pos = @world.entities.get(eid, C.Position)
+            d_angle = (dt / 1000) * spin.rad_per_sec
+            pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
+            
+    class OrbiterSystem extends System
+        match_component: C.Orbit
+
+        constructor: () ->
+            @v_orbited = new Vector2D()
+            @v_orbiter = new Vector2D()
+            @v_old = new Vector2D()
+
+        update_match: (dt, eid, orbiter) ->
+            pos = @world.entities.get(eid, C.Position)
+            o_pos = @world.entities.get(orbiter.orbited_id, C.Position)
+
+            @v_orbited.setValues(o_pos.x, o_pos.y)
+            @v_orbiter.setValues(pos.x, pos.y)
+
+            angle_delta = (dt / 1000) * orbiter.rad_per_sec
+            @v_orbiter.rotateAround(@v_orbited, angle_delta)
+
+            @v_old.setValues(pos.x, pos.y)
+            pos.x = @v_orbiter.x
+            pos.y = @v_orbiter.y
+            if orbiter.rotate
+                pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
+
+    class SeekerSystem extends System
+        match_component: C.Seeker
+
+        constructor: () ->
+            @v_seeker = new Vector2D()
+            @v_target = new Vector2D()
+
+        update_match: (dt, eid, seeker) ->
+            return if not seeker.target
+
+            pos = @world.entities.get(eid, C.Position)
+
+            target_pos = seeker.target
+            if not _.isObject(target_pos)
+                target_pos = @world.entities.get(seeker.target, C.Position)
+            return if not target_pos.x and target_pos.y
+
+            # Set up the vectors for angle math...
+            @v_seeker.setValues(pos.x, pos.y)
+            @v_target.setValues(target_pos.x, target_pos.y)
+
+            # Get the target angle, ensuring a 0..2*Math.PI range.
+            target_angle = @v_seeker.angleTo(@v_target) + (Math.PI*0.5)
+            target_angle += 2*Math.PI if target_angle < 0
+
+            # Pick the direction from current to target angle
+            direction =
+                if target_angle < pos.rotation then -1
+                else 1
+   
+            # If the offset between the angles is more than half a circle, go
+            # the other way because it'll be shorter.
+            offset = Math.abs(target_angle - pos.rotation)
+            if offset > Math.PI
+                direction = 0 - direction
+
+            # Figure out the amount of rotation for this tick. If it's more
+            # than the remaining offset, just rotate that much (or none)
+            d_angle = (dt / 1000) * seeker.rad_per_sec
+            d_angle = offset if d_angle > offset
+
+            # Update the rotation, ensuring a 0..2*Math.PI range.
+            pos.rotation = (pos.rotation + (direction * d_angle)) % (Math.PI*2)
+            pos.rotation += 2*Math.PI if pos.rotation < 0
+
+    class ThrusterSystem extends System
+        match_component: C.Thruster
+
+        constructor: () ->
+            @v_inertia = new Vector2D()
+            @v_thrust = new Vector2D()
+
+        update_match: (dt, eid, thruster) ->
+            pos = @world.entities.get(eid, C.Position)
+
+            @v_inertia.setValues(thruster.dx, thruster.dy)
+
+            tick_dv = (dt / 1000) * thruster.dv
+            if not thruster.active
+                # Fire retro-thrusters until inertia is gone
+                @v_inertia.addScalar(0 - tick_dv)
+                @v_inertia.x = 0 if @v_inertia.x < 0
+                @v_inertia.y = 0 if @v_inertia.y < 0
+            else
+                # Create a thrust vector pointing straight up, then rotate it to
+                # correspond with entity
+                @v_thrust.setValues(0, 0-tick_dv)
+                @v_thrust.rotate(pos.rotation)
+
+                # Try adding thrust to our current inertia
+                @v_inertia.add(@v_thrust)
+
+                # Enforce the speed limit by scaling the inertia vector back
+                curr_v = @v_inertia.magnitude()
+                if curr_v > thruster.max_v
+                    drag = thruster.max_v / curr_v
+                    @v_inertia.multiplyScalar(drag)
+
+            # Update inertia
+            thruster.dx = @v_inertia.x
+            thruster.dy = @v_inertia.y
+
+            # Finally, update position based on inertia
+            pos.x += (dt / 1000) * thruster.dx
+            pos.y += (dt / 1000) * thruster.dy
+
+    class ClickCourseSystem extends System
+        match_component: C.ClickCourse
+        update_match: (t_delta, eid, click_course) ->
+            pos = @world.entities.get(eid, C.Position)
+            sprite = @world.entities.get(eid, C.Sprite)
+            seeker = @world.entities.get(eid, C.Seeker)
+            thruster = @world.entities.get(eid, C.Thruster)
+            
+            # Set course destination on left button down
+            if click_course.active and @world.inputs.pointer_button_left
+                click_course.x = @world.inputs.pointer_world_x
+                click_course.y = @world.inputs.pointer_world_y
+                thruster?.active = true
+                seeker?.target = {
+                    x: click_course.x,
+                    y: click_course.y
+                }
+
+            # Full stop, when the sprite collides with the destination
+            x_offset = Math.abs(pos.x - click_course.x)
+            y_offset = Math.abs(pos.y - click_course.y)
+            if x_offset < sprite.width/2 and y_offset < sprite.height/2
+                if click_course.stop_on_arrival
+                    thruster?.active = false
+                seeker?.target = null
+
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
-        ThrusterSystem
+        ThrusterSystem, ClickCourseSystem
     }

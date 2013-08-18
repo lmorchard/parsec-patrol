@@ -73,13 +73,18 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Thruster extends Component
         type: 'Thruster'
-        constructor: (@dv=0, @max_v=0, @dx=0, @dy=0)->
+        constructor: (@dv=0, @max_v=0, @dx=0, @dy=0, @active=true)->
 
     class Seeker extends Component
         type: 'Seeker'
         constructor: (@target, @rad_per_sec=0)->
 
+    class ClickCourse extends Component
+        type: 'ClickCourse'
+        constructor: (@stop_on_arrival=false) ->
+            @active = true
+
     return {
         Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin, Bouncer, Spawn,
-        Collidable, Renderable, Sprite, Thruster, Seeker
+        Collidable, Renderable, Sprite, Thruster, Seeker, ClickCourse
     }

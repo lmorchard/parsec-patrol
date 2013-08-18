@@ -3,7 +3,6 @@ define [
 ], (
     Components, Entities, Worlds, _
 ) ->
-
     [C, E, W] = [Components, Entities, Worlds]
 
     suite 'Components', () ->
