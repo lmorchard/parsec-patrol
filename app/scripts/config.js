@@ -1,5 +1,5 @@
-require.config({
-    deps: ['main'],
+/* jshint -W079, -W098 */
+var require = {
     paths: {
         jquery: '../bower_components/jquery/jquery',
         underscore: '../bower_components/underscore-amd/underscore',
@@ -16,4 +16,4 @@ require.config({
             exports: 'Hammer'
         }
     }
-});
+};

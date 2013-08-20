@@ -124,9 +124,13 @@ module.exports = function (grunt) {
             },
             server: '.tmp'
         },
+        coffeelint: {
+            app: ['app/{,*/}*.coffee'],
+            test: ['test/{,*/}*.coffee'],
+        },
         jshint: {
             options: {
-                jshintrc: '.jshintrc'
+                jshintrc: '.jshintrc',
             },
             all: [
                 'Gruntfile.js',

@@ -25,6 +25,10 @@
         <div class="container"></div>
         <div id="mocha" style="opacity: 0.85;"></div>
 
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
         <script>
             mocha.setup({
                 ui: 'tdd',
@@ -35,6 +39,7 @@
             var assert = chai.assert;
         </script>
 
+        <script src="../app/scripts/config.js"></script>
         <script data-main="spec/config" src="../app/bower_components/requirejs/require.js"></script>
     </body>
 </html>
