@@ -85,6 +85,7 @@ define ['entities', 'underscore'], (Entities, _) ->
             @active = true
 
     return {
-        Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin, Bouncer, Spawn,
-        Collidable, Renderable, Sprite, Thruster, Seeker, ClickCourse
+        Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin,
+        Bouncer, Spawn, Collidable, Renderable, Sprite, Thruster, Seeker,
+        ClickCourse
     }

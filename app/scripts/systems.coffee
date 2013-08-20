@@ -1,5 +1,6 @@
 define [
-    'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D', 'Hammer'
+    'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D',
+    'Hammer'
 ], (
     C, Utils, $, _, PubSub, Vector2D, Hammer
 ) ->
@@ -32,8 +33,8 @@ define [
                 pos = @world.entities.get(eid, C.Position)
                 switch spawn.position_logic
                     when 'random'
-                        pos.x = _.random(0-(@world.width / 2), @world.width / 2)
-                        pos.y = _.random(0-(@world.height / 2), @world.height / 2)
+                        pos.x = _.random(0-(@world.width/2), @world.width/2)
+                        pos.y = _.random(0-(@world.height/2), @world.height/2)
                     when 'at'
                         pos.x = spawn.x
                         pos.y = spawn.y
@@ -65,8 +66,10 @@ define [
                 @world.inputs[name] =
                     if is_down then Utils.now()
                     else null
-                @world.inputs.pointer_x = ev.gesture.center.pageX - @canvas.offsetLeft
-                @world.inputs.pointer_y = ev.gesture.center.pageY - @canvas.offsetTop
+                @world.inputs.pointer_x = (ev.gesture.center.pageX -
+                                           @canvas.offsetLeft)
+                @world.inputs.pointer_y = (ev.gesture.center.pageY -
+                                           @canvas.offsetTop)
                 return false
 
             $(@canvas)
@@ -88,7 +91,8 @@ define [
         
         match_component: C.Sprite
 
-        constructor: (@window, @game_area, @canvas, @scale_x=1.0, @scale_y=1.0) ->
+        constructor: (@window, @game_area, @canvas,
+                      @scale_x=1.0, @scale_y=1.0) ->
             @ctx = @canvas.getContext('2d')
             @draw_bounding_boxes = false
             @viewport_ratio = 1.0
@@ -227,13 +231,17 @@ define [
                         @ctx.beginPath()
                         
                         @ctx.moveTo(0-(w*0.5), 0)
-                        @ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0, true)
+                        @ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0,
+                                 true)
                         @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5, true)
+                        @ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5,
+                                 true)
                         @ctx.moveTo(0, h*0.5)
-                        @ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5, false)
+                        @ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5,
+                                 false)
                         @ctx.moveTo(0-w*0.5, 0)
-                        @ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0, false)
+                        @ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0,
+                                 false)
 
                         @ctx.stroke()
 
@@ -255,13 +263,15 @@ define [
             # TODO: Fix this horrible, naive collision detection
             # No account for shape or rotation. No quadtrees, etc.
             # Probably good-enough for now
-            # See also: http://www.mikechambers.com/blog/2011/03/21/javascript-quadtree-implementation/
+            # See also: http://www.mikechambers.com/blog/2011/03/21/
+            #   javascript-quadtree-implementation/
             
             boxes = {}
             [COLLIDABLE, LEFT, TOP, HEIGHT, WIDTH] = [0..4]
             for eid, collidable of matches
                 [pos, sprite] = @world.entities.get(eid, C.Position, C.Sprite)
-                boxes[eid] = [collidable, pos.x, pos.y, sprite.width, sprite.height]
+                boxes[eid] = [collidable, pos.x, pos.y,
+                              sprite.width, sprite.height]
 
             for [a_eid, b_eid] in @combinations(_.keys(boxes), 2)
                 a_box = boxes[a_eid]

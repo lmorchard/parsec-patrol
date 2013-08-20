@@ -46,7 +46,8 @@ define [], ()->
     setValues: (@x, @y)-> @
 
     dist: (vector)->
-      Math.sqrt (vector.x - @x) * (vector.x - @x) + (vector.y - @y) * (vector.y - @y)
+      Math.sqrt (vector.x - @x) * (vector.x - @x) +
+                (vector.y - @y) * (vector.y - @y)
 
     normalise: ->
       if !@isZero()

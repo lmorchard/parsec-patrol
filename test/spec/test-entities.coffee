@@ -14,18 +14,18 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
         suite 'EntityManager', () ->
 
-            test "EntityManager.get should give quick access to a component", () ->
+            test ".get should give quick access to a component", () ->
                 mp = @em.get(@entity_0, C.Position)
                 assert.equal(mp.x, 4)
                 assert.equal(mp.y, 8)
 
-            test "EntityManager.get should accept multiple components", () ->
+            test ".get should accept multiple components", () ->
                 [mp, tn] = @em.get(@entity_0, C.Position, C.TypeName)
                 assert.equal(mp.x, 4)
                 assert.equal(mp.y, 8)
                 assert.equal(tn.name, 'test0')
 
-            test "EntityManager.get with no specified component should return all", () ->
+            test ".get with no specified component should return all", () ->
                 expected_name = 'My Test 0'
                 c = new C.EntityName(expected_name)
                 @em.addComponent(@entity_0, c)
@@ -39,7 +39,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 for idx in [0..all_keys.length-1]
                     assert.equal(all_keys[idx], expected_keys[idx])
 
-            test "EntityManager.addComponent should add a component to an entity", () ->
+            test ".addComponent should add a component to an entity", () ->
                 expected_name = 'My Test 0'
                 c = new C.EntityName(expected_name)
                 @em.addComponent(@entity_0, c)
@@ -47,14 +47,14 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 en = @em.get(@entity_0, C.EntityName)
                 assert.equal(en.name, expected_name)
                 
-            test "EntityManager.removeComponent() should remove a component from an entity", () ->
+            test ".removeComponent should remove a component", () ->
                 c = new C.EntityName("Blah blah")
                 @em.addComponent(@entity_0, c)
                 @em.removeComponent(@entity_0, c)
                 en = @em.get(@entity_0, C.EntityName)
                 assert.equal(en, null)
 
-            test "create/destroyEntity should properly manage component indexes", () ->
+            test "create/destroyEntity should properly manage indexes", () ->
                 components = [
                     new C.TypeName('test1'),
                     new C.Position(null, 4, 8)

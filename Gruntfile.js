@@ -125,12 +125,15 @@ module.exports = function (grunt) {
             server: '.tmp'
         },
         coffeelint: {
+            options: {
+                'indentation': { 'level': 'ignore' }
+            },
             app: ['app/{,*/}*.coffee'],
-            test: ['test/{,*/}*.coffee'],
+            test: ['test/{,*/}*.coffee']
         },
         jshint: {
             options: {
-                jshintrc: '.jshintrc',
+                jshintrc: '.jshintrc'
             },
             all: [
                 'Gruntfile.js',
@@ -404,6 +407,7 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('default', [
+        'coffeelint',
         'jshint',
         'test',
         'build'
