@@ -1,7 +1,7 @@
 define [
-    'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D'
+    'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D', 'Hammer'
 ], (
-    C, Utils, $, _, PubSub, Vector2D
+    C, Utils, $, _, PubSub, Vector2D, Hammer
 ) ->
 
     class System
@@ -46,16 +46,27 @@ define [
 
     class PointerInputSystem extends System
         constructor: (@canvas) ->
+            @is_clicking = false
 
         setWorld: (world) ->
             super world
 
             button_names = ['left', 'middle', 'right']
+
             button_ev = (is_down) => (ev) =>
                 name = "pointer_button_#{button_names[ev.button]}"
                 @world.inputs[name] =
                     if is_down then Utils.now()
                     else null
+                return false
+
+            touch_ev = (is_down) => (ev) =>
+                name = "pointer_button_#{button_names[0]}"
+                @world.inputs[name] =
+                    if is_down then Utils.now()
+                    else null
+                @world.inputs.pointer_x = ev.gesture.center.pageX - @canvas.offsetLeft
+                @world.inputs.pointer_y = ev.gesture.center.pageY - @canvas.offsetTop
                 return false
 
             $(@canvas)
@@ -66,6 +77,9 @@ define [
                     @world.inputs.pointer_x = ev.pageX - @canvas.offsetLeft
                     @world.inputs.pointer_y = ev.pageY - @canvas.offsetTop
                 )
+            Hammer(@canvas)
+                .on("touch", touch_ev(true))
+                .on("release", touch_ev(false))
 
         update: (dt) ->
 

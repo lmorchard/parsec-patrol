@@ -5,15 +5,6 @@ define [
     W, E, C, S, PubSub, $, _
 ) ->
 
-    class PointerFollower extends C.Component
-    
-    class PointerFollowerSystem extends S.System
-        match_component: PointerFollower
-        update_match: (dt, eid, pointer_follower) ->
-            pos = @world.entities.get(eid, C.Position)
-            pos.x = @world.inputs.pointer_world_x
-            pos.y = @world.inputs.pointer_world_y
-
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
         
@@ -24,7 +15,6 @@ define [
         new S.SpinSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
-        new PointerFollowerSystem,
         new S.ViewportSystem(
             window, area, canvas, 1.0, 1.0
         ),
@@ -42,7 +32,7 @@ define [
             new C.Spawn('at', -40, 40),
             new C.Collidable,
             new C.Thruster(150, 75, 0, 0, false),
-            new C.ClickCourse,
+            new C.ClickCourse(true),
             new C.Seeker(null, Math.PI)
         ),
         e_enemy3 = em.create(

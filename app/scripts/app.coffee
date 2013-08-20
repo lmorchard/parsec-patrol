@@ -5,98 +5,87 @@ define [
     W, E, C, S, PubSub, $, _
 ) ->
 
-    () ->
-        gameCanvas = document.getElementById('gameCanvas')
-        return if not gameCanvas
-
-        resizeGame = () ->
-
-            [new_w, new_h] = [window.innerWidth, window.innerHeight]
-
-            ###
-            ratio = 9 / 16 # 3/4
-            new_ratio = new_w / new_h
-            if new_ratio > ratio
-                new_w = new_h * ratio
-            else
-                new_h = new_w / ratio
-            ###
-
-            gameArea = document.getElementById('gameArea')
-            gameArea.style.width = "#{new_w}px"
-            gameArea.style.height = "#{new_h}px"
-            gameArea.style.marginLeft = "#{-new_w/2}px"
-            gameArea.style.marginTop = "#{-new_h/2}px"
-            
-            gameCanvas = document.getElementById('gameCanvas')
-            gameCanvas.width = new_w * 1.00
-            gameCanvas.height = new_h * 0.75
-
-        resizeGame()
-        window.addEventListener('resize', resizeGame, false)
-        window.addEventListener('orientationchange', resizeGame, false)
-
-        world = new W.World
-
-        world.tick_delay = 1000 / 60
+    canvas = document.getElementById('gameCanvas')
+    area = document.getElementById('gameArea')
         
-        world.width = gameCanvas.width
-        world.height = gameCanvas.height
+    world = new W.World(640, 480,
+        new S.PointerInputSystem(canvas),
+        new S.ClickCourseSystem,
+        new S.SpawnSystem,
+        new S.SpinSystem,
+        new S.SeekerSystem,
+        new S.ThrusterSystem,
+        new S.ViewportSystem(
+            window, area, canvas, 1.0, 0.75
+        ),
+    )
 
-        world.addSystem(
-            new S.SpawnSystem,
-            new S.BouncerSystem,
-            new S.OrbiterSystem,
-            new S.ViewportSystem document.getElementById('gameCanvas')
-        )
+    em = world.entities
 
-        em = world.entities
+    scene = E.Scene.create(em, "Scene 1",
+        e_sun = E.Star.create(em, 'Sun'),
+        e_hero = em.create(
+            new C.TypeName('HeroShip'),
+            new C.EntityName('hero'),
+            new C.Sprite('hero'),
+            new C.Position,
+            new C.Spawn('at', -40, 40),
+            new C.Collidable,
+            new C.Thruster(150, 75, 0, 0, false),
+            new C.ClickCourse(true),
+            new C.Seeker(null, Math.PI)
+        ),
+        e_enemy3 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy3'),
+            new C.Sprite('enemyscout', '#3ff', 15, 15),
+            new C.Spawn('at', -80, 0),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_hero, Math.PI)
+        ),
+        e_enemy4 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy3'),
+            new C.Sprite('enemyscout', '#f3f', 15, 15),
+            new C.Spawn('at', 0, 80),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_enemy3, Math.PI)
+        ),
+        e_enemy5 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy5'),
+            new C.Sprite('enemyscout', '#ff3', 15, 15),
+            new C.Spawn('at', 80, 0),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_enemy4, Math.PI * 2)
+        ),
+        e_enemy6 = em.create(
+            new C.TypeName('EnemyScout'),
+            new C.EntityName('enemy6'),
+            new C.Sprite('enemyscout', '#3f3', 15, 15),
+            new C.Spawn('at', 80, -80),
+            new C.Position,
+            new C.Collidable,
+            new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_enemy5, Math.PI * 2)
+        ),
+    )
 
-        num_scenes = 10
-        scenes = (E.Scene.create(
-            em, "Scene #{idx}"
-        ) for idx in [0..num_scenes-1])
+    world.subscribe '', (msg, data) ->
+        console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
-        for scene in scenes
-            sun = E.Star.create(em, "Star 1")
-            num_planets = _.random(3,10)
-            planets = (E.Planet.create(
-                em, "Planet #{idx}", sun
-            ) for idx in [0..num_planets-1])
-            group = em.get(scene, C.EntityGroup)
-            C.EntityGroup.add(group, sun, planets...)
+    world.dump = () ->
+        console.log JSON.stringify(world.entities.store)
 
-        console.log("SCENES #{scenes}")
+    window.world = world
 
-        world.subscribe '', (msg, data) ->
-            console.log("MSG #{msg} <- #{JSON.stringify(data)}")
-
-        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
-            scene: scenes[0]
-
-        $('#controlPanel').delegate 'button', 'click', (ev) ->
-            switch ev.target.className
-                when 'srs'
-                    scene = scenes[0]
-                when 'lrs'
-                    scene = scenes[1]
-                when 'nav'
-                    scene = scenes[2]
-                when 'com'
-                    scene = scenes[3]
-                when 'pha'
-                    scene = scenes[4]
-                when 'tor'
-                    scene = scenes[5]
-                when 'dmg'
-                    scene = scenes[6]
-                when 'def'
-                    scene = scenes[7]
-
-            world.publish S.ViewportSystem.MSG_SCENE_CHANGE, {scene: scene}
-
-        world.dump = () ->
-            console.log JSON.stringify(world.entities.store)
-        window.world = world
-
+    () ->
         world.start()
+        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
+            scene: scene
