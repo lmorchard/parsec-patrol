@@ -1,8 +1,8 @@
 define [
     'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D',
-    'Hammer'
+    'Hammer', 'THREEx.KeyboardState'
 ], (
-    C, Utils, $, _, PubSub, Vector2D, Hammer
+    C, Utils, $, _, PubSub, Vector2D, Hammer, KeyboardState
 ) ->
 
     class System
@@ -45,9 +45,18 @@ define [
             @world.publish @constructor.MSG_SPAWN,
                 entity_id: eid, spawn: spawn
 
+    class KeyboardInputSystem extends System
+        constructor: (@canvas) ->
+
+        setWorld: (world) ->
+            super world
+            @world.inputs.keyboard = new KeyboardState(document.body)
+
+        update: (dt) ->
+            # console.log("KEYS #{JSON.stringify(@world.inputs.keyboard.keyCodes)}")
+
     class PointerInputSystem extends System
         constructor: (@canvas) ->
-            @is_clicking = false
 
         setWorld: (world) ->
             super world
@@ -460,14 +469,15 @@ define [
             thruster = @world.entities.get(eid, C.Thruster)
             
             # Set course destination on left button down
-            if click_course.active and @world.inputs.pointer_button_left
+            if click_course.active and (
+                    @world.inputs.pointer_button_left or
+                    @world.inputs.keyboard.pressed('a'))
                 click_course.x = @world.inputs.pointer_world_x
                 click_course.y = @world.inputs.pointer_world_y
                 thruster?.active = true
-                seeker?.target = {
+                seeker?.target =
                     x: click_course.x,
                     y: click_course.y
-                }
 
             # Full stop, when the sprite collides with the destination
             x_offset = Math.abs(pos.x - click_course.x)
@@ -480,5 +490,5 @@ define [
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
-        ThrusterSystem, ClickCourseSystem
+        ThrusterSystem, ClickCourseSystem, KeyboardInputSystem
     }

@@ -9,6 +9,7 @@ define [
     area = document.getElementById('gameArea')
         
     world = new W.World(640, 480,
+        new S.KeyboardInputSystem(canvas),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,

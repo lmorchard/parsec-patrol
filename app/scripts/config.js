@@ -6,14 +6,12 @@ var require = {
         backbone: '../bower_components/backbone-amd/backbone',
         pubsub: '../bower_components/pubsub-js/src/pubsub',
         async: '../bower_components/async/lib/async',
-        Hammer: '../bower_components/hammerjs/dist/hammer'
+        Hammer: '../bower_components/hammerjs/dist/hammer',
+        'THREEx.KeyboardState': '../bower_components/threex.keyboardstate/threex.keyboardstate'
     },
     shim: {
-        async: {
-            exports: 'async'
-        },
-        'Hammer': {
-            exports: 'Hammer'
-        }
+        async: { exports: 'async' },
+        'Hammer': { exports: 'Hammer' },
+        'THREEx.KeyboardState': { exports: 'THREEx.KeyboardState' }
     }
 };
