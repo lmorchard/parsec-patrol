@@ -8,17 +8,18 @@ define [
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
         
-    world = new W.World(640, 480,
+    world = new W.World(320, 240
         new S.KeyboardInputSystem(canvas),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
+        new S.OrbiterSystem,
         new S.SpinSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
-        new S.ViewportSystem(
-            window, area, canvas, 1.0, 1.0
-        ),
+        new S.HealthSystem,
+        new S.BeamWeaponSystem,
+        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
     )
 
     em = world.entities
@@ -30,11 +31,14 @@ define [
             new C.EntityName('hero'),
             new C.Sprite('hero'),
             new C.Position,
-            new C.Spawn('at', -40, 40),
+            new C.Spawn('at', -30, 30),
             new C.Collidable,
-            new C.Thruster(150, 75, 0, 0, false),
-            new C.ClickCourse(true),
-            new C.Seeker(null, Math.PI)
+            new C.Orbit(e_sun, Math.PI/4),
+            #new C.Thruster(150, 75, 0, 0, false),
+            #new C.Seeker(null, Math.PI),
+            #new C.ClickCourse(true),
+            new C.Health(2000),
+            new C.BeamWeapon(4, 100, 100),
         ),
         e_enemy3 = em.create(
             new C.TypeName('EnemyScout'),
@@ -43,8 +47,10 @@ define [
             new C.Spawn('at', -80, 0),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_hero, Math.PI)
+            #new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_hero, Math.PI),
+            new C.Health(1000),
+            new C.WeaponsTarget,
         ),
         e_enemy4 = em.create(
             new C.TypeName('EnemyScout'),
@@ -53,8 +59,10 @@ define [
             new C.Spawn('at', 0, 80),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_enemy3, Math.PI)
+            #new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_hero, Math.PI),
+            new C.Health(1000),
+            new C.WeaponsTarget,
         ),
         e_enemy5 = em.create(
             new C.TypeName('EnemyScout'),
@@ -63,8 +71,10 @@ define [
             new C.Spawn('at', 80, 0),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_enemy4, Math.PI * 2)
+            #new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_hero, Math.PI * 2),
+            new C.Health(1000),
+            new C.WeaponsTarget,
         ),
         e_enemy6 = em.create(
             new C.TypeName('EnemyScout'),
@@ -73,13 +83,15 @@ define [
             new C.Spawn('at', 80, -80),
             new C.Position,
             new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_enemy5, Math.PI * 2)
+            #new C.Thruster(100, 50, 0, 0),
+            new C.Seeker(e_hero, Math.PI * 2),
+            new C.Health(1000),
+            new C.WeaponsTarget,
         ),
     )
 
-    world.subscribe '', (msg, data) ->
-        console.log("MSG #{msg} <- #{JSON.stringify(data)}")
+    #world.subscribe '', (msg, data) ->
+    #    console.log("MSG #{msg} <- #{JSON.stringify(data)}")
 
     world.dump = () ->
         console.log JSON.stringify(world.entities.store)

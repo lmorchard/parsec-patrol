@@ -13,6 +13,7 @@ define [
             @world = world
         
         getMatches: () ->
+            return [] if not @match_component
             return @world.entities.getComponents(@match_component)
 
         update: (t_delta) ->
@@ -141,6 +142,12 @@ define [
 
             @setViewportSize(@canvas.width, @canvas.height)
 
+        convertX: (x) ->
+            return (x * @viewport_ratio) + (@viewport_width / 2)
+
+        convertY: (y) ->
+            return (y * @viewport_ratio) + (@viewport_height / 2)
+
         draw: (t_delta) ->
 
             return if not @current_scene
@@ -163,10 +170,39 @@ define [
 
                 [sprite, pos] = @world.entities.get(eid, C.Sprite, C.Position)
 
+                beam_weapon = @world.entities.get(eid, C.BeamWeapon)
+                if beam_weapon
+                    # Really hacky attempt at animating flickery beams
+                    duty_cycle = 30
+                    for beam in beam_weapon.beams
+                        if beam?.target
+                            if beam.cycle < duty_cycle
+
+                                origin_x = @convertX(beam_weapon.x)
+                                origin_y = @convertY(beam_weapon.y)
+                                
+                                target_x = @convertX(beam.x)
+                                target_y = @convertY(beam.y)
+
+                                @ctx.save()
+                                @ctx.lineWidth = 1.5
+                                @ctx.strokeStyle = "#f33"
+                                @ctx.beginPath()
+                                @ctx.moveTo(origin_x, origin_y)
+                                @ctx.lineTo(target_x, target_y)
+                                @ctx.stroke()
+                                @ctx.restore()
+
+                            else if beam.cycle >= duty_cycle*2
+                                beam.cycle = (duty_cycle/4) * Math.random()
+
+                            beam.cycle += t_delta
+
                 @ctx.save()
 
-                vp_x = (pos.x * @viewport_ratio) + (@viewport_width / 2)
-                vp_y = (pos.y * @viewport_ratio) + (@viewport_height / 2)
+                vp_x = @convertX(pos.x)
+                vp_y = @convertY(pos.y)
+                
                 sprite_size = 20 * @viewport_ratio
 
                 w = sprite.width * @viewport_ratio
@@ -180,9 +216,31 @@ define [
                     hb = h / 2
                     @ctx.strokeRect(0-wb, 0-wb, w, h)
 
+                health = @world.entities.get(eid, C.Health)
+                if health
+                    perc = (health.current / health.max)
+                    
+                    top = 0 - (h/2) - 10
+                    left = 0 - (w/2)
+                   
+                    @ctx.save()
+                    @ctx.lineWidth = 4
+                    @ctx.strokeStyle = "#333"
+                    @ctx.beginPath()
+                    @ctx.moveTo(left, top)
+                    @ctx.lineTo(left + w, top)
+                    @ctx.stroke()
+                    if perc > 0
+                        @ctx.strokeStyle = "#3e3"
+                        @ctx.beginPath()
+                        @ctx.moveTo(left, top)
+                        @ctx.lineTo(left + (w * perc), top)
+                        @ctx.stroke()
+                    @ctx.restore()
+
                 @ctx.rotate(pos.rotation)
 
-                @ctx.fillStyle = "#fff"
+                @ctx.fillStyle = "#000"
                 @ctx.strokeStyle = sprite.stroke_style
                 @ctx.lineWidth = 1.25
 
@@ -190,6 +248,7 @@ define [
                 switch sprite.shape
 
                     when 'star'
+                        @ctx.fillStyle = "#fff"
                         @ctx.beginPath()
                         @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
                         @ctx.fill()
@@ -206,6 +265,7 @@ define [
                         @ctx.lineTo(w*0.25, 0)
                         @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
                         @ctx.lineTo(0-(w*0.125), 0-(h/2))
+                        @ctx.fill()
                         @ctx.stroke()
                         
                     when 'enemyscout'
@@ -216,6 +276,7 @@ define [
                         @ctx.lineTo(w*0.45, h*0.5)
                         @ctx.lineTo(0, 0-(h*0.5))
                         @ctx.moveTo(0, 0-(h*0.5))
+                        @ctx.fill()
                         @ctx.stroke()
 
                     when 'enemycruiser'
@@ -489,8 +550,78 @@ define [
                     thruster?.active = false
                 seeker?.target = null
 
+    class BeamWeaponSystem extends System
+        @DAMAGE_TYPE = 'Beam'
+
+        match_component: C.BeamWeapon
+        
+        constructor: () ->
+            @v_beam = new Vector2D()
+            @v_target = new Vector2D()
+        
+        update_match: (t_delta, eid, beam_weapon) ->
+            pos = @world.entities.get(eid, C.Position)
+            beam_weapon.x = pos.x
+            beam_weapon.y = pos.y
+            @v_beam.setValues(pos.x, pos.y)
+            
+            # Make all beams available
+            available_beams = []
+            for beam in beam_weapon.beams
+                beam.target = null
+                available_beams.push(beam)
+
+            # Find targets within beam range
+            targets = @world.entities.getComponents(C.WeaponsTarget)
+            by_range = []
+            for t_eid, target of targets
+                t_pos = @world.entities.get(t_eid, C.Position)
+                @v_target.setValues(t_pos.x, t_pos.y)
+                t_range = @v_beam.dist(@v_target)
+                if t_range <= beam_weapon.range
+                    by_range.push([t_range, t_eid, t_pos])
+
+            # Bail, if no targets found
+            return if not by_range.length > 0
+
+            # Sort targets by range
+            _.sortBy(by_range, (a)->a[0])
+
+            # Activate beams on targets by range priority
+            while available_beams.length
+                for [t_range, t_eid, t_pos] in by_range
+                    beam = available_beams.pop()
+                    if beam
+                        beam.target = t_eid
+                        beam.x = t_pos.x
+                        beam.y = t_pos.y
+
+                        @world.publish HealthSystem.MSG_DAMAGE,
+                            to: t_eid,
+                            from: eid,
+                            kind: @constructor.DAMAGE_TYPE
+                            amount: (beam_weapon.dps / 1000) * t_delta
+
+    class HealthSystem extends System
+        @MSG_DAMAGE = 'health.damage'
+        @MSG_HEAL = 'health.heal'
+
+        #match_component: C.Health
+
+        setWorld: (world) ->
+            super world
+
+            @world.subscribe @constructor.MSG_DAMAGE, (msg, data) =>
+                health = @world.entities.get(data.to, C.Health)
+                health.current -= data.amount
+
+            @world.subscribe @constructor.MSG_HEAL, (msg, data) =>
+                health = @world.entities.get(data.to, C.Health)
+                health.health += data.amount
+
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
-        ThrusterSystem, ClickCourseSystem, KeyboardInputSystem
+        ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
+        BeamWeaponSystem, HealthSystem,
     }

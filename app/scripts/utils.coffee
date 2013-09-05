@@ -4,5 +4,5 @@ define [], () ->
 
     return {
         generateID: () -> curr_id++
-        now: () -> (new Date).getTime()
+        now: () -> Date.now()
     }

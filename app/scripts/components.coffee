@@ -84,8 +84,27 @@ define ['entities', 'underscore'], (Entities, _) ->
         constructor: (@stop_on_arrival=false) ->
             @active = true
 
+    class WeaponsTarget extends Component
+        type: 'WeaponsTarget'
+
+    class BeamWeapon extends Component
+        type: 'BeamWeapon'
+        constructor: (@max_beams=4, @range=150, @dps=150) ->
+            @x = 0
+            @y = 0
+            @beams = ({
+                target: null,
+                x: 0, y: 0,
+                cycle: 0
+            } for idx in [1..max_beams])
+
+    class Health extends Component
+        type: 'Health'
+        constructor: (@max=1000) ->
+            @current = @max
+
     return {
         Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin,
         Bouncer, Spawn, Collidable, Renderable, Sprite, Thruster, Seeker,
-        ClickCourse
+        ClickCourse, WeaponsTarget, BeamWeapon, Health
     }

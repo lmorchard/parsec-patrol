@@ -13,7 +13,8 @@ define [
 
     class World
         debug: true
-        tick_delay: 1000 / 60
+        tick_duration: Math.floor(1000 / 60)
+        max_ticks_per_loop: 10,
         ticks: 0
         t_last: 0
 
@@ -72,25 +73,36 @@ define [
             return if @is_running
             @is_running = true
 
-            @t_last = Utils.now() - @tick_delay
-            
+            @t_last = Utils.now()
             tick_loop = () =>
-                @stats.begin()
+            
+                t_now = Utils.now()
+                t_delta = t_now - @t_last
+                @t_last = t_now
+
                 if not @is_paused
-                    t_now = Utils.now()
-                    t_delta = t_draw_delta = t_now - @t_last
-                    @t_last = t_now
-                    while t_delta > 0
-                        @tick Math.min(t_delta, @tick_delay)
-                        t_delta -= @tick_delay
-                    @draw t_draw_delta
+                    steps = Math.min((t_delta / @tick_duration),
+                                     @max_ticks_per_loop)
+                    for step in [1..steps]
+                        @tick @tick_duration
 
-                if @is_running
-                    requestAnimationFrame tick_loop
+                if not @is_running
+                    cancelInterval(@interval_id)
 
-                @stats.end()
+            # TODO: Use a variable setTimeout instead? in case game logic time
+            # takes more than @tick_duration, maybe adjust tick_duration?
+            @interval_id = setInterval tick_loop, @tick_duration
 
-            requestAnimationFrame tick_loop
+            @t_last_ts = 0
+            draw_loop = (ts) =>
+                @stats.begin() if @debug
+                t_delta = ts - @t_last_ts
+                @t_last_ts = ts
+                @draw t_delta
+                @stats.end() if @debug
+                requestAnimationFrame draw_loop
+
+            requestAnimationFrame draw_loop
 
         stop: () ->
             @is_running = false
@@ -99,7 +111,7 @@ define [
             @is_paused = true
 
         unpause: () ->
-            @t_last = Utils.now() - @tick_delay
+            @t_last = Utils.now() - @tick_duration
             @is_paused = false
 
     class BasicWorld extends World
