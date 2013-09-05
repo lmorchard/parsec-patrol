@@ -22,6 +22,8 @@ define [
 
         update_match: (t_delta, entity_id, match) ->
 
+        draw: (t_delta) ->
+
     class SpawnSystem extends System
         @MSG_SPAWN = 'spawn'
         
@@ -139,7 +141,7 @@ define [
 
             @setViewportSize(@canvas.width, @canvas.height)
 
-        update: (t_delta) ->
+        draw: (t_delta) ->
 
             return if not @current_scene
 
@@ -471,7 +473,7 @@ define [
             # Set course destination on left button down
             if click_course.active and (
                     @world.inputs.pointer_button_left or
-                    @world.inputs.keyboard.pressed('a'))
+                    @world.inputs.keyboard?.pressed('a'))
                 click_course.x = @world.inputs.pointer_world_x
                 click_course.y = @world.inputs.pointer_world_y
                 thruster?.active = true

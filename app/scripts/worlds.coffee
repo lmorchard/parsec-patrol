@@ -1,10 +1,18 @@
 define [
-    'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub'
+    'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub',
+    'Stats'
 ], (
-    Utils, Entities, Components, Systems, _, PubSub
+    Utils, Entities, Components, Systems, _, PubSub, Stats
 ) ->
+    requestAnimationFrame = (window.requestAnimationFrame or
+        window.webkitRequestAnimationFrame or
+        window.mozRequestAnimationFrame    or
+        window.oRequestAnimationFrame      or
+        window.msRequestAnimationFrame     or
+        (fn) -> setTimeout(fn, (1000/60)))
 
     class World
+        debug: true
         tick_delay: 1000 / 60
         ticks: 0
         t_last: 0
@@ -19,6 +27,11 @@ define [
             @entities = new Entities.EntityManager
             @systems = []
             @addSystem(systems...)
+
+            if @debug
+                @stats = new Stats()
+                @stats.setMode(0)
+                document.body.appendChild(@stats.domElement)
 
         _psPrefix: (msg=null) ->
             msg = if not msg then '' else ".#{msg}"
@@ -50,6 +63,11 @@ define [
                 s.update t_delta
             return true
 
+        draw: (t_delta) ->
+            for s in @systems
+                s.draw t_delta
+            return true
+
         start: () ->
             return if @is_running
             @is_running = true
@@ -57,14 +75,22 @@ define [
             @t_last = Utils.now() - @tick_delay
             
             tick_loop = () =>
+                @stats.begin()
                 if not @is_paused
                     t_now = Utils.now()
-                    @tick t_now - @t_last
+                    t_delta = t_draw_delta = t_now - @t_last
                     @t_last = t_now
-                if @is_running
-                    setTimeout tick_loop, @tick_delay
+                    while t_delta > 0
+                        @tick Math.min(t_delta, @tick_delay)
+                        t_delta -= @tick_delay
+                    @draw t_draw_delta
 
-            setTimeout tick_loop, 0.1
+                if @is_running
+                    requestAnimationFrame tick_loop
+
+                @stats.end()
+
+            requestAnimationFrame tick_loop
 
         stop: () ->
             @is_running = false

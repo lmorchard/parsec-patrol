@@ -8,11 +8,13 @@ var require = {
         async: '../app/bower_components/async/lib/async',
         Hammer: '../app/bower_components/hammerjs/dist/hammer',
         KeyboardJS: '../app/scripts/vendor/KeyboardJS-master/keyboard',
-        'THREEx.KeyboardState': '../app/bower_components/threex.keyboardstate/threex.keyboardstate'
+        'THREEx.KeyboardState': '../app/bower_components/threex.keyboardstate/threex.keyboardstate',
+        'Stats': '../app/bower_components/stats.js/src/Stats'
     },
     shim: {
         async: { exports: 'async' },
         'Hammer': { exports: 'Hammer' },
-        'THREEx.KeyboardState': { exports: 'THREEx.KeyboardState' }
+        'THREEx.KeyboardState': { exports: 'THREEx.KeyboardState' },
+        'Stats': { exports: 'Stats' }
     }
 };
