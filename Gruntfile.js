@@ -407,7 +407,7 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('default', [
-        'coffeelint',
+        // 'coffeelint',
         'jshint',
         'test',
         'build'
