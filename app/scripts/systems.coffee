@@ -25,29 +25,6 @@ define [
 
         draw: (t_delta) ->
 
-    class SpawnSystem extends System
-        @MSG_SPAWN = 'spawn'
-        
-        match_component: C.Spawn
-
-        update_match: (t_delta, eid, spawn) ->
-            return if spawn.spawned
-            if @world
-                pos = @world.entities.get(eid, C.Position)
-                switch spawn.position_logic
-                    when 'random'
-                        pos.x = _.random(0-(@world.width/2), @world.width/2)
-                        pos.y = _.random(0-(@world.height/2), @world.height/2)
-                    when 'at'
-                        pos.x = spawn.x
-                        pos.y = spawn.y
-                    else
-                        pos.x = pos.y = 0
-
-            spawn.spawned = true
-            @world.publish @constructor.MSG_SPAWN,
-                entity_id: eid, spawn: spawn
-
     class KeyboardInputSystem extends System
         constructor: (@canvas) ->
 
@@ -98,9 +75,59 @@ define [
 
         update: (dt) ->
 
-    class ViewportSystem extends System
-        @MSG_SCENE_CHANGE = 'scene.change'
+    class SpawnSystem extends System
+        @MSG_SPAWN = 'spawn.spawn'
+        @MSG_DESPAWN = 'spawn.despawn'
         
+        match_component: C.Spawn
+
+        setWorld: (world) ->
+            super world
+            
+            @world.subscribe SpawnSystem.MSG_DESPAWN, (msg, data) =>
+                spawn = @world.entities.get(data.entity_id, C.Spawn)
+                spawn.destroy = true
+
+        update_match: (t_delta, eid, spawn) ->
+            return if not @world
+
+            if spawn.destroy
+                @world.entities.destroy(eid)
+
+            else if not spawn.spawned
+                pos = @world.entities.get(eid, C.Position)
+                switch spawn.position_logic
+                    when 'random'
+                        pos.x = _.random(0-(@world.width/2), @world.width/2)
+                        pos.y = _.random(0-(@world.height/2), @world.height/2)
+                    when 'at'
+                        pos.x = spawn.x
+                        pos.y = spawn.y
+                    else
+                        pos.x = pos.y = 0
+
+                spawn.spawned = true
+                @world.publish @constructor.MSG_SPAWN,
+                    entity_id: eid, spawn: spawn
+
+    class SceneSystem extends System
+        @MSG_SCENE_CHANGE = 'scene.change'
+        match_component: C.EntityGroup
+
+        setWorld: (world) ->
+            super world
+            
+            @world.subscribe SceneSystem.MSG_SCENE_CHANGE, (msg, data) =>
+                @current_scene = data.scene
+
+            @world.subscribe SpawnSystem.MSG_DESPAWN, (msg, data) =>
+                return if not @current_scene
+                scene = @world.entities.get(@current_scene, C.EntityGroup)
+                C.EntityGroup.remove(scene, data.entity_id)
+
+        update_match: (dt, eid, entity_group) ->
+
+    class ViewportSystem extends System
         match_component: C.Sprite
 
         constructor: (@window, @game_area, @canvas,
@@ -111,7 +138,7 @@ define [
 
         setWorld: (world) ->
             super world
-            @world.subscribe @constructor.MSG_SCENE_CHANGE, (msg, data) =>
+            @world.subscribe SceneSystem.MSG_SCENE_CHANGE, (msg, data) =>
                 @current_scene = data.scene
 
             @resize()
@@ -153,7 +180,7 @@ define [
             return if not @current_scene
 
             @ctx.save()
-            @ctx.fillStyle = "rgba(0, 0, 0, 0.3)"
+            @ctx.fillStyle = "rgba(0, 0, 0, 0.8)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
@@ -169,35 +196,49 @@ define [
             for eid, ignore of scene.entities
 
                 [sprite, pos] = @world.entities.get(eid, C.Sprite, C.Position)
+                continue if not sprite or not pos
 
+                # Really hacky attempt at animating flickery beams
                 beam_weapon = @world.entities.get(eid, C.BeamWeapon)
                 if beam_weapon
-                    # Really hacky attempt at animating flickery beams
-                    duty_cycle = 50
+                    origin_x = @convertX(beam_weapon.x)
+                    origin_y = @convertY(beam_weapon.y)
+                                
+                    v_origin = new Vector2D(origin_x, origin_y)
+                    v_turret = new Vector2D(origin_x, @convertY(beam_weapon.y - 6))
+                    v_turret.rotateAround(v_origin, pos.rotation)
+                    turret_rad = (Math.PI*2) / beam_weapon.beams.length
+
+                    duty_cycle = 40
                     for beam in beam_weapon.beams
+                        @ctx.save()
+                        v_turret.rotateAround(v_origin, turret_rad)
+
+                        @ctx.fillStyle = "#66f"
+                        @ctx.beginPath()
+                        @ctx.arc(v_turret.x, v_turret.y, 1.5, 0, Math.PI*2, true)
+                        @ctx.fill()
+                        
                         if beam?.target
                             if beam.cycle < duty_cycle
 
-                                origin_x = @convertX(beam_weapon.x)
-                                origin_y = @convertY(beam_weapon.y)
-                                
-                                fudge = 8
+                                fudge = 1
                                 target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
                                 target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
-                                @ctx.save()
-                                @ctx.lineWidth = 1.5
-                                @ctx.strokeStyle = "#f33"
+                                @ctx.lineWidth = 2.5
+                                @ctx.strokeStyle = "#33f"
                                 @ctx.beginPath()
-                                @ctx.moveTo(origin_x, origin_y)
+                                @ctx.moveTo(v_turret.x, v_turret.y)
                                 @ctx.lineTo(target_x, target_y)
                                 @ctx.stroke()
-                                @ctx.restore()
 
                             else if beam.cycle >= duty_cycle*2
                                 beam.cycle = (duty_cycle) * Math.random()
 
                             beam.cycle += t_delta
+
+                        @ctx.restore()
 
                 @ctx.save()
 
@@ -449,11 +490,12 @@ define [
             return if not seeker.target
 
             pos = @world.entities.get(eid, C.Position)
+            return if not pos
 
             target_pos = seeker.target
             if not _.isObject(target_pos)
                 target_pos = @world.entities.get(seeker.target, C.Position)
-            return if not target_pos.x and target_pos.y
+            return if not target_pos or (not target_pos.x and target_pos.y)
 
             # Set up the vectors for angle math...
             @v_seeker.setValues(pos.x, pos.y)
@@ -607,7 +649,7 @@ define [
         @MSG_DAMAGE = 'health.damage'
         @MSG_HEAL = 'health.heal'
 
-        #match_component: C.Health
+        match_component: C.Health
 
         setWorld: (world) ->
             super world
@@ -620,9 +662,14 @@ define [
                 health = @world.entities.get(data.to, C.Health)
                 health.health += data.amount
 
+        update_match: (t_delta, eid, health) ->
+            if health.current < 0
+                @world.publish SpawnSystem.MSG_DESPAWN,
+                    entity_id: eid
+
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
         ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
-        BeamWeaponSystem, HealthSystem,
+        BeamWeaponSystem, HealthSystem, SceneSystem
     }

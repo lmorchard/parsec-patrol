@@ -57,7 +57,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Spawn extends Component
         type: 'Spawn'
-        constructor: (@position_logic='random', @x=0, @y=0) ->
+        constructor: (@position_logic='random', @x=0, @y=0, @destroy=false) ->
 
     class Sprite extends Component
         type: 'Sprite'

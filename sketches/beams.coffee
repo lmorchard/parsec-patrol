@@ -20,7 +20,7 @@ define [
         new S.ThrusterSystem,
         new S.HealthSystem,
         new S.BeamWeaponSystem,
-        new S.ViewportSystem(window, area, canvas, 1.0, 0.75),
+        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
     )
 
     em = world.entities
@@ -43,9 +43,9 @@ define [
         ),
     )
 
-    MAX_ENEMIES = 20
+    MAX_ENEMIES = 24
 
-    v_spawn = new Vector2D(0, -400)
+    v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
     enemy_ct = 0
 
