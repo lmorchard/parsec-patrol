@@ -153,7 +153,7 @@ define [
             return if not @current_scene
 
             @ctx.save()
-            @ctx.fillStyle = "#000"
+            @ctx.fillStyle = "rgba(0, 0, 0, 0.3)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
@@ -173,7 +173,7 @@ define [
                 beam_weapon = @world.entities.get(eid, C.BeamWeapon)
                 if beam_weapon
                     # Really hacky attempt at animating flickery beams
-                    duty_cycle = 30
+                    duty_cycle = 50
                     for beam in beam_weapon.beams
                         if beam?.target
                             if beam.cycle < duty_cycle
@@ -181,8 +181,9 @@ define [
                                 origin_x = @convertX(beam_weapon.x)
                                 origin_y = @convertY(beam_weapon.y)
                                 
-                                target_x = @convertX(beam.x)
-                                target_y = @convertY(beam.y)
+                                fudge = 8
+                                target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
+                                target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
                                 @ctx.save()
                                 @ctx.lineWidth = 1.5
@@ -194,7 +195,7 @@ define [
                                 @ctx.restore()
 
                             else if beam.cycle >= duty_cycle*2
-                                beam.cycle = (duty_cycle/4) * Math.random()
+                                beam.cycle = (duty_cycle) * Math.random()
 
                             beam.cycle += t_delta
 
@@ -265,7 +266,7 @@ define [
                         @ctx.lineTo(w*0.25, 0)
                         @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
                         @ctx.lineTo(0-(w*0.125), 0-(h/2))
-                        @ctx.fill()
+                        #@ctx.fill()
                         @ctx.stroke()
                         
                     when 'enemyscout'
@@ -276,7 +277,7 @@ define [
                         @ctx.lineTo(w*0.45, h*0.5)
                         @ctx.lineTo(0, 0-(h*0.5))
                         @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.fill()
+                        #@ctx.fill()
                         @ctx.stroke()
 
                     when 'enemycruiser'
