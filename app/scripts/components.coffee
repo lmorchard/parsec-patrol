@@ -86,10 +86,11 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class WeaponsTarget extends Component
         type: 'WeaponsTarget'
+        constructor: (@team="foe") ->
 
     class BeamWeapon extends Component
         type: 'BeamWeapon'
-        constructor: (@max_beams=4, @range=150, @dps=150) ->
+        constructor: (@max_beams=4, @range=150, @dps=150, @color="#6f6", @target_team="enemy") ->
             @x = 0
             @y = 0
             @beams = ({

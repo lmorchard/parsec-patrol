@@ -180,7 +180,7 @@ define [
             return if not @current_scene
 
             @ctx.save()
-            @ctx.fillStyle = "rgba(0, 0, 0, 0.8)"
+            @ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
@@ -209,12 +209,12 @@ define [
                     v_turret.rotateAround(v_origin, pos.rotation)
                     turret_rad = (Math.PI*2) / beam_weapon.beams.length
 
-                    duty_cycle = 40
+                    duty_cycle = 150 # 60
                     for beam in beam_weapon.beams
                         @ctx.save()
                         v_turret.rotateAround(v_origin, turret_rad)
 
-                        @ctx.fillStyle = "#66f"
+                        @ctx.fillStyle = beam_weapon.color
                         @ctx.beginPath()
                         @ctx.arc(v_turret.x, v_turret.y, 1.5, 0, Math.PI*2, true)
                         @ctx.fill()
@@ -222,12 +222,12 @@ define [
                         if beam?.target
                             if beam.cycle < duty_cycle
 
-                                fudge = 1
+                                fudge = 1.125 * @viewport_ratio
                                 target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
                                 target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
-                                @ctx.lineWidth = 2.5
-                                @ctx.strokeStyle = "#33f"
+                                @ctx.lineWidth = (1.125 * @viewport_ratio)
+                                @ctx.strokeStyle = beam_weapon.color
                                 @ctx.beginPath()
                                 @ctx.moveTo(v_turret.x, v_turret.y)
                                 @ctx.lineTo(target_x, target_y)
@@ -290,7 +290,7 @@ define [
                 switch sprite.shape
 
                     when 'star'
-                        @ctx.fillStyle = "#fff"
+                        @ctx.fillStyle = "#ccc"
                         @ctx.beginPath()
                         @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
                         @ctx.fill()
@@ -618,11 +618,18 @@ define [
             targets = @world.entities.getComponents(C.WeaponsTarget)
             by_range = []
             for t_eid, target of targets
-                t_pos = @world.entities.get(t_eid, C.Position)
-                @v_target.setValues(t_pos.x, t_pos.y)
-                t_range = @v_beam.dist(@v_target)
-                if t_range <= beam_weapon.range
-                    by_range.push([t_range, t_eid, t_pos])
+
+                # Do not target self!
+                if t_eid is eid
+                    continue
+
+                # Target only the intended team
+                if target.team is beam_weapon.target_team
+                    t_pos = @world.entities.get(t_eid, C.Position)
+                    @v_target.setValues(t_pos.x, t_pos.y)
+                    t_range = @v_beam.dist(@v_target)
+                    if t_range <= beam_weapon.range
+                        by_range.push([t_range, t_eid, t_pos])
 
             # Bail, if no targets found
             return if not by_range.length > 0
