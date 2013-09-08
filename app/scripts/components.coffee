@@ -93,7 +93,7 @@ define ['entities', 'underscore'], (Entities, _) ->
         constructor: (@max_beams=12, @active_beams=4,
                       @max_range=150,
                       @max_power=150, @charge_rate=150, @discharge_rate=300,
-                      @color="#6f6", @target_team="enemy") ->
+                      @color="#6f6", @target_team="enemy", @split_penalty=0.2) ->
             @x = 0
             @y = 0
             @beams = ({

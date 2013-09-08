@@ -34,14 +34,17 @@ define [
             new C.Position,
             new C.Spawn('at', -65, 65),
             new C.Collidable,
-            #new C.Orbit(e_sun, Math.PI/4),
-            new C.Thruster(150, 75, 0, 0, false),
-            new C.Seeker(null, Math.PI),
-            new C.ClickCourse(true),
+            new C.Orbit(e_sun, Math.PI/4),
+            #new C.Thruster(150, 75, 0, 0, false),
+            #new C.Seeker(null, Math.PI),
+            #new C.ClickCourse(true),
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(15, 5, 3800, 2750, 2.0, 2.0, "#33f", "invaders"),
+            c_hero_beam = new C.BeamWeapon(15, 5, 1000, 4000, 3.5, 3.5, "#33f", "invaders"),
         ),
+    )
+
+    if false
         e_enemy = em.create(
             new C.TypeName('EnemyScout'),
             new C.EntityName("enemy-#{enemy_ct}"),
@@ -55,11 +58,12 @@ define [
             new C.WeaponsTarget("invaders"),
             new C.BeamWeapon(1, 1, 75, 250, 0.25, 0.5, "#f44", "commonwealth"),
         )
-    )
+        group = em.get(scene, C.EntityGroup)
+        C.EntityGroup.add(group, e_enemy)
 
     window.beam = c_hero_beam
 
-    MAX_ENEMIES = 0
+    MAX_ENEMIES = 20
 
     v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
@@ -107,7 +111,7 @@ define [
         t_now = Utils.now()
 
         damage_log.push([t_now, data.amount])
-        while t_now - damage_log[0][0] > 5000
+        while t_now - damage_log[0][0] > 30000
             damage_log.shift()
 
         t_start = damage_log[0][0]

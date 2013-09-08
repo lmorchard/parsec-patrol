@@ -617,9 +617,14 @@ define [
                                          weap.max_beams)
             return if weap.active_beams is 0
 
-            # Split max charge and charging rate by active beams
-            max_charge = weap.max_power / weap.active_beams
-            charge_rate = weap.charge_rate # / weap.active_beams
+            # Scale beam parameters so that more beams are faster, but base
+            # total DPS on a single target is the same.
+            # TODO: Could cache these calculations?
+            max_charge = weap.max_power / (weap.active_beams * weap.active_beams)
+            charge_rate = weap.charge_rate / weap.active_beams
+            discharge_rate = weap.discharge_rate / weap.active_beams
+            # Damage penalty for splitting the beam, up to 20%
+            penalty = 1 - ((weap.active_beams / weap.max_beams) * weap.split_penalty)
 
             beams_to_target = []
             for idx in [0..weap.active_beams-1]
@@ -668,11 +673,6 @@ define [
                         break if not beam
                         beam.target = t_eid
 
-            # Calculate base beam DPS based on power split between actives,
-            # with some power wasted on the splitter
-            discharge_rate = weap.discharge_rate # / weap.active_beams
-            penalty = 0 #((weap.active_beams / weap.max_beams) * 0.30)
-
             # Process damage for all available beams
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
@@ -694,8 +694,7 @@ define [
                     beam.charging = true
 
                 # Damage is power discharged, with some wasteage
-                # TODO: Modify for range, further penalties for splits?
-                dmg = discharge #/ weap.active_beams
+                dmg = discharge * penalty
 
                 # Send damage to the target
                 @world.publish HealthSystem.MSG_DAMAGE,
