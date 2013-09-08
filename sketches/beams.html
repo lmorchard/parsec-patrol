@@ -3,10 +3,33 @@
     <head>
         <title>Beams - Sketches</title>
         <link rel="stylesheet" href="../styles/styls.css">
+        <style type="text/css">
+            #readouts {
+                position: absolute;
+                left:0; bottom: 0; right: 0; top: 75%;
+                opacity: 0.75; background: #000; color: #fff
+            }
+            #readouts ul { list-style-type: none; margin: 0; padding: 0 }
+            #readouts ul li { width: 25%; float: left }
+        </style>
     </head>
     <body>
         <div id="gameArea">
             <canvas style="height: 100%" id="gameCanvas"></canvas>
+            <form id="readouts">
+                <ul>
+                    <li>DMG: <input type="text" size="15" id="dmg"></li>
+                    <li>DPS: <input type="text" size="15" id="dps"></li>
+                    <li id="beam_sel">Beams: 
+                        <button value="1">1</button>
+                        <button value="3">3</button>
+                        <button value="5">5</button>
+                        <button value="7">7</button>
+                        <button value="10">10</button>
+                        <button value="15">15</button>
+                    </li>
+                </ul>
+            </form>
         </div>
         <script src="config.js"></script>
         <script src="../app/bower_components/requirejs/require.js"></script>

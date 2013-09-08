@@ -81,10 +81,12 @@ define [
                 @t_last = t_now
 
                 if not @is_paused
-                    steps = Math.min((t_delta / @tick_duration),
-                                     @max_ticks_per_loop)
-                    for step in [1..steps]
-                        @tick @tick_duration
+                    @tick t_delta
+                    if false
+                        steps = Math.min((t_delta / @tick_duration),
+                                         @max_ticks_per_loop)
+                        for step in [1..steps]
+                            @tick @tick_duration
 
                 if not @is_running
                     cancelInterval(@interval_id)

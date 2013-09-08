@@ -90,13 +90,17 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class BeamWeapon extends Component
         type: 'BeamWeapon'
-        constructor: (@max_beams=4, @range=150, @dps=150, @color="#6f6", @target_team="enemy") ->
+        constructor: (@max_beams=12, @active_beams=4,
+                      @max_range=150,
+                      @max_power=150, @charge_rate=150, @discharge_rate=300,
+                      @color="#6f6", @target_team="enemy") ->
             @x = 0
             @y = 0
             @beams = ({
                 target: null,
                 x: 0, y: 0,
-                cycle: 0
+                charging: true,
+                charge: 0
             } for idx in [1..max_beams])
 
     class Health extends Component

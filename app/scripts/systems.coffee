@@ -180,7 +180,7 @@ define [
             return if not @current_scene
 
             @ctx.save()
-            @ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
+            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
@@ -207,10 +207,20 @@ define [
                     v_origin = new Vector2D(origin_x, origin_y)
                     v_turret = new Vector2D(origin_x, @convertY(beam_weapon.y - 6))
                     v_turret.rotateAround(v_origin, pos.rotation)
-                    turret_rad = (Math.PI*2) / beam_weapon.beams.length
+                    turret_rad = (Math.PI*2) / beam_weapon.active_beams
 
-                    duty_cycle = 150 # 60
-                    for beam in beam_weapon.beams
+                    if false
+                        range = beam_weapon.max_range / beam_weapon.active_beams
+                        @ctx.strokeStyle = beam_weapon.color
+                        @ctx.beginPath()
+                        @ctx.arc(origin_x, origin_y, range * @viewport_ratio, 0, Math.PI*2, false)
+                        @ctx.stroke()
+
+                    duty_cycle = 50
+                    for idx in [0..beam_weapon.active_beams-1]
+                        beam = beam_weapon.beams[idx]
+                        continue if not beam
+
                         @ctx.save()
                         v_turret.rotateAround(v_origin, turret_rad)
 
@@ -219,24 +229,17 @@ define [
                         @ctx.arc(v_turret.x, v_turret.y, 1.5, 0, Math.PI*2, true)
                         @ctx.fill()
                         
-                        if beam?.target
-                            if beam.cycle < duty_cycle
+                        if beam?.target and not beam?.charging
+                            fudge = 2.125 * @viewport_ratio
+                            target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
+                            target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
-                                fudge = 1.125 * @viewport_ratio
-                                target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
-                                target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
-
-                                @ctx.lineWidth = (1.125 * @viewport_ratio)
-                                @ctx.strokeStyle = beam_weapon.color
-                                @ctx.beginPath()
-                                @ctx.moveTo(v_turret.x, v_turret.y)
-                                @ctx.lineTo(target_x, target_y)
-                                @ctx.stroke()
-
-                            else if beam.cycle >= duty_cycle*2
-                                beam.cycle = (duty_cycle) * Math.random()
-
-                            beam.cycle += t_delta
+                            @ctx.lineWidth = (0.75 * @viewport_ratio)
+                            @ctx.strokeStyle = beam_weapon.color
+                            @ctx.beginPath()
+                            @ctx.moveTo(v_turret.x, v_turret.y)
+                            @ctx.lineTo(target_x, target_y)
+                            @ctx.stroke()
 
                         @ctx.restore()
 
@@ -602,55 +605,104 @@ define [
             @v_beam = new Vector2D()
             @v_target = new Vector2D()
         
-        update_match: (t_delta, eid, beam_weapon) ->
+        update_match: (t_delta, eid, weap) ->
+
             pos = @world.entities.get(eid, C.Position)
-            beam_weapon.x = pos.x
-            beam_weapon.y = pos.y
+            weap.x = pos.x
+            weap.y = pos.y
             @v_beam.setValues(pos.x, pos.y)
             
-            # Make all beams available
-            available_beams = []
-            for beam in beam_weapon.beams
-                beam.target = null
-                available_beams.push(beam)
+            # Figure out the number of available beams
+            weap.active_beams = Math.min(weap.active_beams,
+                                         weap.max_beams)
+            return if weap.active_beams is 0
 
-            # Find targets within beam range
-            targets = @world.entities.getComponents(C.WeaponsTarget)
-            by_range = []
-            for t_eid, target of targets
+            # Split max charge and charging rate by active beams
+            max_charge = weap.max_power / weap.active_beams
+            charge_rate = weap.charge_rate # / weap.active_beams
 
-                # Do not target self!
-                if t_eid is eid
-                    continue
+            beams_to_target = []
+            for idx in [0..weap.active_beams-1]
+                beam = weap.beams[idx]
 
-                # Target only the intended team
-                if target.team is beam_weapon.target_team
-                    t_pos = @world.entities.get(t_eid, C.Position)
-                    @v_target.setValues(t_pos.x, t_pos.y)
-                    t_range = @v_beam.dist(@v_target)
-                    if t_range <= beam_weapon.range
-                        by_range.push([t_range, t_eid, t_pos])
+                if beam.charging
+                    beam.charge += charge_rate * t_delta
+                    if beam.charge >= max_charge
+                        beam.charge = max_charge
+                        beam.charging = false
+                        beam.target = null
+                        beams_to_target.push(beam)
 
-            # Bail, if no targets found
-            return if not by_range.length > 0
+            # Per-beam range is split over availables
+            beam_range = weap.max_range / weap.active_beams
 
-            # Sort targets by range
-            _.sortBy(by_range, (a)->a[0])
+            if beams_to_target.length > 0
+                
+                # Find targets within beam range
+                targets = @world.entities.getComponents(C.WeaponsTarget)
+                by_range = []
+                for t_eid, target of targets
 
-            # Activate beams on targets by range priority
-            while available_beams.length
-                for [t_range, t_eid, t_pos] in by_range
-                    beam = available_beams.pop()
-                    if beam
+                    # Do not target self!
+                    continue if t_eid is eid
+
+                    # Target only the intended team
+                    if target.team is weap.target_team
+                        t_pos = @world.entities.get(t_eid, C.Position)
+                        @v_target.setValues(t_pos.x, t_pos.y)
+                        t_range = @v_beam.dist(@v_target)
+                        if t_range <= beam_range
+                            by_range.push([t_range, t_eid, t_pos])
+
+                # Bail, if no targets found
+                return if not by_range.length > 0
+
+                # Sort targets by range
+                _.sortBy(by_range, (a)->a[0])
+
+                # Assign targets to beams ready to switch
+                while beams_to_target.length
+                    for [t_range, t_eid, t_pos] in by_range
+                        # Fetch next beam to target, bail if we're out
+                        beam = beams_to_target.pop()
+                        break if not beam
                         beam.target = t_eid
-                        beam.x = t_pos.x
-                        beam.y = t_pos.y
 
-                        @world.publish HealthSystem.MSG_DAMAGE,
-                            to: t_eid,
-                            from: eid,
-                            kind: @constructor.DAMAGE_TYPE
-                            amount: (beam_weapon.dps / 1000) * t_delta
+            # Calculate base beam DPS based on power split between actives,
+            # with some power wasted on the splitter
+            discharge_rate = weap.discharge_rate # / weap.active_beams
+            penalty = 0 #((weap.active_beams / weap.max_beams) * 0.30)
+
+            # Process damage for all available beams
+            for idx in [0..weap.active_beams-1]
+                beam = weap.beams[idx]
+                continue if beam.charging
+
+                t_pos = @world.entities.get(beam.target, C.Position)
+                if not t_pos
+                    # beam.target = null
+                else
+                    beam.x = t_pos.x
+                    beam.y = t_pos.y
+
+                # Consume charge for beam, start charging cycle if needed
+                discharge = discharge_rate * t_delta
+                discharge = beam.charge if beam.charge < discharge
+                beam.charge -= discharge
+                if beam.charge <= 0
+                    beam.charge = 0
+                    beam.charging = true
+
+                # Damage is power discharged, with some wasteage
+                # TODO: Modify for range, further penalties for splits?
+                dmg = discharge #/ weap.active_beams
+
+                # Send damage to the target
+                @world.publish HealthSystem.MSG_DAMAGE,
+                    to: beam.target
+                    from: eid
+                    kind: @constructor.DAMAGE_TYPE
+                    amount: dmg
 
     class HealthSystem extends System
         @MSG_DAMAGE = 'health.damage'
@@ -663,10 +715,12 @@ define [
 
             @world.subscribe @constructor.MSG_DAMAGE, (msg, data) =>
                 health = @world.entities.get(data.to, C.Health)
+                return if not health
                 health.current -= data.amount
 
             @world.subscribe @constructor.MSG_HEAL, (msg, data) =>
                 health = @world.entities.get(data.to, C.Health)
+                return if not health
                 health.health += data.amount
 
         update_match: (t_delta, eid, health) ->
