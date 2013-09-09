@@ -198,50 +198,7 @@ define [
                 [sprite, pos] = @world.entities.get(eid, C.Sprite, C.Position)
                 continue if not sprite or not pos
 
-                # Really hacky attempt at animating flickery beams
-                beam_weapon = @world.entities.get(eid, C.BeamWeapon)
-                if beam_weapon
-                    origin_x = @convertX(beam_weapon.x)
-                    origin_y = @convertY(beam_weapon.y)
-                                
-                    v_origin = new Vector2D(origin_x, origin_y)
-                    v_turret = new Vector2D(origin_x, @convertY(beam_weapon.y - 6))
-                    v_turret.rotateAround(v_origin, pos.rotation)
-                    turret_rad = (Math.PI*2) / beam_weapon.active_beams
-
-                    if false
-                        range = beam_weapon.max_range / beam_weapon.active_beams
-                        @ctx.strokeStyle = beam_weapon.color
-                        @ctx.beginPath()
-                        @ctx.arc(origin_x, origin_y, range * @viewport_ratio, 0, Math.PI*2, false)
-                        @ctx.stroke()
-
-                    duty_cycle = 50
-                    for idx in [0..beam_weapon.active_beams-1]
-                        beam = beam_weapon.beams[idx]
-                        continue if not beam
-
-                        @ctx.save()
-                        v_turret.rotateAround(v_origin, turret_rad)
-
-                        @ctx.fillStyle = beam_weapon.color
-                        @ctx.beginPath()
-                        @ctx.arc(v_turret.x, v_turret.y, 1.5, 0, Math.PI*2, true)
-                        @ctx.fill()
-                        
-                        if beam?.target and not beam?.charging
-                            fudge = 2.125 * @viewport_ratio
-                            target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
-                            target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
-
-                            @ctx.lineWidth = (0.75 * @viewport_ratio)
-                            @ctx.strokeStyle = beam_weapon.color
-                            @ctx.beginPath()
-                            @ctx.moveTo(v_turret.x, v_turret.y)
-                            @ctx.lineTo(target_x, target_y)
-                            @ctx.stroke()
-
-                        @ctx.restore()
+                @draw_beams t_delta, eid, pos
 
                 @ctx.save()
 
@@ -261,113 +218,166 @@ define [
                     hb = h / 2
                     @ctx.strokeRect(0-wb, 0-wb, w, h)
 
-                health = @world.entities.get(eid, C.Health)
-                if health
-                    perc = (health.current / health.max)
-                    
-                    top = 0 - (h/2) - 10
-                    left = 0 - (w/2)
-                   
-                    @ctx.save()
-                    @ctx.lineWidth = 4
-                    @ctx.strokeStyle = "#333"
-                    @ctx.beginPath()
-                    @ctx.moveTo(left, top)
-                    @ctx.lineTo(left + w, top)
-                    @ctx.stroke()
-                    if perc > 0
-                        @ctx.strokeStyle = "#3e3"
-                        @ctx.beginPath()
-                        @ctx.moveTo(left, top)
-                        @ctx.lineTo(left + (w * perc), top)
-                        @ctx.stroke()
-                    @ctx.restore()
-
-                @ctx.rotate(pos.rotation)
-
-                @ctx.fillStyle = "#000"
-                @ctx.strokeStyle = sprite.stroke_style
-                @ctx.lineWidth = 1.25
-
-                # TODO: Yes, I know, this sucks. Refactor into something better
-                switch sprite.shape
-
-                    when 'star'
-                        @ctx.fillStyle = "#ccc"
-                        @ctx.beginPath()
-                        @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
-                        @ctx.fill()
-
-                    when 'hero'
-                        @ctx.rotate(Math.PI)
-                        @ctx.beginPath()
-                        @ctx.moveTo(0-(w*0.125), 0-(h/2))
-                        @ctx.lineTo(0-(w*0.25), 0-(h/2))
-                        @ctx.lineTo(0-(w*0.5), 0)
-                        @ctx.arc(0, 0, w/2, Math.PI, 0, true)
-                        @ctx.lineTo(w*0.25, 0-(h/2))
-                        @ctx.lineTo(w*0.125, 0-(h/2))
-                        @ctx.lineTo(w*0.25, 0)
-                        @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
-                        @ctx.lineTo(0-(w*0.125), 0-(h/2))
-                        #@ctx.fill()
-                        @ctx.stroke()
-                        
-                    when 'enemyscout'
-                        @ctx.beginPath()
-                        @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.lineTo(0-w*0.45, h*0.5)
-                        @ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
-                        @ctx.lineTo(w*0.45, h*0.5)
-                        @ctx.lineTo(0, 0-(h*0.5))
-                        @ctx.moveTo(0, 0-(h*0.5))
-                        #@ctx.fill()
-                        @ctx.stroke()
-
-                    when 'enemycruiser'
-                        hu = h / 5
-                        wu = w / 4
-
-                        @ctx.beginPath()
-                        @ctx.moveTo(0, 0-hu*2.5)
-                        @ctx.lineTo(-(wu*1), hu*0.5)
-                        @ctx.lineTo(-(wu*1.25), 0-hu*1.5)
-                        @ctx.lineTo(-(wu*2), hu*2.5)
-                        @ctx.arc(0-wu, hu*2.5, w*0.25, Math.PI, Math.PI/2, true)
-                        @ctx.lineTo(-wu*0.5, hu*2.5)
-                        @ctx.arc(0, hu*2.5, w*0.125, Math.PI, 0, true)
-                        @ctx.lineTo(wu, hu*3.75)
-                        @ctx.arc(wu, hu*2.5, w*0.25, Math.PI/2, 0, true)
-                        @ctx.lineTo(wu*1.25, 0-hu*1.5)
-                        @ctx.lineTo(wu*1, hu*0.5)
-                        @ctx.lineTo(0, 0-hu*2.5)
-
-                        @ctx.stroke()
-
-                    when 'torpedo'
-                        @ctx.beginPath()
-                        
-                        @ctx.moveTo(0-(w*0.5), 0)
-                        @ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0,
-                                 true)
-                        @ctx.moveTo(0, 0-(h*0.5))
-                        @ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5,
-                                 true)
-                        @ctx.moveTo(0, h*0.5)
-                        @ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5,
-                                 false)
-                        @ctx.moveTo(0-w*0.5, 0)
-                        @ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0,
-                                 false)
-
-                        @ctx.stroke()
-
-                    else
-                        @ctx.beginPath()
-                        @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
-                        @ctx.stroke()
+                @draw_health_bar t_delta, eid, w, h
+                @draw_sprite t_delta, eid, w, h, pos, sprite_size, sprite
 
                 @ctx.restore()
+
+        draw_health_bar: (t_delta, eid, w, h) ->
+            health = @world.entities.get(eid, C.Health)
+            return if not health
+
+            perc = (health.current / health.max)
+            
+            top = 0 - (h/2) - 10
+            left = 0 - (w/2)
+           
+            @ctx.save()
+            @ctx.lineWidth = 4
+            @ctx.strokeStyle = "#333"
+            @ctx.beginPath()
+            @ctx.moveTo(left, top)
+            @ctx.lineTo(left + w, top)
+            @ctx.stroke()
+            if perc > 0
+                @ctx.strokeStyle = "#3e3"
+                @ctx.beginPath()
+                @ctx.moveTo(left, top)
+                @ctx.lineTo(left + (w * perc), top)
+                @ctx.stroke()
+            @ctx.restore()
+
+        draw_beams: (t_delta, eid, pos) ->
+            beam_weapon = @world.entities.get(eid, C.BeamWeapon)
+            return if not beam_weapon
+
+            origin_x = @convertX(beam_weapon.x)
+            origin_y = @convertY(beam_weapon.y)
+                        
+            v_origin = new Vector2D(origin_x, origin_y)
+            v_turret = new Vector2D(origin_x, @convertY(beam_weapon.y - 6))
+            v_turret.rotateAround(v_origin, pos.rotation)
+            turret_rad = (Math.PI*2) / beam_weapon.active_beams
+
+            if false
+                range = beam_weapon.max_range / beam_weapon.active_beams
+                @ctx.strokeStyle = beam_weapon.color
+                @ctx.beginPath()
+                @ctx.arc(origin_x, origin_y, range * @viewport_ratio, 0, Math.PI*2, false)
+                @ctx.stroke()
+
+            for idx in [0..beam_weapon.active_beams-1]
+                beam = beam_weapon.beams[idx]
+                continue if not beam
+
+                @ctx.save()
+                v_turret.rotateAround(v_origin, turret_rad)
+
+                @ctx.fillStyle = beam_weapon.color
+                @ctx.beginPath()
+                @ctx.arc(v_turret.x, v_turret.y, 1.5, 0, Math.PI*2, true)
+                @ctx.fill()
+                
+                if beam?.target and not beam?.charging
+                    fudge = 2.125 * @viewport_ratio
+                    target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
+                    target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
+
+                    @ctx.lineWidth = (0.75 * @viewport_ratio)
+                    @ctx.strokeStyle = beam_weapon.color
+                    @ctx.beginPath()
+                    @ctx.moveTo(v_turret.x, v_turret.y)
+                    @ctx.lineTo(target_x, target_y)
+                    @ctx.stroke()
+
+                @ctx.restore()
+
+        draw_sprite: (t_delta, eid, w, h, pos, sprite_size, sprite) ->
+
+            @ctx.rotate(pos.rotation)
+
+            @ctx.fillStyle = "#000"
+            @ctx.strokeStyle = sprite.stroke_style
+            @ctx.lineWidth = 1.25
+
+            # TODO: Yes, I know, this sucks. Refactor into something better
+            switch sprite.shape
+
+                when 'star'
+                    @ctx.fillStyle = "#ccc"
+                    @ctx.beginPath()
+                    @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
+                    @ctx.fill()
+
+                when 'hero'
+                    @ctx.rotate(Math.PI)
+                    @ctx.beginPath()
+                    @ctx.moveTo(0-(w*0.125), 0-(h/2))
+                    @ctx.lineTo(0-(w*0.25), 0-(h/2))
+                    @ctx.lineTo(0-(w*0.5), 0)
+                    @ctx.arc(0, 0, w/2, Math.PI, 0, true)
+                    @ctx.lineTo(w*0.25, 0-(h/2))
+                    @ctx.lineTo(w*0.125, 0-(h/2))
+                    @ctx.lineTo(w*0.25, 0)
+                    @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
+                    @ctx.lineTo(0-(w*0.125), 0-(h/2))
+                    #@ctx.fill()
+                    @ctx.stroke()
+                    
+                when 'enemyscout'
+                    @ctx.beginPath()
+                    @ctx.moveTo(0, 0-(h*0.5))
+                    @ctx.lineTo(0-w*0.45, h*0.5)
+                    @ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
+                    @ctx.lineTo(w*0.45, h*0.5)
+                    @ctx.lineTo(0, 0-(h*0.5))
+                    @ctx.moveTo(0, 0-(h*0.5))
+                    #@ctx.fill()
+                    @ctx.stroke()
+
+                when 'enemycruiser'
+                    hu = h / 5
+                    wu = w / 4
+
+                    @ctx.beginPath()
+                    @ctx.moveTo(0, 0-hu*2.5)
+                    @ctx.lineTo(-(wu*1), hu*0.5)
+                    @ctx.lineTo(-(wu*1.25), 0-hu*1.5)
+                    @ctx.lineTo(-(wu*2), hu*2.5)
+                    @ctx.arc(0-wu, hu*2.5, w*0.25, Math.PI, Math.PI/2, true)
+                    @ctx.lineTo(-wu*0.5, hu*2.5)
+                    @ctx.arc(0, hu*2.5, w*0.125, Math.PI, 0, true)
+                    @ctx.lineTo(wu, hu*3.75)
+                    @ctx.arc(wu, hu*2.5, w*0.25, Math.PI/2, 0, true)
+                    @ctx.lineTo(wu*1.25, 0-hu*1.5)
+                    @ctx.lineTo(wu*1, hu*0.5)
+                    @ctx.lineTo(0, 0-hu*2.5)
+
+                    @ctx.stroke()
+
+                when 'torpedo'
+                    @ctx.beginPath()
+                    
+                    @ctx.moveTo(0-(w*0.5), 0)
+                    @ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0,
+                             true)
+                    @ctx.moveTo(0, 0-(h*0.5))
+                    @ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5,
+                             true)
+                    @ctx.moveTo(0, h*0.5)
+                    @ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5,
+                             false)
+                    @ctx.moveTo(0-w*0.5, 0)
+                    @ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0,
+                             false)
+
+                    @ctx.stroke()
+
+                else
+                    @ctx.beginPath()
+                    @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
+                    @ctx.stroke()
+
 
     class CollisionSystem extends System
         constructor: () ->
