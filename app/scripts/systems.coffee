@@ -1,6 +1,6 @@
 define [
     'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D',
-    'Hammer', 'THREEx.KeyboardState'
+    'Hammer' #, 'THREEx.KeyboardState'
 ], (
     C, Utils, $, _, PubSub, Vector2D, Hammer, KeyboardState
 ) ->
@@ -30,7 +30,7 @@ define [
 
         setWorld: (world) ->
             super world
-            @world.inputs.keyboard = new KeyboardState(document.body)
+            @world.inputs.keyboard = {} #new KeyboardState(document.body)
 
         update: (dt) ->
             # console.log("KEYS #{JSON.stringify(@world.inputs.keyboard.keyCodes)}")

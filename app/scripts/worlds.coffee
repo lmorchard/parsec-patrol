@@ -1,8 +1,8 @@
 define [
     'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub',
-    'Stats'
+    #'Stats'
 ], (
-    Utils, Entities, Components, Systems, _, PubSub, Stats
+    Utils, Entities, Components, Systems, _, PubSub#, Stats
 ) ->
     requestAnimationFrame = (window.requestAnimationFrame or
         window.webkitRequestAnimationFrame or
@@ -29,7 +29,7 @@ define [
             @systems = []
             @addSystem(systems...)
 
-            if @debug
+            if false and @debug
                 @stats = new Stats()
                 @stats.setMode(0)
                 document.body.appendChild(@stats.domElement)
@@ -97,11 +97,11 @@ define [
 
             @t_last_ts = 0
             draw_loop = (ts) =>
-                @stats.begin() if @debug
+                #@stats.begin() if @debug
                 t_delta = ts - @t_last_ts
                 @t_last_ts = ts
                 @draw t_delta
-                @stats.end() if @debug
+                #@stats.end() if @debug
                 requestAnimationFrame draw_loop
 
             requestAnimationFrame draw_loop
