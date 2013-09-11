@@ -6,11 +6,11 @@
         <style type="text/css">
             #readouts {
                 position: absolute;
-                left:0; bottom: 0; right: 0; top: 75%;
-                opacity: 0.75; background: #000; color: #fff
+                left:0; bottom: 0; right: 0; top: 95%;
+                opacity: 0.55; background: #000; color: #fff
             }
             #readouts ul { list-style-type: none; margin: 0; padding: 0 }
-            #readouts ul li { width: 25%; float: left }
+            #readouts ul li { width: 50%; float: left }
         </style>
     </head>
     <body>
@@ -18,18 +18,18 @@
             <canvas style="height: 100%" id="gameCanvas"></canvas>
             <form id="readouts">
                 <ul>
-                    <li>DMG: <input type="text" size="15" id="dmg"></li>
                     <li>DPS: <input type="text" size="15" id="dps"></li>
                     <li id="beam_sel">Beams: 
                         <button value="1">1</button>
                         <button value="3">3</button>
                         <button value="5">5</button>
                         <button value="7">7</button>
+                        <button value="9">9</button>
                         <button value="10">10</button>
+                        <button value="12">12</button>
                         <button value="15">15</button>
                     </li>
                 </ul>
-                <textarea id="out" cols="96" rows="8"></textarea>
             </form>
         </div>
         <script src="config.js"></script>

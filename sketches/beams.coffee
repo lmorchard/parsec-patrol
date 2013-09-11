@@ -124,7 +124,6 @@ define [
         
         dps = dmg_sum / (duration/1000)
         $('#dps').attr('value', "#{dps}")
-        $('#dmg').attr('value', "#{data.amount}")
 
     world.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) =>
         #scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')

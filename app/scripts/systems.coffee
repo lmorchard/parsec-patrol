@@ -180,7 +180,7 @@ define [
             return if not @current_scene
 
             @ctx.save()
-            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
+            @ctx.fillStyle = "rgba(0, 0, 0, 0.9)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
@@ -233,14 +233,17 @@ define [
             left = 0 - (w/2)
            
             @ctx.save()
-            @ctx.lineWidth = 4
+            @ctx.lineWidth = 2 * @viewport_ratio
             @ctx.strokeStyle = "#333"
+            @ctx.shadowColor = "#333"
+            @ctx.shadowBlur = 3 * @viewport_ratio
             @ctx.beginPath()
             @ctx.moveTo(left, top)
             @ctx.lineTo(left + w, top)
             @ctx.stroke()
             if perc > 0
                 @ctx.strokeStyle = "#3e3"
+                @ctx.shadowColor = "#3e3"
                 @ctx.beginPath()
                 @ctx.moveTo(left, top)
                 @ctx.lineTo(left + (w * perc), top)
@@ -283,8 +286,10 @@ define [
                     target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
                     target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
-                    @ctx.lineWidth = (0.75 * @viewport_ratio)
+                    @ctx.lineWidth = (1 * @viewport_ratio)
+                    @ctx.shadowBlur = (4 * @viewport_ratio)
                     @ctx.strokeStyle = beam_weapon.color
+                    @ctx.shadowColor = beam_weapon.color
                     @ctx.beginPath()
                     @ctx.moveTo(v_turret.x, v_turret.y)
                     @ctx.lineTo(target_x, target_y)
@@ -298,7 +303,9 @@ define [
 
             @ctx.fillStyle = "#000"
             @ctx.strokeStyle = sprite.stroke_style
-            @ctx.lineWidth = 1.25
+            @ctx.shadowColor = sprite.stroke_style
+            @ctx.shadowBlur = 3 * @viewport_ratio
+            @ctx.lineWidth = 1.25 * @viewport_ratio
 
             # TODO: Yes, I know, this sucks. Refactor into something better
             switch sprite.shape
