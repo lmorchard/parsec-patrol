@@ -13,18 +13,40 @@
         <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-        <link rel="stylesheet" href="styles/b431c35c.main.css">
+        <link rel="stylesheet" href="styles/f3ab6853.main.css">
+
+        <style type="text/css">
+            #readouts {
+                position: absolute;
+                left:0; bottom: 0; right: 0; top: 95%;
+                opacity: 0.55; background: #000; color: #fff
+            }
+            #readouts ul { list-style-type: none; margin: 0; padding: 0 }
+            #readouts ul li { width: 50%; float: left }
+        </style>
 
         <script src="scripts/vendor/f7f27360.modernizr.js"></script>
     </head>
     <body>
         <div id="gameArea">
             <canvas id="gameCanvas"></canvas>
-            <div id="controlPanel">
-                <button class="srs"><span>SRS</span></button><button class="lrs"><span>LRS</span></button><button class="nav"><span>NAV</span></button><button class="com"><span>COM</span></button><button class="pha"><span>PHA</span></button><button class="tor"><span>TOR</span></button><button class="dmg"><span>DMG</span></button><button class="def"><span>DEF</span></button>
-            </div>
+            <form id="readouts">
+                <ul>
+                    <li>DPS: <input type="text" size="15" id="dps"></li>
+                    <li id="beam_sel">Beams: 
+                        <button value="1">1</button>
+                        <button value="3">3</button>
+                        <button value="5">5</button>
+                        <button value="7">7</button>
+                        <button value="9">9</button>
+                        <button value="10">10</button>
+                        <button value="12">12</button>
+                        <button value="15">15</button>
+                    </li>
+                </ul>
+            </form>
         </div>
         <script src="scripts/config.js"></script>
-        <script data-main="scripts/200c46fb.main" src="bower_components/requirejs/require.js"></script>
+        <script data-main="scripts/05ca9a49.main" src="bower_components/requirejs/require.js"></script>
     </body>
 </html>
