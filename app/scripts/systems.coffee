@@ -195,7 +195,11 @@ define [
             scene = @world.entities.get(@current_scene, C.EntityGroup)
             for eid, ignore of scene.entities
 
-                [sprite, pos] = @world.entities.get(eid, C.Sprite, C.Position)
+                spawn = @world.entities.get(eid, C.Spawn)
+                continue if not spawn?.spawned
+
+                sprite = @world.entities.get(eid, C.Sprite)
+                pos = @world.entities.get(eid, C.Position)
                 continue if not sprite or not pos
 
                 @draw_beams t_delta, eid, pos
@@ -282,11 +286,11 @@ define [
                 @ctx.fill()
                 
                 if beam?.target and not beam?.charging
-                    fudge = 2.125 * @viewport_ratio
+                    fudge = 1.25 * @viewport_ratio
                     target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
                     target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
-                    @ctx.lineWidth = (1 * @viewport_ratio)
+                    @ctx.lineWidth = (0.75 * @viewport_ratio)
                     @ctx.shadowBlur = (4 * @viewport_ratio)
                     @ctx.strokeStyle = beam_weapon.color
                     @ctx.shadowColor = beam_weapon.color
@@ -621,7 +625,30 @@ define [
         constructor: () ->
             @v_beam = new Vector2D()
             @v_target = new Vector2D()
-        
+            @stats = {}
+
+        calculate_stats: (weap) ->
+            # Scale beam parameters so that more beams are faster, yet have the
+            # same base total DPS on a single target.
+            key = "#{weap.active_beams}:#{weap.max_power}"
+            if not (key of @stats)
+                # Cache these calculations, because they happen on every frame.
+                active = weap.active_beams
+                @stats[key] =
+                    # Charge is active-squared, because beams are active-times
+                    # as numerous AND active-times as fast. That took me awhile
+                    # to figure out.
+                    max_charge: weap.max_power / (active * active)
+                    # Rate that the capacitor fills from energy stores
+                    charge_rate: weap.charge_rate / active
+                    # Rate that capacitor drains in delivering damage
+                    discharge_rate: weap.discharge_rate / active
+                    # Total range is split per-beam
+                    beam_range: weap.max_range / active
+                    # Damage penalty for splitting the beam
+                    dmg_penalty: 1 - ((active / weap.max_beams) * weap.split_penalty)
+            return @stats[key]
+
         update_match: (t_delta, eid, weap) ->
 
             pos = @world.entities.get(eid, C.Position)
@@ -634,33 +661,27 @@ define [
                                          weap.max_beams)
             return if weap.active_beams is 0
 
-            # Scale beam parameters so that more beams are faster, but base
-            # total DPS on a single target is the same.
-            # TODO: Could cache these calculations?
-            max_charge = weap.max_power / (weap.active_beams * weap.active_beams)
-            charge_rate = weap.charge_rate / weap.active_beams
-            discharge_rate = weap.discharge_rate / weap.active_beams
-            # Damage penalty for splitting the beam, up to 20%
-            penalty = 1 - ((weap.active_beams / weap.max_beams) * weap.split_penalty)
+            # Calculate current beam weapon parameters
+            stats = @calculate_stats(weap)
 
+            # Perform beam charging. Immediately after charging, a beam can
+            # change targets.
             beams_to_target = []
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
 
                 if beam.charging
-                    beam.charge += charge_rate * t_delta
-                    if beam.charge >= max_charge
-                        beam.charge = max_charge
+                    beam.charge += stats.charge_rate * t_delta
+                    if beam.charge >= stats.max_charge
+                        beam.charge = stats.max_charge
                         beam.charging = false
                         beam.target = null
                         beams_to_target.push(beam)
 
-            # Per-beam range is split over availables
-            beam_range = weap.max_range / weap.active_beams
-
+            # Do we have any beams available for targeting...?
             if beams_to_target.length > 0
                 
-                # Find targets within beam range
+                # Find valid targets within beam range
                 targets = @world.entities.getComponents(C.WeaponsTarget)
                 by_range = []
                 for t_eid, target of targets
@@ -668,42 +689,40 @@ define [
                     # Do not target self!
                     continue if t_eid is eid
 
-                    # Target only the intended team
-                    if target.team is weap.target_team
-                        t_pos = @world.entities.get(t_eid, C.Position)
-                        @v_target.setValues(t_pos.x, t_pos.y)
-                        t_range = @v_beam.dist(@v_target)
-                        if t_range <= beam_range
-                            by_range.push([t_range, t_eid, t_pos])
+                    # Target only the intended team.
+                    continue if target.team isnt weap.target_team
 
-                # Bail, if no targets found
-                return if not by_range.length > 0
+                    # Finally, let's see if the target is in range.
+                    t_pos = @world.entities.get(t_eid, C.Position)
+                    @v_target.setValues(t_pos.x, t_pos.y)
+                    t_range = @v_beam.dist(@v_target)
+                    if t_range <= stats.beam_range
+                        by_range.push([t_range, t_eid, t_pos])
 
-                # Sort targets by range
-                _.sortBy(by_range, (a)->a[0])
+                # Assign available beams to closest targets (if any)
+                if by_range.length
+                    _.sortBy(by_range, (a)->a[0])
+                    while beams_to_target.length
+                        for [t_range, t_eid, t_pos] in by_range
+                            beam = beams_to_target.pop()
+                            break if not beam
+                            beam.target = t_eid
 
-                # Assign targets to beams ready to switch
-                while beams_to_target.length
-                    for [t_range, t_eid, t_pos] in by_range
-                        # Fetch next beam to target, bail if we're out
-                        beam = beams_to_target.pop()
-                        break if not beam
-                        beam.target = t_eid
-
-            # Process damage for all available beams
+            # Process discharge and damage for all active beams
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
+
+                # A beam charging does no damage.
                 continue if beam.charging
 
+                # Update the beam's end-point, if the target still exists.
                 t_pos = @world.entities.get(beam.target, C.Position)
-                if not t_pos
-                    # beam.target = null
-                else
+                if t_pos
                     beam.x = t_pos.x
                     beam.y = t_pos.y
 
                 # Consume charge for beam, start charging cycle if needed
-                discharge = discharge_rate * t_delta
+                discharge = stats.discharge_rate * t_delta
                 discharge = beam.charge if beam.charge < discharge
                 beam.charge -= discharge
                 if beam.charge <= 0
@@ -711,7 +730,7 @@ define [
                     beam.charging = true
 
                 # Damage is power discharged, with some wasteage
-                dmg = discharge * penalty
+                dmg = discharge * stats.dmg_penalty
 
                 # Send damage to the target
                 @world.publish HealthSystem.MSG_DAMAGE,

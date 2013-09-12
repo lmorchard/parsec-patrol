@@ -83,6 +83,9 @@ define [
                 if not @is_paused
                     @tick t_delta
                     if false
+                        # TODO: Fixed-step game logic frames, with an
+                        # accumulator to trigger fill-in frames that don't
+                        # exactly match real timing.
                         steps = Math.min((t_delta / @tick_duration),
                                          @max_ticks_per_loop)
                         for step in [1..steps]
