@@ -63,7 +63,7 @@ define [
 
     window.beam = c_hero_beam
 
-    MAX_ENEMIES = 20
+    MAX_ENEMIES = 16
 
     v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
@@ -98,7 +98,7 @@ define [
             spawn_enemy()
 
     damage_log = []
-    world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
+    if false then world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
         
         # Only count hero ship DPS
         type_name = em.get(data.from, C.TypeName)

@@ -128,6 +128,8 @@ define [
         update_match: (dt, eid, entity_group) ->
 
     class ViewportSystem extends System
+        glow: false
+
         match_component: C.Sprite
 
         constructor: (@window, @game_area, @canvas,
@@ -239,15 +241,17 @@ define [
             @ctx.save()
             @ctx.lineWidth = 2 * @viewport_ratio
             @ctx.strokeStyle = "#333"
-            @ctx.shadowColor = "#333"
-            @ctx.shadowBlur = 3 * @viewport_ratio
+            if @glow
+                @ctx.shadowColor = "#333"
+                @ctx.shadowBlur = 3 * @viewport_ratio
             @ctx.beginPath()
             @ctx.moveTo(left, top)
             @ctx.lineTo(left + w, top)
             @ctx.stroke()
             if perc > 0
                 @ctx.strokeStyle = "#3e3"
-                @ctx.shadowColor = "#3e3"
+                if @glow
+                    @ctx.shadowColor = "#3e3"
                 @ctx.beginPath()
                 @ctx.moveTo(left, top)
                 @ctx.lineTo(left + (w * perc), top)
@@ -291,9 +295,10 @@ define [
                     target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
                     @ctx.lineWidth = (0.75 * @viewport_ratio)
-                    @ctx.shadowBlur = (4 * @viewport_ratio)
                     @ctx.strokeStyle = beam_weapon.color
-                    @ctx.shadowColor = beam_weapon.color
+                    if @glow
+                        @ctx.shadowBlur = (4 * @viewport_ratio)
+                        @ctx.shadowColor = beam_weapon.color
                     @ctx.beginPath()
                     @ctx.moveTo(v_turret.x, v_turret.y)
                     @ctx.lineTo(target_x, target_y)
@@ -307,8 +312,9 @@ define [
 
             @ctx.fillStyle = "#000"
             @ctx.strokeStyle = sprite.stroke_style
-            @ctx.shadowColor = sprite.stroke_style
-            @ctx.shadowBlur = 3 * @viewport_ratio
+            if @glow
+                @ctx.shadowColor = sprite.stroke_style
+                @ctx.shadowBlur = 3 * @viewport_ratio
             @ctx.lineWidth = 1.25 * @viewport_ratio
 
             # TODO: Yes, I know, this sucks. Refactor into something better

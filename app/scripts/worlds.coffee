@@ -1,8 +1,8 @@
 define [
     'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub',
-    #'Stats'
+    'Stats'
 ], (
-    Utils, Entities, Components, Systems, _, PubSub#, Stats
+    Utils, Entities, Components, Systems, _, PubSub, Stats
 ) ->
     requestAnimationFrame = (window.requestAnimationFrame or
         window.webkitRequestAnimationFrame or
@@ -11,12 +11,14 @@ define [
         window.msRequestAnimationFrame     or
         (fn) -> setTimeout(fn, (1000/60)))
 
+    TARGET_FPS = 60
+    TARGET_DURATION = 1000 / TARGET_FPS
+
     class World
         debug: true
-        tick_duration: Math.floor(1000 / 60)
-        max_ticks_per_loop: 10,
+        tick_duration: TARGET_DURATION
+        max_t_delta: TARGET_DURATION * 5
         ticks: 0
-        t_last: 0
 
         constructor: (@width=640, @height=480, systems...) ->
             @id = Utils.generateID()
@@ -29,7 +31,7 @@ define [
             @systems = []
             @addSystem(systems...)
 
-            if false and @debug
+            if @debug
                 @stats = new Stats()
                 @stats.setMode(0)
                 document.body.appendChild(@stats.domElement)
@@ -73,41 +75,31 @@ define [
             return if @is_running
             @is_running = true
 
-            @t_last = Utils.now()
-            tick_loop = () =>
-            
-                t_now = Utils.now()
-                t_delta = t_now - @t_last
-                @t_last = t_now
+            @t_last = 0
+            @accumulator = 0
+
+            run_loop = (ts) =>
+                @stats.begin() if @debug
+
+                t_delta = Math.min(ts - @t_last, @max_t_delta)
+                @t_last = ts
+
+                @draw t_delta
 
                 if not @is_paused
-                    @tick t_delta
-                    if false
-                        # TODO: Fixed-step game logic frames, with an
-                        # accumulator to trigger fill-in frames that don't
-                        # exactly match real timing.
-                        steps = Math.min((t_delta / @tick_duration),
-                                         @max_ticks_per_loop)
-                        for step in [1..steps]
-                            @tick @tick_duration
+                    # Fixed-step game logic loop
+                    # see: http://gafferongames.com/game-physics/fix-your-timestep/
+                    @accumulator += t_delta
+                    while @accumulator > @tick_duration
+                        @tick @tick_duration
+                        @accumulator -= @tick_duration
 
-                if not @is_running
-                    cancelInterval(@interval_id)
+                @stats.end() if @debug
 
-            # TODO: Use a variable setTimeout instead? in case game logic time
-            # takes more than @tick_duration, maybe adjust tick_duration?
-            @interval_id = setInterval tick_loop, @tick_duration
+                if @is_running
+                    requestAnimationFrame run_loop
 
-            @t_last_ts = 0
-            draw_loop = (ts) =>
-                #@stats.begin() if @debug
-                t_delta = ts - @t_last_ts
-                @t_last_ts = ts
-                @draw t_delta
-                #@stats.end() if @debug
-                requestAnimationFrame draw_loop
-
-            requestAnimationFrame draw_loop
+            requestAnimationFrame run_loop
 
         stop: () ->
             @is_running = false
