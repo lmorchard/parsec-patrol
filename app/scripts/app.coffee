@@ -9,6 +9,7 @@ define [
     area = document.getElementById('gameArea')
         
     world = new W.World(640, 480,
+        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.KeyboardInputSystem(canvas),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
@@ -20,7 +21,7 @@ define [
         new S.ThrusterSystem,
         new S.HealthSystem,
         new S.BeamWeaponSystem,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        new S.ExplosionSystem,
     )
 
     em = world.entities
@@ -40,30 +41,13 @@ define [
             #new C.ClickCourse(true),
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(15, 9, 1000, 4000, 3.5, 3.5, "#33f", "invaders"),
+            c_hero_beam = new C.BeamWeapon(15, 9, 1250, 4000, 4000, 4000, "#33f", "invaders"),
         ),
     )
 
-    if false
-        e_enemy = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName("enemy-#{enemy_ct}"),
-            new C.Sprite('enemyscout', '#f33', 12, 12),
-            new C.Spawn('at', -65, -65),
-            new C.Position,
-            new C.Collidable,
-            #new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_hero, Math.PI * 2),
-            new C.Health(3000000),
-            new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 75, 250, 0.25, 0.5, "#f44", "commonwealth"),
-        )
-        group = em.get(scene, C.EntityGroup)
-        C.EntityGroup.add(group, e_enemy)
-
     window.beam = c_hero_beam
 
-    MAX_ENEMIES = 20
+    MAX_ENEMIES = 24
 
     v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
@@ -88,10 +72,21 @@ define [
             new C.Seeker(e_hero, Math.PI * 2),
             new C.Health(300),
             new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 75, 250, 0.25, 0.5, "#f44", "commonwealth"),
+            new C.BeamWeapon(1, 1, 75, 250, 250, 500, "#f44", "commonwealth"),
         )
         group = em.get(scene, C.EntityGroup)
         C.EntityGroup.add(group, enemy)
+
+    spawn_explosion = (dying_eid) ->
+        pos = em.get(dying_eid, C.Position)
+        exp = em.create(
+            new C.TypeName('Explosion'),
+            new C.Position,
+            new C.Spawn('at', pos.x, pos.y),
+            new C.Explosion(0.5, 70, 100, 1.5, 125, '#f33'),
+        )
+        group = em.get(scene, C.EntityGroup)
+        C.EntityGroup.add(group, exp)
 
     if MAX_ENEMIES
         for idx in [1..MAX_ENEMIES]
@@ -134,6 +129,9 @@ define [
 
         # Respawn an enemy, if necessary
         if type_name?.name is "EnemyScout"
+
+            spawn_explosion(data.entity_id)
+            
             scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
             if scouts.length <= MAX_ENEMIES
                 spawn_enemy()

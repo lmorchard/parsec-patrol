@@ -108,8 +108,21 @@ define ['entities', 'underscore'], (Entities, _) ->
         constructor: (@max=1000) ->
             @current = @max
 
+    class Explosion extends Component
+        type: 'Explosion'
+        constructor: (@ttl=2.0, @radius=100,
+                      @max_particles=100, @max_particle_size=4,
+                      @max_velocity=300, @color='#f00') ->
+            @age = 0
+            @stop = false
+            @particles = []
+            for idx in [0..@max_particles-1]
+                @particles.push({
+                    free: true, x: 0, y: 0, dx: 0, dy: 0, s: 0, mr: 0
+                })
+
     return {
         Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin,
         Bouncer, Spawn, Collidable, Renderable, Sprite, Thruster, Seeker,
-        ClickCourse, WeaponsTarget, BeamWeapon, Health
+        ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion
     }

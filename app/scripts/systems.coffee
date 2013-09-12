@@ -200,9 +200,8 @@ define [
                 spawn = @world.entities.get(eid, C.Spawn)
                 continue if not spawn?.spawned
 
-                sprite = @world.entities.get(eid, C.Sprite)
                 pos = @world.entities.get(eid, C.Position)
-                continue if not sprite or not pos
+                continue if not pos
 
                 @draw_beams t_delta, eid, pos
 
@@ -210,24 +209,46 @@ define [
 
                 vp_x = @convertX(pos.x)
                 vp_y = @convertY(pos.y)
-                
-                sprite_size = 20 * @viewport_ratio
-
-                w = sprite.width * @viewport_ratio
-                h = sprite.height * @viewport_ratio
-
                 @ctx.translate(vp_x, vp_y)
 
-                if @draw_bounding_boxes
-                    @ctx.strokeStyle = "#33c"
-                    wb = w / 2
-                    hb = h / 2
-                    @ctx.strokeRect(0-wb, 0-wb, w, h)
+                sprite = @world.entities.get(eid, C.Sprite)
+                if sprite
+                    sprite_size = 20 * @viewport_ratio
 
-                @draw_health_bar t_delta, eid, w, h
-                @draw_sprite t_delta, eid, w, h, pos, sprite_size, sprite
+                    w = sprite.width * @viewport_ratio
+                    h = sprite.height * @viewport_ratio
+
+                    if @draw_bounding_boxes
+                        @ctx.strokeStyle = "#33c"
+                        wb = w / 2
+                        hb = h / 2
+                        @ctx.strokeRect(0-wb, 0-wb, w, h)
+
+                    @draw_health_bar t_delta, eid, w, h
+                    @draw_sprite t_delta, eid, w, h, pos, sprite_size, sprite
+
+                explosion = @world.entities.get(eid, C.Explosion)
+                if explosion
+                    @draw_explosion t_delta, eid, explosion
 
                 @ctx.restore()
+
+        draw_explosion: (t_delta, eid, explosion) ->
+
+            @ctx.save()
+            @ctx.fillStyle = explosion.color
+
+            duration_alpha = 1 - (explosion.age / explosion.ttl)
+
+            for p in explosion.particles
+                continue if p.free
+                @ctx.globalAlpha = (1 - (p.r / p.mr)) * duration_alpha
+                s = p.s * @viewport_ratio
+                @ctx.fillRect(p.x * @viewport_ratio,
+                              p.y * @viewport_ratio,
+                              s, s)
+            
+            @ctx.restore()
 
         draw_health_bar: (t_delta, eid, w, h) ->
             health = @world.entities.get(eid, C.Health)
@@ -769,9 +790,54 @@ define [
                 @world.publish SpawnSystem.MSG_DESPAWN,
                     entity_id: eid
 
+    class ExplosionSystem extends System
+        match_component: C.Explosion
+
+        constructor: () ->
+            @v_center = new Vector2D(0, 0)
+            @v_scratch = new Vector2D(0, 0)
+
+        update_match: (t_delta, eid, explosion) ->
+
+            for p in explosion.particles
+
+                if not explosion.stop and p.free
+                    p.x = 0
+                    p.y = 0
+                    @v_scratch.setValues(0, explosion.max_velocity * Math.random())
+                    @v_scratch.rotateAround(@v_center, (Math.PI * 2) * Math.random())
+                    p.dx = @v_scratch.x
+                    p.dy = @v_scratch.y
+                    p.mr = explosion.radius * Math.random()
+                    p.s = explosion.max_particle_size * Math.random()
+                    p.free = false
+
+                if not p.free
+                    p.x += p.dx * t_delta
+                    p.y += p.dy * t_delta
+
+                    @v_scratch.setValues(p.x, p.y)
+                    p.r = @v_scratch.dist(@v_center)
+                    if p.r >= p.mr
+                        p.free = true
+
+            explosion.age += t_delta
+            if not explosion.stop and explosion.age >= (explosion.ttl * 0.75)
+                explosion.stop = true
+
+            if explosion.stop
+                all_free = true
+                for p in explosion.particles
+                    if not p.free
+                        all_free = false
+                        break
+                if all_free or explosion.age >= explosion.ttl
+                    @world.publish SpawnSystem.MSG_DESPAWN,
+                        entity_id: eid
+
     return {
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
         ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
-        BeamWeaponSystem, HealthSystem, SceneSystem
+        BeamWeaponSystem, HealthSystem, SceneSystem, ExplosionSystem
     }

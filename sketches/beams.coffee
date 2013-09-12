@@ -9,6 +9,7 @@ define [
     area = document.getElementById('gameArea')
         
     world = new W.World(640, 480,
+        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.KeyboardInputSystem(canvas),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
@@ -20,7 +21,7 @@ define [
         new S.ThrusterSystem,
         new S.HealthSystem,
         new S.BeamWeaponSystem,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        new S.ExplosionSystem,
     )
 
     em = world.entities
@@ -93,6 +94,35 @@ define [
         group = em.get(scene, C.EntityGroup)
         C.EntityGroup.add(group, enemy)
 
+    spawn_explosion = (dying_eid) ->
+        pos = em.get(dying_eid, C.Position)
+        exp = em.create(
+            new C.TypeName('Explosion'),
+            new C.Position,
+            new C.Spawn('at', pos.x, pos.y),
+            new C.Explosion(0.5, 70, 100, 1.5, 125, '#f33'),
+        )
+        group = em.get(scene, C.EntityGroup)
+        C.EntityGroup.add(group, exp)
+
+    world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
+        
+        type_name = em.get(data.entity_id, C.TypeName)
+
+        # Respawn an enemy, if necessary
+        if type_name?.name is "EnemyScout"
+            
+            spawn_explosion(data.entity_id)
+
+            scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+            if scouts.length <= MAX_ENEMIES
+                spawn_enemy()
+
+        # Reload after a few seconds, if the hero ship dies
+        if type_name?.name is "HeroShip"
+            r = () -> location.reload()
+            setTimeout r, 5000
+
     if MAX_ENEMIES
         for idx in [1..MAX_ENEMIES]
             spawn_enemy()
@@ -127,21 +157,6 @@ define [
 
     world.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) =>
         #scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
-
-    world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
-        
-        type_name = em.get(data.entity_id, C.TypeName)
-
-        # Respawn an enemy, if necessary
-        if type_name?.name is "EnemyScout"
-            scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
-            if scouts.length <= MAX_ENEMIES
-                spawn_enemy()
-
-        # Reload after a few seconds, if the hero ship dies
-        if type_name?.name is "HeroShip"
-            r = () -> location.reload()
-            setTimeout r, 5000
 
     world.dump = () ->
         console.log JSON.stringify(world.entities.store)

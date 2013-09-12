@@ -1,8 +1,8 @@
 define [
     'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub',
-    'Stats'
+    # 'Stats'
 ], (
-    Utils, Entities, Components, Systems, _, PubSub, Stats
+    Utils, Entities, Components, Systems, _, PubSub# , Stats
 ) ->
     requestAnimationFrame = (window.requestAnimationFrame or
         window.webkitRequestAnimationFrame or
@@ -15,7 +15,7 @@ define [
     TARGET_DURATION = 1000 / TARGET_FPS
 
     class World
-        debug: true
+        measure_fps: false
         tick_duration: TARGET_DURATION
         max_t_delta: TARGET_DURATION * 5
         ticks: 0
@@ -31,7 +31,7 @@ define [
             @systems = []
             @addSystem(systems...)
 
-            if @debug
+            if @measure_fps
                 @stats = new Stats()
                 @stats.setMode(0)
                 document.body.appendChild(@stats.domElement)
@@ -81,7 +81,7 @@ define [
             @tick_duration_sec = @tick_duration / 1000
 
             run_loop = (ts) =>
-                @stats.begin() if @debug
+                @stats.begin() if @measure_fps
 
                 t_delta = Math.min(ts - @t_last, @max_t_delta)
                 @t_last = ts
@@ -96,7 +96,7 @@ define [
                         @tick @tick_duration_sec
                         @accumulator -= @tick_duration
 
-                @stats.end() if @debug
+                @stats.end() if @measure_fps
 
                 if @is_running
                     requestAnimationFrame run_loop
