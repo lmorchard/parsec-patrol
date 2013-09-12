@@ -93,7 +93,7 @@ define [
             spawn_enemy()
 
     damage_log = []
-    world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
+    if false then world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
         
         # Only count hero ship DPS
         type_name = em.get(data.from, C.TypeName)
