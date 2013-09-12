@@ -40,7 +40,7 @@ define [
             #new C.ClickCourse(true),
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(15, 5, 1000, 4000, 3.5, 3.5, "#33f", "invaders"),
+            c_hero_beam = new C.BeamWeapon(15, 9, 1000, 4000, 3.5, 3.5, "#33f", "invaders"),
         ),
     )
 
