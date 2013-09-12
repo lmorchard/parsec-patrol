@@ -180,7 +180,7 @@ define [
             return if not @current_scene
 
             @ctx.save()
-            @ctx.fillStyle = "rgba(0, 0, 0, 0.9)"
+            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
             @ctx.restore()
 
