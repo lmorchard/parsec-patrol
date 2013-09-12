@@ -474,15 +474,15 @@ define [
             if pos.y > yb then bouncer.y_dir = -1
             if pos.y < -yb then bouncer.y_dir = 1
 
-            pos.x += bouncer.x_dir * ((dt/1000) * bouncer.x_sec)
-            pos.y += bouncer.y_dir * ((dt/1000) * bouncer.y_sec)
+            pos.x += bouncer.x_dir * (dt * bouncer.x_sec)
+            pos.y += bouncer.y_dir * (dt * bouncer.y_sec)
                 
     class SpinSystem extends System
         match_component: C.Spin
 
         update_match: (dt, eid, spin) ->
             pos = @world.entities.get(eid, C.Position)
-            d_angle = (dt / 1000) * spin.rad_per_sec
+            d_angle = dt * spin.rad_per_sec
             pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
             
     class OrbiterSystem extends System
@@ -500,7 +500,7 @@ define [
             @v_orbited.setValues(o_pos.x, o_pos.y)
             @v_orbiter.setValues(pos.x, pos.y)
 
-            angle_delta = (dt / 1000) * orbiter.rad_per_sec
+            angle_delta = dt * orbiter.rad_per_sec
             @v_orbiter.rotateAround(@v_orbited, angle_delta)
 
             @v_old.setValues(pos.x, pos.y)
@@ -548,7 +548,7 @@ define [
 
             # Figure out the amount of rotation for this tick. If it's more
             # than the remaining offset, just rotate that much (or none)
-            d_angle = (dt / 1000) * seeker.rad_per_sec
+            d_angle = dt * seeker.rad_per_sec
             d_angle = offset if d_angle > offset
 
             # Update the rotation, ensuring a 0..2*Math.PI range.
@@ -567,7 +567,7 @@ define [
 
             @v_inertia.setValues(thruster.dx, thruster.dy)
 
-            tick_dv = (dt / 1000) * thruster.dv
+            tick_dv = dt * thruster.dv
             if not thruster.active
                 # Fire retro-thrusters until inertia is gone
                 @v_inertia.addScalar(0 - tick_dv)
@@ -593,8 +593,8 @@ define [
             thruster.dy = @v_inertia.y
 
             # Finally, update position based on inertia
-            pos.x += (dt / 1000) * thruster.dx
-            pos.y += (dt / 1000) * thruster.dy
+            pos.x += dt * thruster.dx
+            pos.y += dt * thruster.dy
 
     class ClickCourseSystem extends System
         match_component: C.ClickCourse

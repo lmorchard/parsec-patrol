@@ -78,6 +78,8 @@ define [
             @t_last = 0
             @accumulator = 0
 
+            @tick_duration_sec = @tick_duration / 1000
+
             run_loop = (ts) =>
                 @stats.begin() if @debug
 
@@ -91,7 +93,7 @@ define [
                     # see: http://gafferongames.com/game-physics/fix-your-timestep/
                     @accumulator += t_delta
                     while @accumulator > @tick_duration
-                        @tick @tick_duration
+                        @tick @tick_duration_sec
                         @accumulator -= @tick_duration
 
                 @stats.end() if @debug

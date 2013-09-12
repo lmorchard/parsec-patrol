@@ -40,7 +40,7 @@ define [
             #new C.ClickCourse(true),
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(15, 9, 1250, 3500, 3.5, 3.5, "#33f", "invaders"),
+            c_hero_beam = new C.BeamWeapon(15, 9, 1250, 3500, 3500, 3500, "#33f", "invaders"),
         ),
     )
 
@@ -56,14 +56,14 @@ define [
             new C.Seeker(e_hero, Math.PI * 2),
             new C.Health(3000000),
             new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 75, 250, 0.25, 0.5, "#f44", "commonwealth"),
+            new C.BeamWeapon(1, 1, 75, 250, 250, 500, "#f44", "commonwealth"),
         )
         group = em.get(scene, C.EntityGroup)
         C.EntityGroup.add(group, e_enemy)
 
     window.beam = c_hero_beam
 
-    MAX_ENEMIES = 16
+    MAX_ENEMIES = 24
 
     v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
@@ -88,7 +88,7 @@ define [
             new C.Seeker(e_hero, Math.PI * 2),
             new C.Health(300),
             new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 75, 250, 0.25, 0.5, "#f44", "commonwealth"),
+            new C.BeamWeapon(1, 1, 75, 250, 250, 500, "#f44", "commonwealth"),
         )
         group = em.get(scene, C.EntityGroup)
         C.EntityGroup.add(group, enemy)
