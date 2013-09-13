@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "sprites.js",
+  "sourceRoot": "../../../app/scripts/sketches/",
+  "sources": [
+    "sprites.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAGG,GAHH,EAAO,CAAA,CAAA,EAAA;CAMH,OAAA,2BAAA;CAAA,EAAS,CAAT,EAAA,EAAiB,IAAR,EAAA;CAAT,EACO,CAAP,IAAe,EAAR,IAAA;AAIH,CALJ,CAEyB,CAAb,CAAZ,CAAA,CACQ,KADI,CAAA,CAAA,CACJ,CADI,CAAA,CAAA,CAEJ;CAJR,CAcA,CAAK,CAAL,CAAU,GAdV;AAoBgC,CApBhC,CAegC,CAAV,CAAtB,CAAK,CACK,EAAA,CAkCE,CAhCA,CAHkB,CAWlB,CAXZ,CAmBY;CAwBN,IAAD,MAAL;CAhEJ,EAGG;CAHH"
+}

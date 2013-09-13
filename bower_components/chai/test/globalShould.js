@@ -1,0 +1,1 @@
+suite("global should",function(){test("works",function(){var e=typeof window!="undefined"?window:global;e.globalShould=chai.should();try{globalShould.not.exist(undefined)}finally{delete e.globalShould}})});

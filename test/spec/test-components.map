@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "test-components.js",
+  "sourceRoot": "../../../test/spec/",
+  "sources": [
+    "test-components.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAEG,GAFH,EAAO,CAGH,CAHG,EAAA;CAKH,OAAA,KAAA;CAAA,CAAyB,EAAzB,EAAY,CAAA,CAAA,EAAA;CAEN,CAAc,CAAA,EAApB,IAAoB,EAApB,CAAA;CAEI,EAAM,EAAN,CAAA,GAAM;AACO,CAAR,EAAQ,CAAR,CAAD,CAAmB,SAAnB;CADJ,MAAM;CAGD,CAA4B,CAAA,CAAjC,KAAiC,IAAjC,aAAA;CACW,KAAD,GAAN,CAAA,KAAA;CADJ,MAAiC;CALrC,IAAoB;CAPxB,EAEG;CAFH"
+}

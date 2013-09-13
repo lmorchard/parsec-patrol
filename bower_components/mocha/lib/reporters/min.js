@@ -1,0 +1,1 @@
+function Min(e){Base.call(this,e),e.on("start",function(){process.stdout.write("[2J"),process.stdout.write("[1;3H")}),e.on("end",this.epilogue.bind(this))}var Base=require("./base");exports=module.exports=Min,Min.prototype.__proto__=Base.prototype;

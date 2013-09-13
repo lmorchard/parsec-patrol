@@ -1,0 +1,1 @@
+var http=require("http"),server=http.createServer(function(e,t){t.end("Hello World\n")});server.listen(8888),describe("http",function(){it("should provide an example",function(e){http.get({path:"/",port:8888},function(t){t.should.have.status(200),e()})})});

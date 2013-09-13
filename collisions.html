@@ -1,0 +1,18 @@
+<!doctype html>
+<html class="no-js">
+    <head>
+        <title>Collisions - Sketches</title>
+        <link rel="stylesheet" href="styles/styls.css">
+    </head>
+    <body>
+        <div id="gameArea">
+            <canvas style="height: 100%" id="gameCanvas"></canvas>
+        </div>
+        <script src="bower_components/requirejs/require.js"></script>
+        <script>
+            require(['scripts/common'], function (config) {
+                require(['sketches/collisions']);
+            });
+        </script>
+    </body>
+</html>

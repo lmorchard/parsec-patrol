@@ -1,0 +1,1 @@
+(function(){define(["app"],function(e){return suite("App",function(){return setup(function(){}),test("Module should be defined",function(){return assert.isDefined(e)})})})}).call(this);

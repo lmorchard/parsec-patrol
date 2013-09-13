@@ -1,0 +1,1 @@
+(function(){define([],function(){var e;return e=0,{generateID:function(){return e++},now:function(){return Date.now()}}})}).call(this);

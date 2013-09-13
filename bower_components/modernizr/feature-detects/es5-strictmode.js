@@ -1,0 +1,1 @@
+Modernizr.addTest("strictmode",function(){return function(){return!this}()});

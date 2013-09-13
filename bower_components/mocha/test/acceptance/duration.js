@@ -1,0 +1,1 @@
+describe("durations",function(){describe("when slow",function(){it("should highlight in red",function(e){setTimeout(function(){e()},100)})}),describe("when reasonable",function(){it("should highlight in yellow",function(e){setTimeout(function(){e()},50)})}),describe("when fast",function(){it("should highlight in green",function(e){setTimeout(function(){e()},10)})})});

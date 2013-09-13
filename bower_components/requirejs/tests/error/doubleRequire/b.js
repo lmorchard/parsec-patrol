@@ -1,0 +1,1 @@
+define(["myShim"],function(e){return{name:"b"}});

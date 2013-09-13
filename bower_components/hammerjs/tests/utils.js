@@ -1,0 +1,1 @@
+test("utils.extend",function(){expect(1),deepEqual(Hammer.utils.extend({a:1,b:3},{b:2,c:3}),{a:1,b:2,c:3},"Simple extend")}),test("utils.extend.clone",function(){expect(1);var e={foo:!0},t=Hammer.utils.extend({},e);e.foo=!1,deepEqual(t,{foo:!0},"Clone reference")});

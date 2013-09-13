@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "click-course.js",
+  "sourceRoot": "../../../app/scripts/sketches/",
+  "sources": [
+    "click-course.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAGG,GAHH,EAAO,CAAA,CAAA,EAAA;CAMH,OAAA,6EAAA;CAAA,EAAS,CAAT,EAAA,EAAiB,IAAR,EAAA;CAAT,EACO,CAAP,IAAe,EAAR,IAAA;AAKH,CANJ,CAGyB,CAAb,CAAZ,CAAA,CACQ,IADI,CAAA,CAAA,EACJ,GADI,CAEJ;CALR,CAaA,CAAK,CAAL,CAAU,GAbV;AAqBQ,CArBR,CAegC,CAAV,CAAtB,CAAK,CACO,EAEA,EAAA,CAHkB,CAclB,CAdZ;CAfA,EAsEe,CAAf,CAAA,CAAM;CAEA,IAAD,MAAL;CA9EJ,EAGG;CAHH"
+}

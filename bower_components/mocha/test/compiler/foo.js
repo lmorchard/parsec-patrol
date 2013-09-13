@@ -1,0 +1,1 @@
+var fs=require("fs");require.extensions[".foo"]=function(e,t){var n;n=fs.readFileSync(t,"utf8");var r='describe("custom compiler",function(){ it("should work",function() { '+n+".should.eql(1); }); });";return e._compile(r,t)};
