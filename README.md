@@ -7,9 +7,13 @@ Pew-pews in SPAAAAACE!
 npm install
 bower install
 grunt server
-open http://localhost:9000
+open http://localhost:9000/
+open http://localhost:9000/sketches/
 
 ## TODO / Ideas
+
+* Rework all component constructors to accept an object, looking forward to
+  JSON (de)serialization of the world
 
 * Auto-adjust rendering features based on FPS and estimated spare CPU headroom.
     * Glow on / off
