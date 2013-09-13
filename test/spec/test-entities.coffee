@@ -9,6 +9,11 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 new C.Position(null, 4, 8)
             )
 
+            @gid1 = @em.createGroup()
+            @gid2 = @em.createGroup()
+            @gid3 = 12345
+            @em.addToGroup(@gid1, @entity_0)
+
         test 'Module should be defined', () ->
             assert.isDefined Entities
 
@@ -73,3 +78,28 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
                 assert.ok(!@em.has(entity_1))
                 for c in components
                     assert.ok(_.isUndefined(@em.store[c.type][entity_1]))
+
+            test ".addEntityToGroup should add to group", () ->
+                assert.equal(@em.groupForEntity(@entity_0), @gid1)
+                assert.equal(@em.entitiesForGroup(@gid1)[@entity_0], 1)
+                assert.ok(@em.groupHasEntity(@gid1, @entity_0))
+                assert.ok(not @em.groupHasEntity(@gid2, @entity_0))
+                assert.ok(not @em.groupHasEntity(@gid3, @entity_0))
+
+            test ".removeEntityFromGroup should remove from group", () ->
+                @em.removeFromGroup(@gid1, @entity_0)
+
+                assert.equal(@em.groupForEntity(@entity_0), null)
+                assert.equal(@em.entitiesForGroup(@gid1)[@entity_0], null)
+                assert.ok(not @em.groupHasEntity(@gid1, @entity_0))
+                assert.ok(not @em.groupHasEntity(@gid2, @entity_0))
+                assert.ok(not @em.groupHasEntity(@gid3, @entity_0))
+
+            test "Destruction should remove from group", () ->
+                @em.destroy(@entity_0)
+
+                assert.equal(@em.groupForEntity(@entity_0), null)
+                assert.equal(@em.entitiesForGroup(@gid1)[@entity_0], null)
+                assert.ok(not @em.groupHasEntity(@gid1, @entity_0))
+                assert.ok(not @em.groupHasEntity(@gid2, @entity_0))
+                assert.ok(not @em.groupHasEntity(@gid3, @entity_0))

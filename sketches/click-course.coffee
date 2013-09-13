@@ -4,35 +4,22 @@ define [
 ], (
     W, E, C, S, PubSub, $, _
 ) ->
-
-    class PointerFollower extends C.Component
-    
-    class PointerFollowerSystem extends S.System
-        match_component: PointerFollower
-        update_match: (dt, eid, pointer_follower) ->
-            pos = @world.entities.get(eid, C.Position)
-            pos.x = @world.inputs.pointer_world_x
-            pos.y = @world.inputs.pointer_world_y
-
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
         
     world = new W.World(640, 480,
+        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.SpinSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
-        new PointerFollowerSystem,
-        new S.ViewportSystem(
-            window, area, canvas, 1.0, 1.0
-        ),
     )
 
     em = world.entities
 
-    scene = E.Scene.create(em, "Scene 1",
+    world.current_scene = scene = em.createGroup(
         e_sun = E.Star.create(em, 'Sun'),
         e_hero = em.create(
             new C.TypeName('HeroShip'),
@@ -87,15 +74,6 @@ define [
         ),
     )
 
-    world.subscribe '', (msg, data) ->
-        console.log("MSG #{msg} <- #{JSON.stringify(data)}")
-
-    world.dump = () ->
-        console.log JSON.stringify(world.entities.store)
-
     window.world = world
 
-    () ->
-        world.start()
-        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
-            scene: scene
+    () -> world.start()

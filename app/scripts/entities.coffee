@@ -5,6 +5,9 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
         constructor: () ->
             # Component store, indexed by @store[component][entity]
             @store = {}
+            @gid = 0
+            @entities_by_group = {}
+            @groups_by_entity = {}
 
         # Create an entity with the given components
         create: (components...) ->
@@ -15,6 +18,9 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
 
         # Destroy an entity and all its components by ID
         destroy: (entity_id) ->
+            gid = @groupForEntity(entity_id)
+            if gid isnt null
+                @removeFromGroup(gid, entity_id)
             for type, by_entity of @store
                 if entity_id of by_entity
                     delete by_entity[entity_id]
@@ -61,16 +67,39 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
         getComponents: (component) ->
             @store[component.prototype.type] || {}
 
+        createGroup: (entities...) ->
+            @entities_by_group[id = ++@gid] = {}
+            if entities.length > 0
+                @addToGroup(id, entities...)
+            return id
+
+        addToGroup: (group_id, entities...) ->
+            for entity_id in entities
+                @entities_by_group[group_id][entity_id] = 1
+                @groups_by_entity[entity_id] = group_id
+
+        removeFromGroup: (group_id, entity_id) ->
+            if not @groupHasEntity(group_id, entity_id)
+                return false
+            delete @entities_by_group[group_id][entity_id]
+            delete @groups_by_entity[entity_id]
+
+        groupForEntity: (entity_id) ->
+            return @groups_by_entity[entity_id]
+
+        groupHasEntity: (group_id, entity_id) ->
+            if not (group_id of @entities_by_group)
+                return false
+            return entity_id of @entities_by_group[group_id]
+
+        entitiesForGroup: (group_id) ->
+            if not (group_id of @entities_by_group)
+                return []
+            return @entities_by_group[group_id]
+
     class EntityTemplate
         @create: (entity_manager) ->
             return entity_manager.create()
-
-    class Scene extends EntityTemplate
-        @create: (em, name='unnamed', entities...) -> em.create(
-            new C.TypeName('Scene'),
-            new C.EntityName(name),
-            new C.EntityGroup(entities...)
-        )
 
     class SpaceEntity extends EntityTemplate
 
@@ -105,5 +134,5 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
         )
 
     return {
-        EntityManager, Scene, Star, Asteroid, Planet
+        EntityManager, Star, Asteroid, Planet
     }

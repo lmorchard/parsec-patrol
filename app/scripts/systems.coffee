@@ -91,11 +91,21 @@ define [
         update_match: (t_delta, eid, spawn) ->
             return if not @world
 
+            pos = @world.entities.get(eid, C.Position)
+
             if spawn.destroy
+                tombstone = @world.entities.get(eid, C.Tombstone)
+                if tombstone
+                    t_eid = @world.entities.create(
+                        new C.Spawn('at', pos.x, pos.y),
+                        tombstone.components...
+                    )
+                    gid = @world.entities.groupForEntity(eid)
+                    if gid isnt null
+                        @world.entities.addToGroup(gid, t_eid)
                 @world.entities.destroy(eid)
 
             else if not spawn.spawned
-                pos = @world.entities.get(eid, C.Position)
                 switch spawn.position_logic
                     when 'random'
                         pos.x = _.random(0-(@world.width/2), @world.width/2)
@@ -110,23 +120,6 @@ define [
                 @world.publish @constructor.MSG_SPAWN,
                     entity_id: eid, spawn: spawn
 
-    class SceneSystem extends System
-        @MSG_SCENE_CHANGE = 'scene.change'
-        match_component: C.EntityGroup
-
-        setWorld: (world) ->
-            super world
-            
-            @world.subscribe SceneSystem.MSG_SCENE_CHANGE, (msg, data) =>
-                @current_scene = data.scene
-
-            @world.subscribe SpawnSystem.MSG_DESPAWN, (msg, data) =>
-                return if not @current_scene
-                scene = @world.entities.get(@current_scene, C.EntityGroup)
-                C.EntityGroup.remove(scene, data.entity_id)
-
-        update_match: (dt, eid, entity_group) ->
-
     class ViewportSystem extends System
         glow: false
 
@@ -140,8 +133,6 @@ define [
 
         setWorld: (world) ->
             super world
-            @world.subscribe SceneSystem.MSG_SCENE_CHANGE, (msg, data) =>
-                @current_scene = data.scene
 
             @resize()
             bound_resize = () => @resize()
@@ -178,9 +169,6 @@ define [
             return (y * @viewport_ratio) + (@viewport_height / 2)
 
         draw: (t_delta) ->
-
-            return if not @current_scene
-
             @ctx.save()
             @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
@@ -194,8 +182,8 @@ define [
                     @world.inputs.pointer_y - (@viewport_height / 2)
                 ) / @viewport_ratio
 
-            scene = @world.entities.get(@current_scene, C.EntityGroup)
-            for eid, ignore of scene.entities
+            scene = @world.entities.entitiesForGroup(@world.current_scene)
+            for eid, ignore of scene
 
                 spawn = @world.entities.get(eid, C.Spawn)
                 continue if not spawn?.spawned
@@ -238,15 +226,19 @@ define [
             @ctx.save()
             @ctx.fillStyle = explosion.color
 
+            # Explosion fades out overall as it nears expiration
             duration_alpha = 1 - (explosion.age / explosion.ttl)
 
             for p in explosion.particles
                 continue if p.free
+                # Particles fade out as they reach the radius
                 @ctx.globalAlpha = (1 - (p.r / p.mr)) * duration_alpha
                 s = p.s * @viewport_ratio
-                @ctx.fillRect(p.x * @viewport_ratio,
-                              p.y * @viewport_ratio,
-                              s, s)
+                @ctx.fillRect(
+                    p.x * @viewport_ratio,
+                    p.y * @viewport_ratio,
+                    s, s
+                )
             
             @ctx.restore()
 
@@ -819,6 +811,7 @@ define [
                     @v_scratch.setValues(p.x, p.y)
                     p.r = @v_scratch.dist(@v_center)
                     if p.r >= p.mr
+                        p.r = p.mr
                         p.free = true
 
             explosion.age += t_delta
@@ -832,6 +825,7 @@ define [
                         all_free = false
                         break
                 if all_free or explosion.age >= explosion.ttl
+                    explosion.age = explosion.ttl
                     @world.publish SpawnSystem.MSG_DESPAWN,
                         entity_id: eid
 
@@ -839,5 +833,5 @@ define [
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
         ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
-        BeamWeaponSystem, HealthSystem, SceneSystem, ExplosionSystem
+        BeamWeaponSystem, HealthSystem, ExplosionSystem
     }

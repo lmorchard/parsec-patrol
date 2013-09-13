@@ -30,8 +30,7 @@ define [
     )
 
     em = world.entities
-
-    scene = E.Scene.create(em, "Scene 1",
+    world.current_scene = scene = em.createGroup(
         e_sun = E.Star.create(em, 'Sun'),
         e_torp = em.create(
             new C.TypeName('Torpedo'),
@@ -85,15 +84,4 @@ define [
         ),
     )
 
-    world.subscribe '', (msg, data) ->
-        console.log("MSG #{msg} <- #{JSON.stringify(data)}")
-
-    world.dump = () ->
-        console.log JSON.stringify(world.entities.store)
-
-    window.world = world
-
-    () ->
-        world.start()
-        world.publish S.ViewportSystem.MSG_SCENE_CHANGE,
-            scene: scene
+    () -> world.start()

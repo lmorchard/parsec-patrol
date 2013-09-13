@@ -1,8 +1,7 @@
 define [
     'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub',
-    # 'Stats'
 ], (
-    Utils, Entities, Components, Systems, _, PubSub# , Stats
+    Utils, Entities, Components, Systems, _, PubSub
 ) ->
     requestAnimationFrame = (window.requestAnimationFrame or
         window.webkitRequestAnimationFrame or
@@ -30,11 +29,6 @@ define [
             @entities = new Entities.EntityManager
             @systems = []
             @addSystem(systems...)
-
-            if @measure_fps
-                @stats = new Stats()
-                @stats.setMode(0)
-                document.body.appendChild(@stats.domElement)
 
         _psPrefix: (msg=null) ->
             msg = if not msg then '' else ".#{msg}"
@@ -81,8 +75,6 @@ define [
             @tick_duration_sec = @tick_duration / 1000
 
             run_loop = (ts) =>
-                @stats.begin() if @measure_fps
-
                 t_delta = Math.min(ts - @t_last, @max_t_delta)
                 @t_last = ts
 
@@ -95,8 +87,6 @@ define [
                     while @accumulator > @tick_duration
                         @tick @tick_duration_sec
                         @accumulator -= @tick_duration
-
-                @stats.end() if @measure_fps
 
                 if @is_running
                     requestAnimationFrame run_loop

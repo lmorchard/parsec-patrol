@@ -10,50 +10,28 @@ define [
         
     world = new W.World(640, 480,
         new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
-        new S.KeyboardInputSystem(canvas),
-        new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
-        new S.SceneSystem,
-        new S.OrbiterSystem,
-        new S.SpinSystem,
-        new S.SeekerSystem,
-        new S.ThrusterSystem,
-        new S.HealthSystem,
-        new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
 
     em = world.entities
 
-    scene = E.Scene.create(em, "Scene 1",
+    world.current_scene = scene = em.createGroup(
         e_sun = E.Star.create(em, 'Sun'),
     )
 
-    e_ct = 0
-
     spawn_explosion = () ->
-        v_spawn = new Vector2D(0, (250 - (210 * Math.random())))
+        v_spawn = new Vector2D(0, (250 - (150 * Math.random())))
         v_center = new Vector2D(0, 0)
         v_spawn.rotateAround(v_center, (Math.PI*2) * Math.random())
-        exp = em.create(
+        em.addToGroup(scene, em.create(
             new C.TypeName('Explosion'),
-            new C.EntityName("explosion-#{e_ct++}"),
             new C.Position,
             new C.Spawn('at', v_spawn.x, v_spawn.y),
-            new C.Explosion(1.0, 75, 50, 4, 150, '#f00'),
-        )
-        group = em.get(scene, C.EntityGroup)
-        C.EntityGroup.add(group, exp)
+            new C.Explosion(1.0, 75, 50, 3, 150, '#f00'),
+        ))
 
-    setInterval spawn_explosion, 1.5 * Math.random()
+    setInterval spawn_explosion, 0.75 * Math.random()
 
-    world.dump = () ->
-        console.log JSON.stringify(world.entities.store)
-
-    window.world = world
-
-    () ->
-        world.start()
-        world.publish S.SceneSystem.MSG_SCENE_CHANGE,
-            scene: scene
+    () -> world.start()

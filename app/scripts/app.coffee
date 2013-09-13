@@ -14,7 +14,6 @@ define [
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
-        new S.SceneSystem,
         new S.OrbiterSystem,
         new S.SpinSystem,
         new S.SeekerSystem,
@@ -26,7 +25,7 @@ define [
 
     em = world.entities
 
-    scene = E.Scene.create(em, "Scene 1",
+    world.current_scene = scene = em.createGroup(
         e_sun = E.Star.create(em, 'Sun'),
         e_hero = em.create(
             new C.TypeName('HeroShip'),
@@ -36,16 +35,11 @@ define [
             new C.Spawn('at', -65, 65),
             new C.Collidable,
             new C.Orbit(e_sun, Math.PI/4),
-            #new C.Thruster(150, 75, 0, 0, false),
-            #new C.Seeker(null, Math.PI),
-            #new C.ClickCourse(true),
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
             c_hero_beam = new C.BeamWeapon(15, 9, 1250, 4000, 4000, 4000, "#33f", "invaders"),
         ),
     )
-
-    window.beam = c_hero_beam
 
     MAX_ENEMIES = 24
 
@@ -61,7 +55,7 @@ define [
     spawn_enemy = () ->
         enemy_ct++
         v_spawn.rotateAround(v_center, (Math.PI*2) * Math.random())
-        enemy = em.create(
+        em.addToGroup(scene, em.create(
             new C.TypeName('EnemyScout'),
             new C.EntityName("enemy-#{enemy_ct}"),
             new C.Sprite('enemyscout', '#f33', 12, 12),
@@ -73,55 +67,15 @@ define [
             new C.Health(300),
             new C.WeaponsTarget("invaders"),
             new C.BeamWeapon(1, 1, 75, 250, 250, 500, "#f44", "commonwealth"),
-        )
-        group = em.get(scene, C.EntityGroup)
-        C.EntityGroup.add(group, enemy)
-
-    spawn_explosion = (dying_eid) ->
-        pos = em.get(dying_eid, C.Position)
-        exp = em.create(
-            new C.TypeName('Explosion'),
-            new C.Position,
-            new C.Spawn('at', pos.x, pos.y),
-            new C.Explosion(0.5, 70, 100, 1.5, 125, '#f33'),
-        )
-        group = em.get(scene, C.EntityGroup)
-        C.EntityGroup.add(group, exp)
+            new C.Tombstone(
+                new C.TypeName('Explosion'),
+                new C.Position,
+                new C.Explosion(0.75, 70, 20, 3, 150, '#f33'),
+            ),
+        ))
 
     if MAX_ENEMIES
-        for idx in [1..MAX_ENEMIES]
-            spawn_enemy()
-
-    damage_log = []
-    if false then world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
-        
-        # Only count hero ship DPS
-        type_name = em.get(data.from, C.TypeName)
-        return if type_name?.name isnt "HeroShip"
-
-        # This is wasted damage - target already dead.
-        health = em.get(data.to, C.Health)
-        return if not health
-
-        t_now = Utils.now()
-
-        damage_log.push([t_now, data.amount])
-        while t_now - damage_log[0][0] > 30000
-            damage_log.shift()
-
-        t_start = damage_log[0][0]
-        t_end = damage_log[damage_log.length-1][0]
-        duration = t_end - t_start
-
-        dmg_sum = 0
-        for entry in damage_log
-            dmg_sum += entry[1]
-        
-        dps = dmg_sum / (duration/1000)
-        $('#dps').attr('value', "#{dps}")
-
-    world.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) =>
-        #scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+        spawn_enemy() for idx in [1..MAX_ENEMIES]
 
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
         
@@ -129,9 +83,6 @@ define [
 
         # Respawn an enemy, if necessary
         if type_name?.name is "EnemyScout"
-
-            spawn_explosion(data.entity_id)
-            
             scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
             if scouts.length <= MAX_ENEMIES
                 spawn_enemy()
@@ -140,13 +91,5 @@ define [
         if type_name?.name is "HeroShip"
             r = () -> location.reload()
             setTimeout r, 5000
-
-    world.dump = () ->
-        console.log JSON.stringify(world.entities.store)
-
-    window.world = world
-
-    () ->
-        world.start()
-        world.publish S.SceneSystem.MSG_SCENE_CHANGE,
-            scene: scene
+    
+    () -> world.start()

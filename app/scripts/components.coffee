@@ -13,28 +13,6 @@ define ['entities', 'underscore'], (Entities, _) ->
         type: 'EntityName'
         constructor: (@name) ->
 
-    class EntityGroup extends Component
-        type: 'EntityGroup'
-        constructor: (entities...) ->
-            @entities = {}
-            EntityGroup.add(@, entities...)
-
-        @add: (group, entities...) ->
-            for entity in entities
-                group.entities[entity] = true
-        @remove: (group, entities...) ->
-            for entity in entities
-                delete group.entities[entity]
-        @move: (group1, group2, entities...) ->
-            for entity in entities
-                delete group1.entities[entity]
-                group2.entities[entity] = true
-        @has: (group, entities...) ->
-            for entity in entities
-                if not (entity of group.entities)
-                    return false
-            return true
-
     class Position extends Component
         type: 'Position'
         constructor: (@map, @x, @y, @rotation=0) ->
@@ -58,6 +36,10 @@ define ['entities', 'underscore'], (Entities, _) ->
     class Spawn extends Component
         type: 'Spawn'
         constructor: (@position_logic='random', @x=0, @y=0, @destroy=false) ->
+
+    class Tombstone extends Component
+        type: 'Tombstone'
+        constructor: (@components...) ->
 
     class Sprite extends Component
         type: 'Sprite'
@@ -118,11 +100,15 @@ define ['entities', 'underscore'], (Entities, _) ->
             @particles = []
             for idx in [0..@max_particles-1]
                 @particles.push({
-                    free: true, x: 0, y: 0, dx: 0, dy: 0, s: 0, mr: 0
+                    free: true,
+                    x: 0, y: 0,
+                    dx: 0, dy: 0,
+                    s: 0, mr: 0
                 })
 
     return {
-        Component, TypeName, EntityName, EntityGroup, Position, Orbit, Spin,
-        Bouncer, Spawn, Collidable, Renderable, Sprite, Thruster, Seeker,
-        ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion
+        Component, TypeName, EntityName, Position, Orbit, Spin,
+        Bouncer, Spawn, Tombstone, Collidable, Renderable, Sprite,
+        Thruster, Seeker, ClickCourse, WeaponsTarget, BeamWeapon, Health,
+        Explosion
     }
