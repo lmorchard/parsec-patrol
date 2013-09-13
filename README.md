@@ -12,6 +12,26 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
+* Ship power stores
+
+* Shield regeneration
+
+* Flux capacitor control for defense / offense / speed power distribution
+
+* Arc slider for beam split control
+
+* Cluster seeker missiles - laser targets, low health, lots of em
+
+* Nuke torpedoes - fly to tap/click, splash damage radius, animated explosion
+
+* Destructable asteroids - break into pieces using tombstones?
+
+* Flocking behavior for enemy scouts
+
+* Stargates for scene changes
+
+* Per-system damage, when shields are down
+
 * Rework all component constructors to accept an object, looking forward to
   JSON (de)serialization of the world
 

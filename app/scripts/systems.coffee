@@ -618,9 +618,7 @@ define [
             thruster = @world.entities.get(eid, C.Thruster)
             
             # Set course destination on left button down
-            if click_course.active and (
-                    @world.inputs.pointer_button_left or
-                    @world.inputs.keyboard?.pressed('a'))
+            if click_course.active and (@world.inputs.pointer_button_left)
                 click_course.x = @world.inputs.pointer_world_x
                 click_course.y = @world.inputs.pointer_world_y
                 thruster?.active = true

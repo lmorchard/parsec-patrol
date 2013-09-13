@@ -34,7 +34,10 @@ define [
             new C.Position,
             new C.Spawn('at', -65, 65),
             new C.Collidable,
-            new C.Orbit(e_sun, Math.PI/4),
+            # new C.Orbit(e_sun, Math.PI/4),
+            new C.Thruster(150, 75, 0, 0, false),
+            new C.ClickCourse,
+            new C.Seeker(null, Math.PI)
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
             c_hero_beam = new C.BeamWeapon(15, 9, 1250, 4000, 4000, 4000, "#33f", "invaders"),
