@@ -124,4 +124,4 @@ define [
         $('#dps').attr('value', "#{dps}")
     ###
 
-    () -> world.start()
+    world.start()

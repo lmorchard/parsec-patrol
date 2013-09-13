@@ -1,8 +1,5 @@
 <!doctype html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<html class="no-js">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -39,7 +36,14 @@
             var assert = chai.assert;
         </script>
 
-        <script src="../app/scripts/config.js"></script>
-        <script data-main="spec/config" src="../app/bower_components/requirejs/require.js"></script>
+        <script src="../app/bower_components/requirejs/require.js"></script>
+        <script>
+            require(['../scripts/common'], function (config) {
+                requirejs.config({
+                    baseUrl: '../scripts'
+                });
+                require(['../test/spec/runner']);
+            });
+        </script>
     </body>
 </html>

@@ -94,4 +94,4 @@ define [
         )
     )
 
-    () -> world.start()
+    world.start()

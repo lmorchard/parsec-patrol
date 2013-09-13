@@ -62,4 +62,4 @@ define [
             new C.Sprite('torpedo')
         )
     )
-    () -> world.start()
+    world.start()

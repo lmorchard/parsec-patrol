@@ -2,7 +2,7 @@
 <html class="no-js">
     <head>
         <title>Beams - Sketches</title>
-        <link rel="stylesheet" href="../styles/styls.css">
+        <link rel="stylesheet" href="styles/styls.css">
         <style type="text/css">
             #readouts {
                 position: absolute;
@@ -17,8 +17,11 @@
         <div id="gameArea">
             <canvas style="height: 100%" id="gameCanvas"></canvas>
         </div>
-        <script src="config.js"></script>
-        <script src="../app/bower_components/requirejs/require.js"></script>
-        <script>require(['../sketches/explosions'], function (p) { p(); })</script>
+        <script src="bower_components/requirejs/require.js"></script>
+        <script>
+            require(['scripts/common'], function (config) {
+                require(['sketches/explosions']);
+            });
+        </script>
     </body>
 </html>

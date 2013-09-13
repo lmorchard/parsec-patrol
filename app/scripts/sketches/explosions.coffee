@@ -34,4 +34,4 @@ define [
 
     setInterval spawn_explosion, 0.75 * Math.random()
 
-    () -> world.start()
+    world.start()

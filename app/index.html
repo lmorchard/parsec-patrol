@@ -48,9 +48,11 @@
                 </ul>
             </form>
         </div>
-        <script src="scripts/config.js"></script>
-        <!-- build:js scripts/main.js -->
-        <script data-main="scripts/main" src="bower_components/requirejs/require.js"></script>
-        <!-- endbuild -->
+        <script src="bower_components/requirejs/require.js"></script>
+        <script>
+            require(['scripts/common'], function (config) {
+                require(['app'], function (app) { app() });
+            });
+        </script>
     </body>
 </html>
