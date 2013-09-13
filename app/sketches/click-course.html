@@ -2,15 +2,18 @@
 <html class="no-js">
     <head>
         <title>Seeker - Sketches</title>
-        <link rel="stylesheet" href="styles/styls.css">
+        <link rel="stylesheet" href="../styles/styls.css">
     </head>
     <body>
         <div id="gameArea">
             <canvas style="height: 100%" id="gameCanvas"></canvas>
         </div>
-        <script src="bower_components/requirejs/require.js"></script>
+        <script src="../bower_components/requirejs/require.js"></script>
         <script>
-            require(['scripts/common'], function (config) {
+            require(['../scripts/common'], function (config) {
+                requirejs.config({
+                    baseUrl: '../scripts'
+                });
                 require(['sketches/click-course']);
             });
         </script>

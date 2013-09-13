@@ -12,7 +12,7 @@ define [
         new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.KeyboardInputSystem(canvas),
         new S.PointerInputSystem(canvas),
-        new S.ClickCourseSystem,
+        new S.ClickCourseSystem(true),
         new S.SpawnSystem,
         new S.OrbiterSystem,
         new S.SpinSystem,
@@ -95,4 +95,4 @@ define [
             r = () -> location.reload()
             setTimeout r, 5000
     
-    () -> world.start()
+    world.start()

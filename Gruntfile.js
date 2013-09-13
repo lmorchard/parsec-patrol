@@ -38,8 +38,12 @@ module.exports = function (grunt) {
                 options: { livereload: true }
             },
             html: {
-                files: ['<%= yeoman.app %>/{,*/}*.html'],
-                tasks: ['copy:html']
+                files: [
+                    '<%= yeoman.app %>/*.html',
+                    '<%= yeoman.app %>/sketches/*.html',
+                ],
+                tasks: ['copy:html'],
+                options: { livereload: true }
             },
             scripts: {
                 files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
@@ -52,8 +56,6 @@ module.exports = function (grunt) {
             livereload: {
                 options: { livereload: LIVERELOAD_PORT },
                 files: [
-                    '<%= yeoman.app %>/*.html',
-                    '<%= yeoman.app %>/sketches/*.html',
                     'test/*.html',
                     'test/spec/*.js',
                     '<%= yeoman.app %>/styles/{,*/}*.css',
@@ -347,6 +349,8 @@ module.exports = function (grunt) {
         grunt.task.run([
             'clean:server',
             'concurrent:server',
+            'copy:scripts',
+            'symlink:js',
             'connect:livereload',
             'watch'
         ]);
