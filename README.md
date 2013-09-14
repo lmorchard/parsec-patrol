@@ -2,6 +2,15 @@
 
 Pew-pews in SPAAAAACE!
 
+## Inspirations
+
+* Super Star Trek
+* Star Raiders
+* [Bosconian](http://en.wikipedia.org/wiki/Bosconian)
+* XKobo
+* Netrek
+* EVE Online
+
 ## Development
 
 npm install
@@ -11,6 +20,9 @@ open http://localhost:9000/
 open http://localhost:9000/sketches/
 
 ## TODO / Ideas
+
+* Rework all component constructors to accept an object, looking forward to
+  JSON (de)serialization of the world
 
 * Ship power stores
 
@@ -32,15 +44,12 @@ open http://localhost:9000/sketches/
 
 * Stargates for scene changes
 
-* Per-system damage, when shields are down
+* Open Web App boilerplating
 
-* Rework all component constructors to accept an object, looking forward to
-  JSON (de)serialization of the world
+* Per-system damage, when shields are down
 
 * Auto-adjust rendering features based on FPS and estimated spare CPU headroom.
     * Glow on / off
 
 * Auto-pause if it looks like we're no longer in the foreground (ie. big drop
   in FPS from rFA)
-
-* Open Web App boilerplating

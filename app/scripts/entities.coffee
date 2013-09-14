@@ -74,6 +74,8 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             return id
 
         addToGroup: (group_id, entities...) ->
+            if not (group_id of @entities_by_group)
+                @entities_by_group[group_id] = {}
             for entity_id in entities
                 @entities_by_group[group_id][entity_id] = 1
                 @groups_by_entity[entity_id] = group_id

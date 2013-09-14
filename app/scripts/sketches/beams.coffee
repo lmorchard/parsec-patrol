@@ -20,6 +20,7 @@ define [
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
+    world.measure_fps = true
     
     window.world = world
 
@@ -77,7 +78,7 @@ define [
             new C.Tombstone(
                 new C.TypeName('Explosion'),
                 new C.Position,
-                new C.Explosion(0.75, 40, 25, 1.25, 150, '#f33'),
+                new C.Explosion(0.75, 40, 15, 1.25, 150, '#f33'),
             ),
         ))
 
