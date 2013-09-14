@@ -40,7 +40,15 @@ define [
             new C.Seeker(null, Math.PI)
             new C.Health(20000),
             new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(15, 9, 1250, 4000, 4000, 4000, "#33f", "invaders"),
+            c_hero_beam = new C.BeamWeapon(
+                15, 9, 1250, 4500, 4500, 4500,
+                "#33f", "invaders"
+            ),
+            new C.Tombstone(
+                new C.TypeName('Explosion'),
+                new C.Position,
+                new C.Explosion(5, 100, 50, 1.5, 250, '#fff'),
+            ),
         ),
     )
 
@@ -73,7 +81,7 @@ define [
             new C.Tombstone(
                 new C.TypeName('Explosion'),
                 new C.Position,
-                new C.Explosion(0.75, 70, 20, 3, 150, '#f33'),
+                new C.Explosion(0.75, 40, 25, 1.25, 150, '#f33'),
             ),
         ))
 
@@ -95,4 +103,4 @@ define [
             r = () -> location.reload()
             setTimeout r, 5000
     
-    world.start()
+    () -> world.start()

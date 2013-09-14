@@ -22,6 +22,8 @@ open http://localhost:9000/sketches/
 
 * Cluster seeker missiles - laser targets, low health, lots of em
 
+* Motion trails behind some sprites (eg. seeker missiles)
+
 * Nuke torpedoes - fly to tap/click, splash damage radius, animated explosion
 
 * Destructable asteroids - break into pieces using tombstones?

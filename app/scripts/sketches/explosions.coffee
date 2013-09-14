@@ -29,9 +29,9 @@ define [
             new C.TypeName('Explosion'),
             new C.Position,
             new C.Spawn('at', v_spawn.x, v_spawn.y),
-            new C.Explosion(1.0, 75, 50, 3, 150, '#f00'),
+            new C.Explosion(0.75, 70, 50, 2, 175, '#f00'),
         ))
 
-    setInterval spawn_explosion, 0.75 * Math.random()
+    setInterval spawn_explosion, 0.5 * Math.random()
 
     world.start()

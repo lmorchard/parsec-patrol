@@ -121,7 +121,7 @@ define [
                     entity_id: eid, spawn: spawn
 
     class ViewportSystem extends System
-        glow: false
+        glow: false # true
 
         match_component: C.Sprite
 
@@ -224,7 +224,11 @@ define [
         draw_explosion: (t_delta, eid, explosion) ->
 
             @ctx.save()
+            @ctx.strokeStyle = explosion.color
             @ctx.fillStyle = explosion.color
+            if @glow
+                @ctx.shadowColor = explosion.color
+                @ctx.shadowBlur = 3 * @viewport_ratio
 
             # Explosion fades out overall as it nears expiration
             duration_alpha = 1 - (explosion.age / explosion.ttl)
@@ -234,11 +238,23 @@ define [
                 # Particles fade out as they reach the radius
                 @ctx.globalAlpha = (1 - (p.r / p.mr)) * duration_alpha
                 s = p.s * @viewport_ratio
+
+                @ctx.beginPath()
+                @ctx.moveTo(0, 0)
+                @ctx.lineWidth = s
+                @ctx.lineTo(
+                    p.x * @viewport_ratio,
+                    p.y * @viewport_ratio,
+                )
+                @ctx.stroke()
+                
+                ###
                 @ctx.fillRect(
                     p.x * @viewport_ratio,
                     p.y * @viewport_ratio,
                     s, s
                 )
+                ###
             
             @ctx.restore()
 
@@ -307,7 +323,10 @@ define [
                     target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
                     target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
 
-                    @ctx.lineWidth = (0.75 * @viewport_ratio)
+                    max_width = 2.25
+                    perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
+                    @ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active)) * @viewport_ratio
+
                     @ctx.strokeStyle = beam_weapon.color
                     if @glow
                         @ctx.shadowBlur = (4 * @viewport_ratio)
@@ -792,14 +811,13 @@ define [
             for p in explosion.particles
 
                 if not explosion.stop and p.free
-                    p.x = 0
-                    p.y = 0
+                    p.x = p.y = 0
                     @v_scratch.setValues(0, explosion.max_velocity * Math.random())
                     @v_scratch.rotateAround(@v_center, (Math.PI * 2) * Math.random())
                     p.dx = @v_scratch.x
                     p.dy = @v_scratch.y
                     p.mr = explosion.radius * Math.random()
-                    p.s = explosion.max_particle_size * Math.random()
+                    p.s = explosion.max_particle_size #* Math.random()
                     p.free = false
 
                 if not p.free

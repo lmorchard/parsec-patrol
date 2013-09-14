@@ -40,6 +40,11 @@ define [
                 15, 9, 1250, 4500, 4500, 4500,
                 "#33f", "invaders"
             ),
+            new C.Tombstone(
+                new C.TypeName('Explosion'),
+                new C.Position,
+                new C.Explosion(5, 100, 50, 1.5, 250, '#fff'),
+            ),
         ),
     )
     
@@ -62,11 +67,6 @@ define [
             new C.EntityName("enemy-#{enemy_ct}"),
             new C.Sprite('enemyscout', '#f33', 12, 12),
             new C.Spawn('at', v_spawn.x, v_spawn.y),
-            new C.Tombstone(
-                new C.TypeName('Explosion'),
-                new C.Position,
-                new C.Explosion(0.75, 70, 20, 3, 150, '#f33'),
-            ),
             new C.Position,
             new C.Collidable,
             new C.Thruster(100, 50, 0, 0),
@@ -74,6 +74,11 @@ define [
             new C.Health(300),
             new C.WeaponsTarget("invaders"),
             new C.BeamWeapon(1, 1, 75, 250, 250, 500, "#f44", "commonwealth"),
+            new C.Tombstone(
+                new C.TypeName('Explosion'),
+                new C.Position,
+                new C.Explosion(0.75, 40, 25, 1.25, 150, '#f33'),
+            ),
         ))
 
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
