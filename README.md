@@ -22,10 +22,18 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
-* Stop entities at world boundary?
-
 * Rework all component constructors to accept an object, looking forward to
   JSON (de)serialization of the world
+
+* Spawner component
+    * Opposite of tombstone
+    * Generate entities periodically, randomly, up to a max on scene
+
+* Random tombstone
+    * eg. Loot table
+    * Generate one or more from a random selection of assemblages
+
+* Stop entities at world boundary?
 
 * Refactor sprites - no more ginormous switch statement, maybe animations?
 
@@ -46,6 +54,8 @@ open http://localhost:9000/sketches/
           difference
     * Deathmatch
         * See also: multiplayer
+    * Competitive Netrek clone
+        * Neat idea, but yikes
 
 * Ship power stores
 
