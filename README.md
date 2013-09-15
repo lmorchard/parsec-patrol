@@ -2,10 +2,11 @@
 
 Pew-pews in SPAAAAACE!
 
-## Inspirations
+## Influences
 
 * Super Star Trek
 * Star Raiders
+* Subspace / Cosmic Rift
 * [Bosconian](http://en.wikipedia.org/wiki/Bosconian)
 * XKobo
 * Netrek
@@ -27,6 +28,24 @@ open http://localhost:9000/sketches/
   JSON (de)serialization of the world
 
 * Refactor sprites - no more ginormous switch statement, maybe animations?
+
+* Multiplayer
+    * Kinda have done this before, but [badly](https://github.com/lmorchard/webtrek)
+    * I'm scared sarge
+
+* Game types
+    * Horde
+        * Endless stream of enemies, fight until dead, high score hooray
+    * Repel the invasion
+        * Super Star Trek style, 8x8 sectors, starbases under attack, defend & clear 
+        * Bosses generating raider squads that roam from sector to sector in
+          search of starbases
+    * MOBA
+        * One scene, mothership on one side generating creeps, starbase on
+          other side generating creeps, towers in the middle, hero makes the
+          difference
+    * Deathmatch
+        * See also: multiplayer
 
 * Ship power stores
 
@@ -57,6 +76,11 @@ open http://localhost:9000/sketches/
     * break into pieces using tombstones to spawn smaller ones?
 
 * Flocking behavior for enemy scouts
+
+* EVE-style logi ships
+    * Work with flocking and damage priority
+    * Heal beam - pump shields into target
+    * Power beam - pump energy into target
 
 * Stargates for scene changes
 
