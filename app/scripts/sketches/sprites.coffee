@@ -21,8 +21,8 @@ define [
     world.load(data = {
         entities: {
             "10": {
-                Sprite: { shape: "sun" },
-                Spawn: { position_logic: "sun" },
+                Sprite: { shape: "star" },
+                Spawn: { position_logic: "center" },
                 Position: {}
             },
             "20": {
