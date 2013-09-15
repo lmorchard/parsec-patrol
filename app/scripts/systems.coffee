@@ -103,6 +103,7 @@ define [
                     gid = @world.entities.groupForEntity(eid)
                     if gid isnt null
                         @world.entities.addToGroup(gid, t_eid)
+
                 @world.entities.destroy(eid)
 
             else if not spawn.spawned
@@ -151,31 +152,33 @@ define [
 
             @ctx.translate(x+(w/2), y+(h/2))
             @ctx.scale(ratio, ratio)
+            s_dot = (1/ratio) * 2
 
             scene = @world.entities.entitiesForGroup(@world.current_scene)
             for eid, ignore of scene
 
                 spawn = @world.entities.get(eid, C.Spawn)
-                continue if not spawn?.spawned
-
                 pos = @world.entities.get(eid, C.Position)
-                continue if not pos
+                ping = @world.entities.get(eid, C.RadarPing)
+                continue if not ping or not spawn?.spawned or not pos
 
-                @ctx.fillStyle = "#fff"
-                @ctx.fillRect(pos.x, pos.y, 5, 5)
+                @ctx.fillStyle = ping.color
+                @ctx.strokeStyle = ping.color
+                @ctx.fillRect(pos.x, pos.y, s_dot, s_dot)
 
             @ctx.restore()
 
     class ViewportSystem extends System
-        glow: true
-
-        match_component: C.Sprite
+        glow: false
+        draw_grid: true
+        draw_bounding_boxes: false
 
         constructor: (@window, @game_area, @canvas,
-                      @scale_x=1.0, @scale_y=1.0) ->
+                      @window_scale_x=1.0, @window_scale_y=1.0,
+                      @zoom=1.0, @grid_size=100, @grid_color='#0a0a0a') ->
             @ctx = @canvas.getContext('2d')
-            @draw_bounding_boxes = false
             @viewport_ratio = 1.0
+            @follow_entity = null
 
         setWorld: (world) ->
             super world
@@ -193,7 +196,6 @@ define [
                 @viewport_height / @world.height
 
         resize: () ->
-
             [new_w, new_h] = [@window.innerWidth, @window.innerHeight]
 
             @game_area.style.width = "#{new_w}px"
@@ -201,20 +203,22 @@ define [
             @game_area.style.marginLeft = "#{-new_w/2}px"
             @game_area.style.marginTop = "#{-new_h/2}px"
             
-            @canvas.width = new_w * @scale_x
-            @canvas.height = new_h * @scale_y
+            @canvas.width = new_w * @window_scale_x
+            @canvas.height = new_h * @window_scale_y
 
             @setViewportSize(@canvas.width, @canvas.height)
 
         draw: (t_delta) ->
 
+            zoomed_ratio = @viewport_ratio * @zoom
+
             if @world.inputs.pointer_x
                 @world.inputs.pointer_world_x = (
-                    @world.inputs.pointer_x - (@viewport_width / 2)
-                ) / @viewport_ratio
+                    @world.inputs.pointer_x - (@viewport_width/2)
+                ) / zoomed_ratio
                 @world.inputs.pointer_world_y = (
-                    @world.inputs.pointer_y - (@viewport_height / 2)
-                ) / @viewport_ratio
+                    @world.inputs.pointer_y - (@viewport_height/2)
+                ) / zoomed_ratio
 
             @ctx.save()
 
@@ -222,13 +226,51 @@ define [
             @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
 
             @ctx.translate(@viewport_width / 2, @viewport_height / 2)
-            @ctx.scale(@viewport_ratio, @viewport_ratio)
+            @ctx.scale(zoomed_ratio, zoomed_ratio)
 
-            @draw_scene(t_delta)
+            visible_width = @viewport_width / zoomed_ratio
+            visible_height = @viewport_height / zoomed_ratio
+            visible_left = 0 - visible_width/2
+            visible_top = 0 - visible_height/2
+
+            if @follow_entity
+                pos = @world.entities.get(@follow_entity, C.Position)
+                if pos
+                    @ctx.translate(0-pos.x, 0-pos.y)
+                    @world.inputs.pointer_world_x += pos.x
+                    @world.inputs.pointer_world_y += pos.y
+                    if @draw_grid
+                        visible_left += pos.x
+                        visible_top += pos.y
+
+            visible_right = visible_left + visible_width
+            visible_bottom = visible_top + visible_height
+
+            if @draw_grid
+                @ctx.strokeStyle = @grid_color
+                @ctx.lineWidth = 1
+
+                grid_offset_x = visible_left % @grid_size
+                start = visible_left - grid_offset_x
+                end = visible_left + visible_width
+                for left in [start..end] by @grid_size
+                    @ctx.moveTo(left, visible_top)
+                    @ctx.lineTo(left, visible_top + visible_height)
+
+                grid_offset_y = visible_top % @grid_size
+                start = visible_top - grid_offset_y
+                end = visible_top + visible_height
+                for top in [start..end] by @grid_size
+                    @ctx.moveTo(visible_left, top)
+                    @ctx.lineTo(visible_left + visible_width, top)
+
+                @ctx.stroke()
+
+            @draw_scene(t_delta, visible_left, visible_top, visible_right, visible_bottom)
 
             @ctx.restore()
 
-        draw_scene: (t_delta) ->
+        draw_scene: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
             scene = @world.entities.entitiesForGroup(@world.current_scene)
             for eid, ignore of scene
 
@@ -240,8 +282,10 @@ define [
 
                 @draw_beams t_delta, eid, pos
 
-                @ctx.save()
+                continue if pos.x < visible_left or pos.x > visible_right
+                continue if pos.y < visible_top or pos.y > visible_bottom
 
+                @ctx.save()
                 @ctx.translate(pos.x, pos.y)
 
                 sprite = @world.entities.get(eid, C.Sprite)
@@ -274,7 +318,7 @@ define [
             @ctx.fillStyle = explosion.color
             if @glow
                 @ctx.shadowColor = explosion.color
-                @ctx.shadowBlur = 3
+                @ctx.shadowBlur = 4
 
             # Explosion fades out overall as it nears expiration
             duration_alpha = 1 - (explosion.age / explosion.ttl)
@@ -309,7 +353,7 @@ define [
             @ctx.strokeStyle = "#333"
             if @glow
                 @ctx.shadowColor = "#333"
-                @ctx.shadowBlur = 3
+                @ctx.shadowBlur = 4
             @ctx.beginPath()
             @ctx.moveTo(left, top)
             @ctx.lineTo(left + w, top)
@@ -338,16 +382,28 @@ define [
             v_turret.rotateAround(v_origin, pos.rotation)
             turret_rad = (Math.PI*2) / beam_weapon.active_beams
 
+            if true
+                perc_active = beam_weapon.active_beams / beam_weapon.max_beams
+                range = beam_weapon.max_range / beam_weapon.active_beams
+                @ctx.save()
+                @ctx.globalAlpha = 0.05
+                @ctx.strokeStyle = beam_weapon.color
+                @ctx.beginPath()
+                @ctx.arc(origin_x, origin_y, range, 0, Math.PI*2, false)
+                @ctx.stroke()
+                @ctx.restore()
+
             for idx in [0..beam_weapon.active_beams-1]
                 beam = beam_weapon.beams[idx]
                 continue if not beam
 
                 @ctx.save()
+
                 v_turret.rotateAround(v_origin, turret_rad)
 
                 @ctx.fillStyle = beam_weapon.color
                 @ctx.beginPath()
-                @ctx.arc(v_turret.x, v_turret.y, 1.5, 0, Math.PI*2, true)
+                @ctx.arc(v_turret.x, v_turret.y, 1.0, 0, Math.PI*2, true)
                 @ctx.fill()
                 
                 if beam?.target and not beam?.charging
@@ -355,7 +411,7 @@ define [
                     target_x = beam.x + (Math.random() * fudge) - (fudge/2)
                     target_y = beam.y + (Math.random() * fudge) - (fudge/2)
 
-                    max_width = 4
+                    max_width = 2
                     perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
                     @ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active))
 
@@ -378,7 +434,7 @@ define [
             @ctx.strokeStyle = sprite.stroke_style
             if @glow
                 @ctx.shadowColor = sprite.stroke_style
-                @ctx.shadowBlur = 3
+                @ctx.shadowBlur = 4
             @ctx.lineWidth = 1.25
 
             # TODO: Yes, I know, this sucks. Refactor into something better
@@ -702,6 +758,7 @@ define [
             if not (key of @stats)
                 # Cache these calculations, because they happen on every frame.
                 active = weap.active_beams
+                perc_active = weap.active_beams / weap.max_beams
                 @stats[key] =
                     # Charge is active-squared, because beams are active-times
                     # as numerous AND active-times as fast. That took me awhile
@@ -712,9 +769,9 @@ define [
                     # Rate that capacitor drains in delivering damage
                     discharge_rate: weap.discharge_rate / active
                     # Total range is split per-beam
-                    beam_range: weap.max_range / active
+                    beam_range: weap.max_range / weap.active_beams
                     # Damage penalty for splitting the beam
-                    dmg_penalty: 1 - ((active / weap.max_beams) * weap.split_penalty)
+                    dmg_penalty: 1 - (perc_active * weap.dmg_penalty)
             return @stats[key]
 
         update_match: (t_delta, eid, weap) ->
@@ -769,7 +826,7 @@ define [
 
                 # Assign available beams to closest targets (if any)
                 if by_range.length
-                    _.sortBy(by_range, (a)->a[0])
+                    _.sortBy(by_range, (a) -> a[0])
                     while beams_to_target.length
                         for [t_range, t_eid, t_pos] in by_range
                             beam = beams_to_target.pop()
