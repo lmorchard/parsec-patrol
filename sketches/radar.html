@@ -1,0 +1,46 @@
+<!doctype html>
+<html class="no-js">
+    <head>
+        <title>Radar - Sketches</title>
+        <link rel="stylesheet" href="../styles/styls.css">
+        <style type="text/css">
+            #readouts {
+                position: absolute;
+                left:0; bottom: 0; right: 0; top: 95%;
+                opacity: 0.55; background: #000; color: #fff
+            }
+            #readouts ul { list-style-type: none; margin: 0; padding: 0 }
+            #readouts ul li { width: 50%; float: left }
+        </style>
+    </head>
+    <body>
+        <div id="gameArea">
+            <canvas style="height: 100%" id="gameCanvas"></canvas>
+            <form id="readouts">
+                <div id="beam_sel">
+                    Beams: 
+                    <button value="1">1</button>
+                    <button value="2">2</button>
+                    <button value="3">3</button>
+                    <button value="4">4</button>
+                    <button value="5">5</button>
+                    <button value="7">7</button>
+                    <button value="9">9</button>
+                    <button value="10">10</button>
+                    <button value="15">15</button>
+                </div>
+            </form>
+            <img id="bg_img" src="../images/PIA17257.jpg" style="display: none">
+            <img id="bg_img2" src="../images/PIA15801.jpg" style="display: none">
+        </div>
+        <script src="../bower_components/requirejs/require.js"></script>
+        <script>
+            require(['../scripts/common'], function (config) {
+                requirejs.config({
+                    baseUrl: '../scripts'
+                });
+                require(['sketches/radar'], function (p) { p(); });
+            });
+        </script>
+    </body>
+</html>
