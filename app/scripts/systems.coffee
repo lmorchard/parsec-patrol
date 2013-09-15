@@ -175,7 +175,7 @@ define [
 
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
-                      @zoom=1.0, @grid_size=100, @grid_color='#0a0a0a') ->
+                      @zoom=1.0, @grid_size=150, @grid_color='#0a0a0a') ->
             @ctx = @canvas.getContext('2d')
             @viewport_ratio = 1.0
             @follow_entity = null
@@ -382,7 +382,7 @@ define [
             v_turret.rotateAround(v_origin, pos.rotation)
             turret_rad = (Math.PI*2) / beam_weapon.active_beams
 
-            if true
+            if false
                 perc_active = beam_weapon.active_beams / beam_weapon.max_beams
                 range = beam_weapon.max_range / beam_weapon.active_beams
                 @ctx.save()
