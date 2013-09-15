@@ -172,6 +172,7 @@ define [
         glow: false
         draw_grid: true
         draw_bounding_boxes: false
+        draw_beam_range: false
 
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
@@ -382,7 +383,7 @@ define [
             v_turret.rotateAround(v_origin, pos.rotation)
             turret_rad = (Math.PI*2) / beam_weapon.active_beams
 
-            if false
+            if @draw_beam_range
                 perc_active = beam_weapon.active_beams / beam_weapon.max_beams
                 range = beam_weapon.max_range / beam_weapon.active_beams
                 @ctx.save()
@@ -789,19 +790,7 @@ define [
             # Calculate current beam weapon parameters
             stats = @calculate_stats(weap)
 
-            # Perform beam charging. Immediately after charging, a beam can
-            # change targets.
-            beams_to_target = []
-            for idx in [0..weap.active_beams-1]
-                beam = weap.beams[idx]
-
-                if beam.charging
-                    beam.charge += stats.charge_rate * t_delta
-                    if beam.charge >= stats.max_charge
-                        beam.charge = stats.max_charge
-                        beam.charging = false
-                        beam.target = null
-                        beams_to_target.push(beam)
+            beams_to_target = @charge_beam(t_delta, stats, weap)
 
             # Do we have any beams available for targeting...?
             if beams_to_target.length > 0
@@ -822,13 +811,13 @@ define [
                     @v_target.setValues(t_pos.x, t_pos.y)
                     t_range = @v_beam.dist(@v_target)
                     if t_range <= stats.beam_range
-                        by_range.push([t_range, t_eid, t_pos])
+                        by_range.push([t_range, t_eid])
 
                 # Assign available beams to closest targets (if any)
                 if by_range.length
-                    _.sortBy(by_range, (a) -> a[0])
+                    by_range.sort (a, b) -> a[0] - b[0]
                     while beams_to_target.length
-                        for [t_range, t_eid, t_pos] in by_range
+                        for [t_range, t_eid] in by_range
                             beam = beams_to_target.pop()
                             break if not beam
                             beam.target = t_eid
@@ -863,6 +852,21 @@ define [
                     from: eid
                     kind: @constructor.DAMAGE_TYPE
                     amount: dmg
+        
+        # Perform beam charging. Immediately after charging, a beam can target.
+        charge_beam: (t_delta, stats, weap) ->
+            beams_to_target = []
+            for idx in [0..weap.active_beams-1]
+                beam = weap.beams[idx]
+                if beam.charging
+                    beam.charge += stats.charge_rate * t_delta
+                    if beam.charge >= stats.max_charge
+                        beam.charge = stats.max_charge
+                        beam.charging = false
+                        beam.target = null
+                        beams_to_target.push(beam)
+
+            return beams_to_target
 
     class HealthSystem extends System
         @MSG_DAMAGE = 'health.damage'
