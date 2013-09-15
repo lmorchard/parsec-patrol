@@ -2,102 +2,160 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Component
         type: 'AbstractComponent'
+        
         toString: () ->
             "#{@type}: #{JSON.stringify(this)}"
 
+        constructor: (props_in) ->
+            props_in ?= {}
+            props = _.defaults(props_in, @constructor.defaults)
+            for k, v of props
+                @[k] = if _.isFunction(v) then v() else v
+
     class TypeName extends Component
-        type: 'TypeName'
-        constructor: (@name) ->
+        @defaults:
+            type: 'TypeName'
+            name: ''
 
     class EntityName extends Component
-        type: 'EntityName'
-        constructor: (@name) ->
+        @defaults:
+            type: 'EntityName'
+            name: ''
 
     class Position extends Component
-        type: 'Position'
-        constructor: (@map, @x, @y, @rotation=0) ->
+        @defaults:
+            type: 'Position'
+            x: 0
+            y: 0
+            rotation: 0
     
     class Orbit extends Component
-        type: 'Orbit'
-        constructor: (@orbited_id, @rad_per_sec=null, @rotate=true) ->
-            @angle = 0.0
-            @rad_per_sec ?= _.random(Math.PI/32, Math.PI)
+        @defaults:
+            type: 'Orbit'
+            orbited_id: null
+            rad_per_sec: -> _.random(Math.PI/32, Math.PI)
+            rotate: true
+            angle: 0.0
 
     class Spin extends Component
-        type: 'Spin'
-        constructor: (@rad_per_sec=null) ->
+        @defaults:
+            type: 'Spin'
+            rad_per_sec: -> _.random(Math.PI/32, Math.PI)
 
     class Bouncer extends Component
-        type: 'Bouncer'
-        constructor: (@x_dir=1, @y_dir=1, @x_sec=null, @y_sec=null) ->
-            @x_sec ?= _.random(20, 200)
-            @y_sec ?= _.random(20, 200)
+        @defaults:
+            type: 'Bouncer'
+            x_dir: 1
+            y_dir: 1
+            x_sec: null
+            y_sec: null
+            x_sec: -> _.random(20, 200)
+            y_sec: -> _.random(20, 200)
 
     class Spawn extends Component
-        type: 'Spawn'
-        constructor: (@position_logic='random', @x=0, @y=0, @destroy=false) ->
+        @defaults:
+            type: 'Spawn'
+            position_logic: 'at'
+            x: 0
+            y: 0
+            destroy: false
 
     class Tombstone extends Component
-        type: 'Tombstone'
-        constructor: (@components...) ->
+        @defaults:
+            type: 'Tombstone'
+            components: []
 
     class Sprite extends Component
-        type: 'Sprite'
-        constructor: (@shape, @stroke_style='#fff', @width=30, @height=30) ->
+        @defaults:
+            type: 'Sprite'
+            shape: 'sun'
+            stroke_style: '#fff'
+            width: 30
+            height: 30
 
     class Renderable extends Component
-        type: 'Renderable'
+        @defaults:
+            type: 'Renderable'
 
     class Collidable extends Component
-        type: 'Collidable'
-        constructor: () ->
+        @defaults:
+            type: 'Collidable'
+        constructor: (props) ->
+            super props
             @in_collision_with = {}
 
     class Thruster extends Component
-        type: 'Thruster'
-        constructor: (@dv=0, @max_v=0, @dx=0, @dy=0, @active=true)->
+        @defaults:
+            type: 'Thruster'
+            active: true
+            max_v: 0
+            dv: 0
+            dx: 0
+            dy: 0
 
     class Seeker extends Component
-        type: 'Seeker'
-        constructor: (@target, @rad_per_sec=0)->
+        @defaults:
+            type: 'Seeker'
+            target: null
+            rad_per_sec: 0
 
     class ClickCourse extends Component
-        type: 'ClickCourse'
-        constructor: (@stop_on_arrival=false) ->
-            @active = true
+        @defaults:
+            type: 'ClickCourse'
+            stop_on_arrival: false
+            active: true
 
     class WeaponsTarget extends Component
-        type: 'WeaponsTarget'
-        constructor: (@team="foe") ->
+        @defaults:
+            type: 'WeaponsTarget'
+            team: 'foe'
 
     class BeamWeapon extends Component
-        type: 'BeamWeapon'
-        constructor: (@max_beams=12, @active_beams=4,
-                      @max_range=150,
-                      @max_power=150, @charge_rate=150, @discharge_rate=300,
-                      @color="#6f6", @target_team="enemy", @dmg_penalty=0.2,
-                      @range_penalty=0.8) ->
-            @x = 0
-            @y = 0
+        @defaults:
+            type: 'BeamWeapon'
+            x: 0
+            y: 0
+            max_beams: 12
+            active_beams: 4
+            max_range: 150
+            max_power: 150
+            charge_rate: 150
+            discharge_rate: 300
+            color: "#6f6"
+            target_team: "enemy"
+            dmg_penalty: 0.2
+            range_penalty: 0.8
+
+        constructor: (props) ->
+            super props
             @beams = ({
                 target: null,
-                x: 0, y: 0,
+                x: 0,
+                y: 0,
                 charging: true,
                 charge: 0
-            } for idx in [1..max_beams])
+            } for idx in [1..@max_beams])
 
     class Health extends Component
-        type: 'Health'
-        constructor: (@max=1000) ->
-            @current = @max
+        @defaults:
+            type: 'Health'
+            max: 1000
+            current: 1000
 
     class Explosion extends Component
-        type: 'Explosion'
-        constructor: (@ttl=2.0, @radius=100,
-                      @max_particles=100, @max_particle_size=4,
-                      @max_velocity=300, @color='#f00') ->
-            @age = 0
-            @stop = false
+        @defaults:
+            type: 'Explosion'
+            ttl: 2.0
+            radius: 100
+            max_particles: 100
+            max_particle_size: 4
+            max_velocity: 300
+            color: '#f00'
+            age: 0
+            stop: false
+
+        constructor: (props) ->
+            super props
             @particles = []
             for idx in [0..@max_particles-1]
                 @particles.push({
@@ -108,12 +166,12 @@ define ['entities', 'underscore'], (Entities, _) ->
                 })
 
     class RadarPing extends Component
-        type: 'RadarPing',
-        constructor: (@color='#fff') ->
+        @defaults:
+            type: 'RadarPing',
+            color: '#fff'
 
     return {
-        Component, TypeName, EntityName, Position, Orbit, Spin,
-        Bouncer, Spawn, Tombstone, Collidable, Renderable, Sprite,
-        Thruster, Seeker, ClickCourse, WeaponsTarget, BeamWeapon, Health,
-        Explosion, RadarPing
+        Component, TypeName, EntityName, Position, Orbit, Spin, Bouncer, Spawn,
+        Tombstone, Collidable, Renderable, Sprite, Thruster, Seeker,
+        ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion, RadarPing
     }

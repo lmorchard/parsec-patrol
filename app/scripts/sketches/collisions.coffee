@@ -32,66 +32,82 @@ define [
 
     render_system.draw_bounding_boxes = true
 
-    em = world.entities
+    world.load(data = {
+        entities: {
+            "10": {
+                "Sprite": { "shape": "hero" },
+                "Spawn": { "x": 80, "y": 0 },
+                "Position": {},
+                "Collidable": {},
+                "Spin": { "rad_per_sec": Math.PI / 2 }
+            },
+            "15": {
+                "Spawn": { "x": -80, "y": 0 },
+                "Position": {},
+                "Collidable": {},
+                "Spin": { "rad_per_sec": Math.PI / 2 },
+                "Sprite": {
+                    "shape": "enemyscout",
+                    "stroke_style": "#fff",
+                    "width": 15,
+                    "height": 15
+                }
+            },
+            "20": {
+                "Spawn": { "x": 0, "y": -60 },
+                "Position": {},
+                "Collidable": {},
+                "Spin": { "rad_per_sec": Math.PI / 2 },
+                "Sprite": {
+                    "shape": "enemyscout",
+                    "stroke_style": "#fff",
+                    "width": 15,
+                    "height": 15
+                }
+            },
+            "25": {
+                "Spawn": { "x": 30, "y": 0 },
+                "Position": {},
+                "Collidable": {},
+                "Spin": { "rad_per_sec": Math.PI * 2 },
+                "Bouncer": { "x_dir": 1, "y_dir": 1, "x_sec": 100, "y_sec": 25 },
+                "Sprite": {
+                    "shape": "torpedo",
+                    "stroke_style": "#f33",
+                    "width": 10,
+                    "height": 10
+                }
+            },
+            "30": {
+                "Spawn": { "x": 0, "y": 30 },
+                "Position": {},
+                "Collidable": {},
+                "Spin": { "rad_per_sec": Math.PI * 4 },
+                "Bouncer": { "x_dir": -1, "y_dir": 1, "x_sec": 25, "y_sec": 100 },
+                "Sprite": {
+                    "shape": "torpedo",
+                    "stroke_style": "#f33",
+                    "width": 10, "height": 10
+                }
+            },
+            "35": {
+                "Spawn": { "x": 30, "y": 30 },
+                "Position": {},
+                "Collidable": {},
+                "Spin": { "rad_per_sec": Math.PI * 6 },
+                "Bouncer": { "x_dir": -1, "y_dir": -1, "x_sec": 50, "y_sec": 25 },
+                "Sprite": {
+                    "shape": "torpedo",
+                    "stroke_style": "#f33",
+                    "width": 10, "height": 10
+                }
+            }
+        },
+        "groups": {
+            "10": [ "10", "15", "20", "25", "30", "35" ]
+        }
+    })
 
-    world.current_scene = scene = em.createGroup(
-        e_hero = em.create(
-            new C.TypeName('HeroShip'),
-            new C.EntityName('hero'),
-            new C.Spawn('at', 80, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI / 4),
-            new C.Sprite('hero')
-        ),
-        e_enemy = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy1'),
-            new C.Spawn('at', -80, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI / 4),
-            new C.Sprite('enemyscout', '#fff', 15, 15)
-        ),
-        e_enemy2 = em.create(
-            new C.TypeName('EnemyCruiser'),
-            new C.EntityName('enemy1'),
-            new C.Spawn('at', 0, -60),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI / 4),
-            new C.Sprite('enemycruiser', '#fff', 50, 50)
-        ),
-        em.create(
-            new C.TypeName('Torpedo'),
-            new C.EntityName('torpedo1'),
-            new C.Spawn('at', 30, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI * 2),
-            new C.Bouncer(1, 1, 25, 25),
-            new C.Sprite('torpedo', '#f33', 10, 10)
-        ),
-        em.create(
-            new C.TypeName('Torpedo'),
-            new C.EntityName('torpedo1'),
-            new C.Spawn('at', 0, 30),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI * 4),
-            new C.Bouncer(-1, 1, 25, 50),
-            new C.Sprite('torpedo', '#f33', 10, 10)
-        ),
-        em.create(
-            new C.TypeName('Torpedo'),
-            new C.EntityName('torpedo1'),
-            new C.Spawn('at', 30, 30),
-            new C.Position,
-            new C.Collidable,
-            new C.Spin(Math.PI * 6),
-            new C.Bouncer(-1, -1, 50, 25),
-            new C.Sprite('torpedo', '#f33', 10, 10)
-        )
-    )
-
+    world.measure_fps = true
+    world.current_scene = _.keys(data.groups)[0]
     world.start()
