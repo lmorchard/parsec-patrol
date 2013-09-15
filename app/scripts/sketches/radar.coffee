@@ -114,7 +114,7 @@ define [
             new C.Seeker(e_hero, Math.PI * 2),
             new C.Health(300),
             new C.WeaponsTarget("invaders"),
-            # new C.BeamWeapon(1, 1, 100, 250, 250, 500, "#f44", "commonwealth"),
+            new C.BeamWeapon(1, 1, 100, 250, 250, 500, "#f44", "commonwealth"),
             new C.RadarPing('#f33'),
             new C.Tombstone(
                 new C.TypeName('Explosion'),

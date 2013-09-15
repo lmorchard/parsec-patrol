@@ -748,8 +748,6 @@ define [
         match_component: C.BeamWeapon
         
         constructor: () ->
-            @v_beam = new Vector2D()
-            @v_target = new Vector2D()
             @stats = {}
 
         calculate_stats: (weap) ->
@@ -760,6 +758,9 @@ define [
                 # Cache these calculations, because they happen on every frame.
                 active = weap.active_beams
                 perc_active = weap.active_beams / weap.max_beams
+                # Total range is split per-beam
+                # TODO: Come up with more of a curve to weapon range drop-off?
+                beam_range = weap.max_range / weap.active_beams
                 @stats[key] =
                     # Charge is active-squared, because beams are active-times
                     # as numerous AND active-times as fast. That took me awhile
@@ -769,8 +770,10 @@ define [
                     charge_rate: weap.charge_rate / active
                     # Rate that capacitor drains in delivering damage
                     discharge_rate: weap.discharge_rate / active
-                    # Total range is split per-beam
-                    beam_range: weap.max_range / weap.active_beams
+                    beam_range: beam_range
+                    # Square the beam range here, so we don't have to sqrt
+                    # during target range-finding later. (Maybe this is dumb?)
+                    beam_range_sq: Math.pow(beam_range, 2)
                     # Damage penalty for splitting the beam
                     dmg_penalty: 1 - (perc_active * weap.dmg_penalty)
             return @stats[key]
@@ -780,7 +783,6 @@ define [
             pos = @world.entities.get(eid, C.Position)
             weap.x = pos.x
             weap.y = pos.y
-            @v_beam.setValues(pos.x, pos.y)
             
             # Figure out the number of available beams
             weap.active_beams = Math.min(weap.active_beams,
@@ -790,38 +792,59 @@ define [
             # Calculate current beam weapon parameters
             stats = @calculate_stats(weap)
 
-            beams_to_target = @charge_beam(t_delta, stats, weap)
+            # Charge beams, target any that have become available.
+            to_target = @charge_beams(t_delta, stats, weap)
+            if to_target.length > 0
+                @target_beams(t_delta, stats, weap, eid, to_target)
 
-            # Do we have any beams available for targeting...?
-            if beams_to_target.length > 0
-                
-                # Find valid targets within beam range
-                targets = @world.entities.getComponents(C.WeaponsTarget)
-                by_range = []
-                for t_eid, target of targets
+            # Discharge beams, apply damage to targets
+            @discharge_beams(t_delta, stats, weap, eid)
+        
+        # Perform beam charging. Immediately after charging, a beam can target.
+        charge_beams: (t_delta, stats, weap) ->
+            to_target = []
+            for idx in [0..weap.active_beams-1]
+                beam = weap.beams[idx]
+                if beam.charging
+                    beam.charge += stats.charge_rate * t_delta
+                    if beam.charge >= stats.max_charge
+                        beam.charge = stats.max_charge
+                        beam.charging = false
+                        beam.target = null
+                        to_target.push(beam)
 
-                    # Do not target self!
-                    continue if t_eid is eid
+            return to_target
 
-                    # Target only the intended team.
-                    continue if target.team isnt weap.target_team
+        target_beams: (t_delta, stats, weap, eid, to_target) ->
+            # Find valid targets within beam range
+            targets = @world.entities.getComponents(C.WeaponsTarget)
+            by_range = []
+            for t_eid, target of targets
 
-                    # Finally, let's see if the target is in range.
-                    t_pos = @world.entities.get(t_eid, C.Position)
-                    @v_target.setValues(t_pos.x, t_pos.y)
-                    t_range = @v_beam.dist(@v_target)
-                    if t_range <= stats.beam_range
-                        by_range.push([t_range, t_eid])
+                # Do not target self!
+                continue if t_eid is eid
 
-                # Assign available beams to closest targets (if any)
-                if by_range.length
-                    by_range.sort (a, b) -> a[0] - b[0]
-                    while beams_to_target.length
-                        for [t_range, t_eid] in by_range
-                            beam = beams_to_target.pop()
-                            break if not beam
-                            beam.target = t_eid
+                # Target only the intended team.
+                continue if target.team isnt weap.target_team
 
+                # Finally, let's see if the target is in range.
+                t_pos = @world.entities.get(t_eid, C.Position)
+                t_range_sq = ((t_pos.x - weap.x) * (t_pos.x - weap.x) +
+                             (t_pos.y - weap.y) * (t_pos.y - weap.y))
+                # t_range = Math.sqrt t_range_sq
+                if t_range_sq <= stats.beam_range_sq
+                    by_range.push([t_range_sq, t_eid])
+
+            # Assign available beams to closest targets (if any)
+            if by_range.length
+                by_range.sort (a, b) -> a[0] - b[0]
+                while to_target.length
+                    for [t_range_sq, t_eid] in by_range
+                        beam = to_target.pop()
+                        break if not beam
+                        beam.target = t_eid
+
+        discharge_beams: (t_delta, stats, weap, eid) ->
             # Process discharge and damage for all active beams
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
@@ -852,21 +875,6 @@ define [
                     from: eid
                     kind: @constructor.DAMAGE_TYPE
                     amount: dmg
-        
-        # Perform beam charging. Immediately after charging, a beam can target.
-        charge_beam: (t_delta, stats, weap) ->
-            beams_to_target = []
-            for idx in [0..weap.active_beams-1]
-                beam = weap.beams[idx]
-                if beam.charging
-                    beam.charge += stats.charge_rate * t_delta
-                    if beam.charge >= stats.max_charge
-                        beam.charge = stats.max_charge
-                        beam.charging = false
-                        beam.target = null
-                        beams_to_target.push(beam)
-
-            return beams_to_target
 
     class HealthSystem extends System
         @MSG_DAMAGE = 'health.damage'
