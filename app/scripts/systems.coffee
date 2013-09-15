@@ -167,7 +167,7 @@ define [
             @ctx.restore()
 
     class ViewportSystem extends System
-        glow: false # true
+        glow: true
 
         match_component: C.Sprite
 
@@ -179,7 +179,6 @@ define [
 
         setWorld: (world) ->
             super world
-
             @resize()
             bound_resize = () => @resize()
             @window.addEventListener 'resize', bound_resize, false
@@ -188,11 +187,10 @@ define [
         setViewportSize: (width, height) ->
             @viewport_width = width
             @viewport_height = height
-
-            if @viewport_width > @viewport_height
-                @viewport_ratio = @viewport_width / @world.width
+            @viewport_ratio = if @viewport_width > @viewport_height
+                @viewport_width / @world.width
             else
-                @viewport_ratio = @viewport_height / @world.height
+                @viewport_height / @world.height
 
         resize: () ->
 
@@ -208,17 +206,7 @@ define [
 
             @setViewportSize(@canvas.width, @canvas.height)
 
-        convertX: (x) ->
-            return (x * @viewport_ratio) + (@viewport_width / 2)
-
-        convertY: (y) ->
-            return (y * @viewport_ratio) + (@viewport_height / 2)
-
         draw: (t_delta) ->
-            @ctx.save()
-            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-            @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
-            @ctx.restore()
 
             if @world.inputs.pointer_x
                 @world.inputs.pointer_world_x = (
@@ -228,6 +216,19 @@ define [
                     @world.inputs.pointer_y - (@viewport_height / 2)
                 ) / @viewport_ratio
 
+            @ctx.save()
+
+            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
+            @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
+
+            @ctx.translate(@viewport_width / 2, @viewport_height / 2)
+            @ctx.scale(@viewport_ratio, @viewport_ratio)
+
+            @draw_scene(t_delta)
+
+            @ctx.restore()
+
+        draw_scene: (t_delta) ->
             scene = @world.entities.entitiesForGroup(@world.current_scene)
             for eid, ignore of scene
 
@@ -241,17 +242,14 @@ define [
 
                 @ctx.save()
 
-                vp_x = @convertX(pos.x)
-                vp_y = @convertY(pos.y)
-
-                @ctx.translate(vp_x, vp_y)
+                @ctx.translate(pos.x, pos.y)
 
                 sprite = @world.entities.get(eid, C.Sprite)
                 if sprite
-                    sprite_size = 20 * @viewport_ratio
+                    sprite_size = 20
 
-                    w = sprite.width * @viewport_ratio
-                    h = sprite.height * @viewport_ratio
+                    w = sprite.width
+                    h = sprite.height
 
                     if @draw_bounding_boxes
                         @ctx.strokeStyle = "#33c"
@@ -271,28 +269,27 @@ define [
         draw_explosion: (t_delta, eid, explosion) ->
 
             @ctx.save()
+
             @ctx.strokeStyle = explosion.color
             @ctx.fillStyle = explosion.color
             if @glow
                 @ctx.shadowColor = explosion.color
-                @ctx.shadowBlur = 3 * @viewport_ratio
+                @ctx.shadowBlur = 3
 
             # Explosion fades out overall as it nears expiration
             duration_alpha = 1 - (explosion.age / explosion.ttl)
 
             for p in explosion.particles
                 continue if p.free
+
                 # Particles fade out as they reach the radius
                 @ctx.globalAlpha = (1 - (p.r / p.mr)) * duration_alpha
-                s = p.s * @viewport_ratio
+                s = p.s
 
                 @ctx.beginPath()
                 @ctx.moveTo(0, 0)
                 @ctx.lineWidth = s
-                @ctx.lineTo(
-                    p.x * @viewport_ratio,
-                    p.y * @viewport_ratio,
-                )
+                @ctx.lineTo(p.x, p.y)
                 @ctx.stroke()
             
             @ctx.restore()
@@ -308,11 +305,11 @@ define [
            
             @ctx.save()
             
-            @ctx.lineWidth = 2 * @viewport_ratio
+            @ctx.lineWidth = 2
             @ctx.strokeStyle = "#333"
             if @glow
                 @ctx.shadowColor = "#333"
-                @ctx.shadowBlur = 3 * @viewport_ratio
+                @ctx.shadowBlur = 3
             @ctx.beginPath()
             @ctx.moveTo(left, top)
             @ctx.lineTo(left + w, top)
@@ -333,11 +330,11 @@ define [
             beam_weapon = @world.entities.get(eid, C.BeamWeapon)
             return if not beam_weapon
 
-            origin_x = @convertX(beam_weapon.x)
-            origin_y = @convertY(beam_weapon.y)
+            origin_x = beam_weapon.x
+            origin_y = beam_weapon.y
                         
             v_origin = new Vector2D(origin_x, origin_y)
-            v_turret = new Vector2D(origin_x, @convertY(beam_weapon.y - 6))
+            v_turret = new Vector2D(origin_x, beam_weapon.y - 6)
             v_turret.rotateAround(v_origin, pos.rotation)
             turret_rad = (Math.PI*2) / beam_weapon.active_beams
 
@@ -354,17 +351,17 @@ define [
                 @ctx.fill()
                 
                 if beam?.target and not beam?.charging
-                    fudge = 1.25 * @viewport_ratio
-                    target_x = @convertX(beam.x + (Math.random() * fudge) - (fudge/2))
-                    target_y = @convertY(beam.y + (Math.random() * fudge) - (fudge/2))
+                    fudge = 1.25
+                    target_x = beam.x + (Math.random() * fudge) - (fudge/2)
+                    target_y = beam.y + (Math.random() * fudge) - (fudge/2)
 
-                    max_width = 2.25
+                    max_width = 4
                     perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
-                    @ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active)) * @viewport_ratio
+                    @ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active))
 
                     @ctx.strokeStyle = beam_weapon.color
                     if @glow
-                        @ctx.shadowBlur = (4 * @viewport_ratio)
+                        @ctx.shadowBlur = 4
                         @ctx.shadowColor = beam_weapon.color
                     @ctx.beginPath()
                     @ctx.moveTo(v_turret.x, v_turret.y)
@@ -381,8 +378,8 @@ define [
             @ctx.strokeStyle = sprite.stroke_style
             if @glow
                 @ctx.shadowColor = sprite.stroke_style
-                @ctx.shadowBlur = 3 * @viewport_ratio
-            @ctx.lineWidth = 1.25 * @viewport_ratio
+                @ctx.shadowBlur = 3
+            @ctx.lineWidth = 1.25
 
             # TODO: Yes, I know, this sucks. Refactor into something better
             switch sprite.shape
