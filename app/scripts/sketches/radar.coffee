@@ -5,7 +5,9 @@ define [
     W, E, C, S, PubSub, $, _, Vector2D, Utils
 ) ->
 
-    MAX_ENEMIES = 60
+    POINTER_SHADOW = false
+    MAX_ENEMIES = 100
+    RESPAWN_ENEMIES = false
     
     class PointerFollower extends C.Component
     
@@ -20,7 +22,7 @@ define [
     area = document.getElementById('gameArea')
         
     world = new W.World(3000, 3000,
-        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0, 3.0),
+        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0, 5.0),
         new S.RadarSystem(canvas, 0.28),
         new S.PointerInputSystem(canvas),
         new PointerFollowerSystem,
@@ -75,7 +77,7 @@ define [
         ),
     )
 
-    if false
+    if POINTER_SHADOW
         em.addToGroup(scene, e_torp = em.create(
             new C.TypeName('Torpedo'),
             new C.EntityName('torpedo1'),
@@ -112,7 +114,7 @@ define [
             new C.Seeker(e_hero, Math.PI * 2),
             new C.Health(300),
             new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 100, 250, 250, 500, "#f44", "commonwealth"),
+            # new C.BeamWeapon(1, 1, 100, 250, 250, 500, "#f44", "commonwealth"),
             new C.RadarPing('#f33'),
             new C.Tombstone(
                 new C.TypeName('Explosion'),
@@ -124,11 +126,15 @@ define [
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
         type_name = em.get(data.entity_id, C.TypeName)
         
+        scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+
         # Respawn an enemy, if necessary
-        if type_name?.name is "EnemyScout"
-            scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+        if RESPAWN_ENEMIES and type_name?.name is "EnemyScout"
             if scouts.length <= MAX_ENEMIES
                 spawn_enemy()
+        else if scouts.length is 0
+            r = () -> location.reload()
+            setTimeout r, 5000
 
         # Reload after a few seconds, if the hero ship dies
         if type_name?.name is "HeroShip"
