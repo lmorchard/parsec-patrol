@@ -1,7 +1,7 @@
 /* global define */
 'use strict';
 define([
-    '../spec/test-app',
+    // '../spec/test-app',
     '../spec/test-utils',
     '../spec/test-worlds',
     '../spec/test-systems',

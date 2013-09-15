@@ -19,61 +19,72 @@ define [
 
     em = world.entities
 
-    world.current_scene = scene = em.createGroup(
-        e_sun = E.Star.create(em, 'Sun'),
-        e_hero = em.create(
-            new C.TypeName('HeroShip'),
-            new C.EntityName('hero'),
-            new C.Sprite('hero'),
-            new C.Position,
-            new C.Spawn('at', -40, 40),
-            new C.Collidable,
-            new C.Thruster(150, 75, 0, 0, false),
-            new C.ClickCourse(true),
-            new C.Seeker(null, Math.PI)
-        ),
-        e_enemy3 = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy3'),
-            new C.Sprite('enemyscout', '#fff', 15, 15),
-            new C.Spawn('at', -80, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_hero, Math.PI)
-        ),
-        e_enemy4 = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy3'),
-            new C.Sprite('enemyscout', '#fff', 15, 15),
-            new C.Spawn('at', 0, 80),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_enemy3, Math.PI)
-        ),
-        e_enemy5 = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy5'),
-            new C.Sprite('enemyscout', '#fff', 15, 15),
-            new C.Spawn('at', 80, 0),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_enemy4, Math.PI * 2)
-        ),
-        e_enemy6 = em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName('enemy6'),
-            new C.Sprite('enemyscout', '#fff', 15, 15),
-            new C.Spawn('at', 80, -80),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_enemy5, Math.PI * 2)
-        ),
-    )
-
-    window.world = world
-
+    world.load(data = {
+        "entities": {
+            "sun": {
+                "Sprite": { "shape": "star" },
+                "Spawn": { "position_logic": "center" },
+                "Position": {}
+            },
+            "hero": {
+                "Sprite": { "shape": "hero" },
+                "Position": {},
+                "Collidable": {},
+                "Spawn": { "x": -40, "y": -40 },
+                "Thruster": { "dv": 250, "max_v": 100, "active": false },
+                "Seeker": { "rad_per_sec": Math.PI },
+                "ClickCourse": { "stop_on_arrival": true },
+            },
+            "enemy3": {
+                "Sprite": {
+                    "shape": "enemyscout",
+                    "stroke_style": "#3ff",
+                    "width": 15, "height": 15
+                },
+                "Spawn": { "x": -80, "y": 0 },
+                "Position": {},
+                "Collidable": {},
+                "Thruster": { "dv": 150, "max_v": 75 },
+                "Seeker": { "target": "hero", "rad_per_sec": Math.PI }
+            },
+            "enemy4": {
+                "Sprite": {
+                    "shape": "enemyscout", "stroke_style": "#f3f",
+                    "width": 15, "height": 15
+                },
+                "Spawn": { "x": 0, "y": 80 },
+                "Position": {},
+                "Collidable": {},
+                "Thruster": { "dv": 150, "max_v": 75 },
+                "Seeker": { "target": "enemy3", "rad_per_sec": Math.PI }
+            },
+            "enemy5": {
+                "Sprite": {
+                    "shape": "enemyscout", "stroke_style": "#ff3",
+                    "width": 15, "height": 15
+                },
+                "Spawn": { "x": 80, "y": 0 },
+                "Position": {},
+                "Collidable": {},
+                "Thruster": { "dv": 150, "max_v": 75 },
+                "Seeker": { "target": "enemy4", "rad_per_sec": Math.PI }
+            },
+            "enemy6": {
+                "Sprite": {
+                    "shape": "enemyscout", "stroke_style": "#3f3",
+                    "width": 15, "height": 15
+                },
+                "Spawn": { "x": 80, "y": -80 },
+                "Position": {},
+                "Collidable": {},
+                "Thruster": { "dv": 150, "max_v": 75 },
+                "Seeker": { "target": "enemy5", "rad_per_sec": Math.PI }
+            },
+        },
+        "groups": {
+            "main": [ "sun", "hero", "enemy3", "enemy4", "enemy5", "enemy6" ]
+        }
+    })
+    world.measure_fps = true
+    world.current_scene = _.keys(data.groups)[0]
     world.start()

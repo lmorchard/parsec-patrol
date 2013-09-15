@@ -5,8 +5,8 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
         setup () ->
             @em = new Entities.EntityManager
             @entity_0 = @em.create(
-                new C.TypeName('test0'),
-                new C.Position(null, 4, 8)
+                new C.TypeName({name: 'test0'}),
+                new C.Position({x: 4, y: 8})
             )
 
             @gid1 = @em.createGroup()
@@ -32,7 +32,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
             test ".get with no specified component should return all", () ->
                 expected_name = 'My Test 0'
-                c = new C.EntityName(expected_name)
+                c = new C.EntityName({name: expected_name})
                 @em.addComponent(@entity_0, c)
 
                 all = @em.get(@entity_0)
@@ -46,7 +46,7 @@ define ['entities', 'components', 'underscore'], (Entities, C, _) ->
 
             test ".addComponent should add a component to an entity", () ->
                 expected_name = 'My Test 0'
-                c = new C.EntityName(expected_name)
+                c = new C.EntityName({name: expected_name})
                 @em.addComponent(@entity_0, c)
 
                 en = @em.get(@entity_0, C.EntityName)

@@ -33,7 +33,6 @@ define [
             @world.inputs.keyboard = {} #new KeyboardState(document.body)
 
         update: (dt) ->
-            # console.log("KEYS #{JSON.stringify(@world.inputs.keyboard.keyCodes)}")
 
     class PointerInputSystem extends System
         constructor: (@canvas) ->
@@ -96,9 +95,13 @@ define [
             if spawn.destroy
                 tombstone = @world.entities.get(eid, C.Tombstone)
                 if tombstone
+                    components = if tombstone.load
+                        @world.entities.loadComponents(tombstone.load)
+                    else
+                        tombstone.components
                     t_eid = @world.entities.create(
-                        new C.Spawn('at', pos.x, pos.y),
-                        tombstone.components...
+                        new C.Spawn({x: pos.x, y: pos.y}),
+                        components...
                     )
                     gid = @world.entities.groupForEntity(eid)
                     if gid isnt null
@@ -176,7 +179,7 @@ define [
 
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
-                      @zoom=1.0, @grid_size=150, @grid_color='#0a0a0a') ->
+                      @zoom=1.0, @grid_size=150, @grid_color='#111') ->
             @ctx = @canvas.getContext('2d')
             @viewport_ratio = 1.0
             @follow_entity = null

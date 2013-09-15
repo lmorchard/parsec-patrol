@@ -66,6 +66,9 @@ define [
                 s.draw t_delta
             return true
 
+        load: (data) ->
+            @entities.load(data)
+
         start: () ->
             return if @is_running
             @is_running = true

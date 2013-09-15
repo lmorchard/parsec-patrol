@@ -3,15 +3,34 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
     class EntityManager
 
         constructor: () ->
-            # Component store, indexed by @store[component][entity]
             @store = {}
             @gid = 0
             @entities_by_group = {}
             @groups_by_entity = {}
 
+        load: (data) ->
+            for eid, c_data of data.entities
+                components = @loadComponents(c_data)
+                @put(eid, components...)
+
+            for gid, eids of data.groups
+                @addToGroup(gid, eids...)
+
+        loadComponents: (c_data) ->
+            components = []
+            for name, props of c_data
+                components.push(new C[name](props))
+            return components
+
+        save: () ->
+
         # Create an entity with the given components
         create: (components...) ->
             entity_id = Utils.generateID()
+            @put(entity_id, components...)
+
+        # Store a collection of components with given ID
+        put: (entity_id, components...) ->
             for c in components
                 @addComponent(entity_id, c)
             return entity_id
@@ -36,11 +55,11 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
         # Get a list of all components for an entity
         get: (entity_id, components...) ->
             if components.length is 1
-                return @store[components[0].prototype.type]?[entity_id]
+                return @store[components[0].defaults.type]?[entity_id]
             else if components.length > 1
                 out = []
                 for c in components
-                    out.push @store[c.prototype.type]?[entity_id]
+                    out.push @store[c.defaults.type]?[entity_id]
                 return out
             else
                 out = {}
@@ -65,7 +84,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
 
         # Get a by-entity map of all components by type
         getComponents: (component) ->
-            @store[component.prototype.type] || {}
+            @store[component.defaults.type] || {}
 
         createGroup: (entities...) ->
             @entities_by_group[id = ++@gid] = {}

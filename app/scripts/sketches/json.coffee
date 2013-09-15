@@ -18,11 +18,11 @@ define [
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
-    world.load(data = {
+    data = {
         entities: {
             "10": {
-                Sprite: { shape: "star" },
-                Spawn: { position_logic: "center" },
+                Sprite: { shape: "sun" },
+                Spawn: { position_logic: "sun" },
                 Position: {}
             },
             "20": {
@@ -59,7 +59,14 @@ define [
         groups: {
             "10": ["10", "20", "30", "40", "50", "60"]
         },
-    })
+    }
+    
+    window.world = world
+    window.C = C
+    window.E = E
+    window.S = S
+
+    world.load(data)
     world.measure_fps = true
     world.current_scene = _.keys(data.groups)[0]
     world.start()
