@@ -120,6 +120,52 @@ define [
                 @world.publish @constructor.MSG_SPAWN,
                     entity_id: eid, spawn: spawn
 
+    class RadarSystem extends System
+        match_component: C.Position
+
+        constructor: (@canvas, @gui_size=0.2) ->
+            @ctx = @canvas.getContext('2d')
+
+        draw: (t_delta) ->
+            canvas_w = @canvas.width
+            canvas_h = @canvas.height
+            gui_size = @gui_size * Math.min(canvas_w, canvas_h)
+
+            x = canvas_w - gui_size
+            y = 0
+            w = gui_size
+            h = gui_size
+
+            ratio = if w < h
+                w / @world.width
+            else
+                h / @world.height
+
+            @ctx.save()
+            @ctx.globalAlpha = 0.75
+
+            @ctx.strokeStyle = "#33c"
+            @ctx.fillStyle = "#000"
+            @ctx.strokeRect(x, y, w, h)
+            @ctx.fillRect(x, y, w, h)
+
+            @ctx.translate(x+(w/2), y+(h/2))
+            @ctx.scale(ratio, ratio)
+
+            scene = @world.entities.entitiesForGroup(@world.current_scene)
+            for eid, ignore of scene
+
+                spawn = @world.entities.get(eid, C.Spawn)
+                continue if not spawn?.spawned
+
+                pos = @world.entities.get(eid, C.Position)
+                continue if not pos
+
+                @ctx.fillStyle = "#fff"
+                @ctx.fillRect(pos.x, pos.y, 5, 5)
+
+            @ctx.restore()
+
     class ViewportSystem extends System
         glow: false # true
 
@@ -197,6 +243,7 @@ define [
 
                 vp_x = @convertX(pos.x)
                 vp_y = @convertY(pos.y)
+
                 @ctx.translate(vp_x, vp_y)
 
                 sprite = @world.entities.get(eid, C.Sprite)
@@ -247,14 +294,6 @@ define [
                     p.y * @viewport_ratio,
                 )
                 @ctx.stroke()
-                
-                ###
-                @ctx.fillRect(
-                    p.x * @viewport_ratio,
-                    p.y * @viewport_ratio,
-                    s, s
-                )
-                ###
             
             @ctx.restore()
 
@@ -268,6 +307,7 @@ define [
             left = 0 - (w/2)
            
             @ctx.save()
+            
             @ctx.lineWidth = 2 * @viewport_ratio
             @ctx.strokeStyle = "#333"
             if @glow
@@ -277,6 +317,7 @@ define [
             @ctx.moveTo(left, top)
             @ctx.lineTo(left + w, top)
             @ctx.stroke()
+
             if perc > 0
                 @ctx.strokeStyle = "#3e3"
                 if @glow
@@ -285,6 +326,7 @@ define [
                 @ctx.moveTo(left, top)
                 @ctx.lineTo(left + (w * perc), top)
                 @ctx.stroke()
+            
             @ctx.restore()
 
         draw_beams: (t_delta, eid, pos) ->
@@ -298,13 +340,6 @@ define [
             v_turret = new Vector2D(origin_x, @convertY(beam_weapon.y - 6))
             v_turret.rotateAround(v_origin, pos.rotation)
             turret_rad = (Math.PI*2) / beam_weapon.active_beams
-
-            if false
-                range = beam_weapon.max_range / beam_weapon.active_beams
-                @ctx.strokeStyle = beam_weapon.color
-                @ctx.beginPath()
-                @ctx.arc(origin_x, origin_y, range * @viewport_ratio, 0, Math.PI*2, false)
-                @ctx.stroke()
 
             for idx in [0..beam_weapon.active_beams-1]
                 beam = beam_weapon.beams[idx]
@@ -849,5 +884,5 @@ define [
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
         ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
-        BeamWeaponSystem, HealthSystem, ExplosionSystem
+        BeamWeaponSystem, HealthSystem, ExplosionSystem, RadarSystem
     }

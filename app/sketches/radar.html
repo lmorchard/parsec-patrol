@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js">
     <head>
-        <title>Click-Course - Sketches</title>
+        <title>Radar - Sketches</title>
         <link rel="stylesheet" href="../styles/styls.css">
     </head>
     <body>
@@ -14,7 +14,7 @@
                 requirejs.config({
                     baseUrl: '../scripts'
                 });
-                require(['sketches/click-course']);
+                require(['sketches/radar'], function (p) { p(); });
             });
         </script>
     </body>
