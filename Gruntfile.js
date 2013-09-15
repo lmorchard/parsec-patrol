@@ -40,7 +40,7 @@ module.exports = function (grunt) {
             html: {
                 files: [
                     '<%= yeoman.app %>/*.html',
-                    '<%= yeoman.app %>/sketches/*.html',
+                    '<%= yeoman.app %>/sketches/*.html'
                 ],
                 tasks: ['copy:html'],
                 options: { livereload: true }
