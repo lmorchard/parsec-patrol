@@ -3,13 +3,10 @@ define [
     'underscore', 'Vector2D', 'utils', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
-) ->
+) -> (canvas, use_gui=true, measure_fps=true) ->
 
-    canvas = document.getElementById('gameCanvas')
-    area = document.getElementById('gameArea')
-        
     world = new W.World(640, 480,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        vp = new S.ViewportSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.ExplosionSystem,
@@ -46,13 +43,15 @@ define [
 
     setInterval spawn_explosion, 0.5 * Math.random()
 
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+
+    world.measure_fps = measure_fps
 
     window.world = world
     window.C = C
     window.E = E
     window.S = S
 
-    world.measure_fps = true
-    world.start()
+    return world

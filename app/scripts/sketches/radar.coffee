@@ -3,18 +3,15 @@ define [
     'underscore', 'Vector2D', 'utils', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
-) ->
+) -> (canvas, use_gui=true, measure_fps=true) ->
 
     options = {
         max_enemies: 100
         respawn_enemies: true
     }
     
-    canvas = document.getElementById('gameCanvas')
-    area = document.getElementById('gameArea')
-        
     world = new W.World(3000, 3000,
-        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0, 5.0),
+        vp = new S.ViewportSystem(canvas),
         new S.RadarSystem(canvas, 0.28),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
@@ -27,13 +24,14 @@ define [
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
-    world.measure_fps = true
     
     window.C = C
     window.E = E
     window.W = W
     window.world = world
     window.vp = vp
+
+    vp.zoom = 4
 
     em = world.entities
 
@@ -168,13 +166,15 @@ define [
         for idx in [1..options.max_enemies]
             spawn_enemy()
 
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
-    gui.add(vp, 'use_sprite_cache')
-    gui.add(vp, 'zoom', 1, 15).step(0.25)
-    gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
-    gui.add(options, 'max_enemies', 1, 200).step(10)
-    gui.add(options, 'respawn_enemies')
-    gui.add(stats, 'enemy_ct').listen()
+    world.measure_fps = measure_fps
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+        gui.add(vp, 'use_sprite_cache')
+        gui.add(vp, 'zoom', 1, 15).step(0.25)
+        gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
+        gui.add(options, 'max_enemies', 1, 200).step(10)
+        gui.add(options, 'respawn_enemies')
+        gui.add(stats, 'enemy_ct').listen()
 
-    () -> world.start()
+    return world

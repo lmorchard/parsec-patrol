@@ -3,7 +3,7 @@ define [
     'underscore', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, dat
-) ->
+) -> (canvas, use_gui=true, measure_fps=true) ->
     class PointerFollower extends C.Component
         @defaults:
             type: "PointerFollower"
@@ -17,9 +17,6 @@ define [
             pos.x = @world.inputs.pointer_world_x
             pos.y = @world.inputs.pointer_world_y
 
-    canvas = document.getElementById('gameCanvas')
-    area = document.getElementById('gameArea')
-        
     world = new W.World(320, 240,
         new S.PointerInputSystem(canvas),
         new S.SpawnSystem,
@@ -27,9 +24,7 @@ define [
         new S.SeekerSystem,
         new S.ThrusterSystem,
         new PointerFollowerSystem,
-        vp = new S.ViewportSystem(
-            window, area, canvas, 1.0, 1.0
-        ),
+        vp = new S.ViewportSystem(canvas)
     )
 
     world.load(data = {
@@ -98,19 +93,21 @@ define [
         },
         "groups": {
             "main": [ "sun", "torp", "enemy3", "enemy4", "enemy5", "enemy6" ]
-        }
+        },
+        "current_scene": "main"
     })
 
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
-    gui.add(vp, 'use_sprite_cache')
-    gui.add(vp, 'draw_bounding_boxes')
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+        gui.add(vp, 'use_sprite_cache')
+        gui.add(vp, 'draw_bounding_boxes')
     
     window.world = world
     window.C = C
     window.E = E
     window.S = S
 
-    world.measure_fps = true
-    world.current_scene = _.keys(data.groups)[0]
-    world.start()
+    world.measure_fps = measure_fps
+
+    return world

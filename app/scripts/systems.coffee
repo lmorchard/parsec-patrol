@@ -211,6 +211,8 @@ define [
         source_size: 100
         use_sprite_cache: false
         use_grid: true
+        prev_zoom: 0
+        zoom: 1
         camera_x: 0
         camera_y: 0
 
@@ -218,18 +220,16 @@ define [
             'star', 'hero', 'enemyscout', 'enemycruiser', 'torpedo', 'default'
         ]
 
-        constructor: (@window, @game_area, @canvas,
-                      @window_scale_x=1.0, @window_scale_y=1.0,
-                      @zoom=1.0) ->
+        constructor: (@canvas) ->
 
             @buffer_canvas = document.createElement('canvas')
-            @buffer_canvas.width = @canvas.width
-            @buffer_canvas.height = @canvas.height
-
             @ctx = @buffer_canvas.getContext('2d')
             @screen_ctx = @canvas.getContext('2d')
 
+            @viewport_width = 0
+            @viewport_height = 0
             @viewport_ratio = 1.0
+
             @follow_entity = null
 
             @sprite_cache = {}
@@ -247,40 +247,10 @@ define [
 
         setWorld: (world) ->
             super world
-            @resize()
-            bound_resize = () => @resize()
-            @window.addEventListener 'resize', bound_resize, false
-            @window.addEventListener 'orientationchange', bound_resize, false
-
             @world.subscribe @constructor.MSG_CAPTURE_CAMERA, (msg, data) =>
                 @follow_entity = data.entity_id
 
-        setViewportSize: (width, height) ->
-            @viewport_width = width
-            @viewport_height = height
-            @viewport_ratio = if @viewport_width > @viewport_height
-                @viewport_width / @world.width
-            else
-                @viewport_height / @world.height
-
-        resize: () ->
-            [new_w, new_h] = [@window.innerWidth, @window.innerHeight]
-
-            @game_area.style.width = "#{new_w}px"
-            @game_area.style.height = "#{new_h}px"
-            @game_area.style.marginLeft = "#{-new_w/2}px"
-            @game_area.style.marginTop = "#{-new_h/2}px"
-            
-            @canvas.width = new_w * @window_scale_x
-            @canvas.height = new_h * @window_scale_y
-            @buffer_canvas.width = @canvas.width
-            @buffer_canvas.height = @canvas.height
-
-            @setViewportSize(@canvas.width, @canvas.height)
-
         draw: (t_delta) ->
-
-            zoomed_ratio = @viewport_ratio * @zoom
 
             # If we have a followed entity, move the camera center
             if @follow_entity
@@ -289,48 +259,71 @@ define [
                     @camera_x = pos.x
                     @camera_y = pos.y
 
+            @updateViewportMetrics()
+
             # Adjust pointer-to-world coords based on camera
             if @world.inputs.pointer_x
                 @world.inputs.pointer_world_x = ((
                     @world.inputs.pointer_x - (@viewport_width/2)
-                ) / zoomed_ratio) + @camera_x
+                ) / @zoomed_ratio) + @camera_x
                 @world.inputs.pointer_world_y = ((
                     @world.inputs.pointer_y - (@viewport_height/2)
-                ) / zoomed_ratio) + @camera_y
-
-            # Calculate parameters defining the visible portion of world
-            visible_width = @viewport_width / zoomed_ratio
-            visible_height = @viewport_height / zoomed_ratio
-            visible_left = (0 - visible_width/2) + @camera_x
-            visible_top = (0 - visible_height/2) + @camera_y
-            visible_right = visible_left + visible_width
-            visible_bottom = visible_top + visible_height
+                ) / @zoomed_ratio) + @camera_y
 
             # Clear the canvas
             @ctx.save()
             @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-            @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
+            @ctx.fillRect(0, 0, @viewport_width, @viewport_height)
 
             # Translate and scale based on the viewport center and zoom level
-            @ctx.translate(@viewport_width / 2, @viewport_height / 2)
-            @ctx.scale(zoomed_ratio, zoomed_ratio)
+            @ctx.translate(@viewport_center_left, @viewport_center_top)
+            @ctx.scale(@zoomed_ratio, @zoomed_ratio)
 
             # Adjust the camera center
             @ctx.translate(0-@camera_x, 0-@camera_y)
 
-            @draw_backdrop(t_delta, visible_left, visible_top,
-                           visible_right, visible_bottom)
-
-            @draw_scene(t_delta, visible_left, visible_top,
-                        visible_right, visible_bottom)
+            @draw_backdrop(t_delta)
+            @draw_scene(t_delta)
 
             @ctx.restore()
 
             if @world.is_paused
                 @draw_paused_bezel(t_delta)
             
-            @screen_ctx.drawImage(@buffer_canvas, 0, 0)
+            if @screen_ctx
+                @screen_ctx.drawImage(@buffer_canvas, 0, 0)
         
+        updateViewportMetrics: (width, height) ->
+            width = @canvas.width
+            height = @canvas.height
+
+            if not (@viewport_width is width and @viewport_height is height and @prev_zoom is @zoom)
+
+                @prev_zoom = @zoom
+                @viewport_width = width
+                @viewport_height = height
+                if @buffer_canvas
+                    @buffer_canvas.width = width
+                    @buffer_canvas.height = height
+
+                @viewport_ratio = if @viewport_width > @viewport_height
+                    @viewport_width / @world.width
+                else
+                    @viewport_height / @world.height
+
+                @viewport_center_left = @viewport_width / 2
+                @viewport_center_top = @viewport_height / 2
+
+                # Calculate parameters defining the visible portion of world
+                @zoomed_ratio = @viewport_ratio * @zoom
+
+            @visible_width = @viewport_width / @zoomed_ratio
+            @visible_height = @viewport_height / @zoomed_ratio
+            @visible_left = (0 - @visible_width/2) + @camera_x
+            @visible_top = (0 - @visible_height/2) + @camera_y
+            @visible_right = @visible_left + @visible_width
+            @visible_bottom = @visible_top + @visible_height
+
         draw_paused_bezel: (t_delta) ->
             width = @canvas.width * 0.75
             height = @canvas.height * 0.25
@@ -350,31 +343,31 @@ define [
             @ctx.textBaseline = 'middle'
             @ctx.strokeText('Paused', left+(width/2), top+(height/2), width)
 
-        draw_backdrop: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
+        draw_backdrop: (t_delta) ->
             return if not @use_grid
 
             @ctx.save()
             @ctx.strokeStyle = @grid_color
             @ctx.lineWidth = 1
 
-            grid_offset_x = visible_left % @grid_size
-            start = visible_left - grid_offset_x
-            end = visible_right
+            grid_offset_x = @visible_left % @grid_size
+            start = @visible_left - grid_offset_x
+            end = @visible_right
             for left in [start..end] by @grid_size
-                @ctx.moveTo(left, visible_top)
-                @ctx.lineTo(left, visible_bottom)
+                @ctx.moveTo(left, @visible_top)
+                @ctx.lineTo(left, @visible_bottom)
 
-            grid_offset_y = visible_top % @grid_size
-            start = visible_top - grid_offset_y
-            end = visible_bottom
+            grid_offset_y = @visible_top % @grid_size
+            start = @visible_top - grid_offset_y
+            end = @visible_bottom
             for top in [start..end] by @grid_size
-                @ctx.moveTo(visible_left, top)
-                @ctx.lineTo(visible_right, top)
+                @ctx.moveTo(@visible_left, top)
+                @ctx.lineTo(@visible_right, top)
 
             @ctx.stroke()
             @ctx.restore()
 
-        draw_scene: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
+        draw_scene: (t_delta) ->
             scene = @world.entities.entitiesForGroup(@world.current_scene)
             for eid, ignore of scene
 
@@ -388,8 +381,8 @@ define [
 
                 # Skip drawing offscreen entities
                 # FIXME: Account for partially-offscreen entities
-                if pos.x < visible_left or pos.x > visible_right or
-                        pos.y < visible_top or pos.y > visible_bottom
+                if pos.x < @visible_left or pos.x > @visible_right or
+                        pos.y < @visible_top or pos.y > @visible_bottom
                     continue
 
                 @ctx.save()

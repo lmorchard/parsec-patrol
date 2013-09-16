@@ -5,16 +5,20 @@
         <link rel="stylesheet" href="../styles/styls.css">
     </head>
     <body>
-        <div id="gameArea">
-            <canvas style="height: 100%" id="gameCanvas"></canvas>
-        </div>
+        <canvas style="height: 100%" id="gameCanvas"></canvas>
         <script src="../bower_components/requirejs/require.js"></script>
         <script>
             require(['../scripts/common'], function (config) {
                 requirejs.config({
                     baseUrl: '../scripts'
                 });
-                require(['sketches/click-course']);
+                require(['utils', 'sketches/click-course'],
+                    function (utils, p) {
+                        canvas = document.getElementById('gameCanvas')
+                        utils.maximizeCanvas(window, canvas)
+                        p(canvas).start()
+                    }
+                );
             });
         </script>
     </body>

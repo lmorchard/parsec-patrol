@@ -3,18 +3,15 @@ define [
     'underscore', 'Vector2D', 'utils', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
-) ->
+) -> (canvas, use_gui=true, measure_fps=true) ->
 
     options = {
         max_enemies: 100
         respawn_enemies: true
     }
     
-    canvas = document.getElementById('gameCanvas')
-    area = document.getElementById('gameArea')
-    
-    world = new W.World(2000, 2000,
-        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0, 3.0),
+    world = new W.World(1000, 1000,
+        vp = new S.ViewportSystem(canvas),
         new S.RadarSystem(canvas, 0.28),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
@@ -30,13 +27,7 @@ define [
         new S.ExplosionSystem,
     )
 
-    world.measure_fps = true
-    
-    window.C = C
-    window.E = E
-    window.W = W
-    window.world = world
-    window.vp = vp
+    vp.zoom = 2
 
     em = world.entities
 
@@ -163,12 +154,20 @@ define [
             r = () -> location.reload()
             setTimeout r, 5000
 
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
-    gui.add(vp, 'use_sprite_cache')
-    gui.add(vp, 'zoom', 1, 15).step(0.25)
-    gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
-    gui.add(c_enemy_turrets, 'active_turrets', 1, 50).step(1)
+    window.C = C
+    window.E = E
+    window.W = W
+    window.world = world
+    window.vp = vp
+
+    world.measure_fps = measure_fps
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+        gui.add(vp, 'use_sprite_cache')
+        gui.add(vp, 'zoom', 1, 15).step(0.25)
+        gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
+        gui.add(c_enemy_turrets, 'active_turrets', 1, 50).step(1)
 
     ###
     f_missiles = gui.addFolder('turrets')
@@ -176,4 +175,4 @@ define [
         f_missiles.add(c_enemy_turrets.turrets[idx], 'loading', 0, 5).listen()
     ###
     
-    () -> world.start()
+    return world

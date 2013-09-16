@@ -3,7 +3,8 @@ define [
     'underscore', 'Vector2D', 'utils', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
-) ->
+) -> (canvas, use_gui=true, measure_fps=true) ->
+
     stats = {
         dps: 0,
         enemies_ct: 0,
@@ -13,11 +14,8 @@ define [
         measure_dps: true
     }
 
-    canvas = document.getElementById('gameCanvas')
-    area = document.getElementById('gameArea')
-        
     world = new W.World(640, 480,
-        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        vp = new S.ViewportSystem(canvas),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
@@ -28,7 +26,6 @@ define [
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
-    world.measure_fps = true
     
     window.C = C
     window.E = E
@@ -189,21 +186,24 @@ define [
         
         stats.dps = dmg_sum / (duration/1000)
     
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
-    gui.add(options, 'max_enemies', 1, 200).step(10)
-    gui.add(stats, 'enemies_ct').listen()
-    gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
-    gui.add(options, 'measure_dps')
-    gui.add(stats, 'dps').listen()
-    gui.add(c_hero_beam.current_stats, 'beam_range').listen()
-    gui.add(c_hero_beam.current_stats, 'max_charge').listen()
-    gui.add(c_hero_beam.current_stats, 'charge_rate').listen()
-    gui.add(c_hero_beam.current_stats, 'discharge_rate').listen()
-    gui.add(c_hero_beam.current_stats, 'dmg_penalty', 0.0, 1.0).step(0.001).listen()
+    world.measure_fps = measure_fps
 
-    f_beams = gui.addFolder('beams')
-    for idx in [0..c_hero_beam.max_beams-1]
-        f_beams.add(c_hero_beam.beams[idx], 'charge', 0, 4500).listen()
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+        gui.add(options, 'max_enemies', 1, 200).step(10)
+        gui.add(stats, 'enemies_ct').listen()
+        gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
+        gui.add(options, 'measure_dps')
+        gui.add(stats, 'dps').listen()
+        gui.add(c_hero_beam.current_stats, 'beam_range').listen()
+        gui.add(c_hero_beam.current_stats, 'max_charge').listen()
+        gui.add(c_hero_beam.current_stats, 'charge_rate').listen()
+        gui.add(c_hero_beam.current_stats, 'discharge_rate').listen()
+        gui.add(c_hero_beam.current_stats, 'dmg_penalty', 0.0, 1.0).step(0.001).listen()
 
-    world.start()
+        f_beams = gui.addFolder('beams')
+        for idx in [0..c_hero_beam.max_beams-1]
+            f_beams.add(c_hero_beam.beams[idx], 'charge', 0, 4500).listen()
+
+    return world

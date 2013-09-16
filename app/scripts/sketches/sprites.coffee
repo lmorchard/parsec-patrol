@@ -3,12 +3,10 @@ define [
     'underscore', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, dat
-) ->
-    canvas = document.getElementById('gameCanvas')
-    area = document.getElementById('gameArea')
+) -> (canvas, use_gui=true, measure_fps=true) ->
 
     world = new W.World(640, 480,
-        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        vp = new S.ViewportSystem(canvas),
         new S.SpawnSystem,
         new S.OrbiterSystem,
     )
@@ -57,12 +55,14 @@ define [
         current_scene: '10'
     })
 
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
-    gui.add(vp, 'use_sprite_cache')
-    gui.add(vp, 'draw_bounding_boxes')
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+        gui.add(vp, 'zoom', 0.125, 4).step(0.0125)
+        gui.add(vp, 'use_sprite_cache')
+        gui.add(vp, 'draw_bounding_boxes')
 
-    world.measure_fps = true
+    world.measure_fps = measure_fps
     
     window.C = C
     window.E = E
@@ -70,4 +70,4 @@ define [
     window.world = world
     window.vp = vp
     
-    () -> world.start()
+    return world

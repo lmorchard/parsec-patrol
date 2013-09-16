@@ -2,19 +2,79 @@
 <html>
     <head>
         <title>Parsec Patrol Sketches</title>
+        <style type="text/css">
+            .sketches { margin: 0; padding: 0; list-style-type: none }
+            .sketches li { float: left; margin: 1em; padding: 0;}
+        </style>
     </head>
     <body>
         <h1>Parsec Patrol!</h1>
-        <ol>
-            <li><a href="sprites.html">sprites</a></li>
-            <li><a href="collisions.html">collisions</a></li>
-            <li><a href="seeker.html">seeker</a></li>
-            <li><a href="click-course.html">click-course</a></li>
-            <li><a href="explosions.html">explosions</a></li>
-            <li><a href="beams.html">beams</a></li>
-            <li><a href="radar.html">radar</a></li>
-            <li><a href="json.html">json</a></li>
-            <li><a href="missiles.html">missiles</a></li>
+        <p>
+            This is not a game, yet. But, I'm sketching out some scenarios that
+            should eventually be part of a game. Below are live canvas demos, a
+            few of which are interactive. The links go to isolated demos of
+            each sketch with control panels.
+        </p>
+        <ol class="sketches">
+            <li>
+                <p><a href="sprites.html">sprites</a></p>
+                <canvas id="sprites" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="collisions.html">collisions</a></p>
+                <canvas id="collisions" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="seeker.html">seeker</a></p>
+                <canvas id="seeker" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="click-course.html">click-course</a></p>
+                <canvas id="click-course" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="explosions.html">explosions</a></p>
+                <canvas id="explosions" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="beams.html">beams</a></p>
+                <canvas id="beams" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="radar.html">radar</a></p>
+                <canvas id="radar" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="missiles.html">missiles</a></p>
+                <canvas id="missiles" width="400" height="300"></canvas>
+            </li>
+            <li>
+                <p><a href="json.html">json</a></p>
+                <canvas id="json" width="400" height="300"></canvas>
+            </li>
         </ol>
+        <script src="../bower_components/requirejs/require.js"></script>
+        <script>
+            require(['../scripts/common'], function (config) {
+                requirejs.config({
+                    baseUrl: '../scripts'
+                });
+                require(['utils', 'sketches/sprites', 'sketches/collisions', 'sketches/seeker',
+                         'sketches/click-course', 'sketches/explosions', 'sketches/beams',
+                         'sketches/radar','sketches/missiles'],
+                    function (utils, sprites, collisions, seeker, clickcourse,
+                              explosions, beams, radar, missiles) {
+                        sprites(document.getElementById('sprites'), false, false).start();
+                        collisions(document.getElementById('collisions'), false, false).start();
+                        seeker(document.getElementById('seeker'), false, false).start();
+                        clickcourse(document.getElementById('click-course'), false, false).start();
+                        explosions(document.getElementById('explosions'), false, false).start();
+                        beams(document.getElementById('beams'), false, false).start();
+                        radar(document.getElementById('radar'), false, false).start();
+                        missiles(document.getElementById('missiles'), false, false).start();
+                    }
+                );
+            });
+        </script>
     </body>
 </html>

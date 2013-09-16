@@ -3,7 +3,7 @@ define [
     'underscore', 'dat'
 ], (
     W, E, C, S, PubSub, $, _, dat
-) ->
+) -> (canvas, use_gui=true, measure_fps=true) ->
 
     class ColorCollideSystem extends S.System
         match_component: C.Collidable
@@ -21,13 +21,7 @@ define [
         new S.OrbiterSystem,
         new S.CollisionSystem,
         new ColorCollideSystem,
-        vp = new S.ViewportSystem(
-            window,
-            document.getElementById('gameArea'),
-            document.getElementById('gameCanvas'),
-            1.0, 1.0,
-            true
-        )
+        vp = new S.ViewportSystem(canvas),
     )
 
     world.load(data = {
@@ -106,11 +100,13 @@ define [
         }
     })
 
-    gui = new dat.GUI()
-    gui.add(world, 'is_paused')
-    gui.add(vp, 'use_sprite_cache')
-    gui.add(vp, 'draw_bounding_boxes')
+    if use_gui
+        gui = new dat.GUI()
+        gui.add(world, 'is_paused')
+        gui.add(vp, 'use_sprite_cache')
+        gui.add(vp, 'draw_bounding_boxes')
 
-    world.measure_fps = true
+    world.measure_fps = measure_fps
     world.current_scene = _.keys(data.groups)[0]
-    world.start()
+
+    return world
