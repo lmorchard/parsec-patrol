@@ -33,7 +33,6 @@ define [
             @world.inputs.keyboard = {} #new KeyboardState(document.body)
 
         update: (dt) ->
-            # console.log("KEYS #{JSON.stringify(@world.inputs.keyboard.keyCodes)}")
 
     class PointerInputSystem extends System
         constructor: (@canvas) ->
@@ -176,7 +175,7 @@ define [
 
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
-                      @zoom=1.0, @grid_size=150, @grid_color='#0a0a0a') ->
+                      @zoom=1.0, @grid_size=150, @grid_color='#111') ->
             @ctx = @canvas.getContext('2d')
             @viewport_ratio = 1.0
             @follow_entity = null

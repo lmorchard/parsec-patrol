@@ -1,7 +1,8 @@
 define ['entities', 'underscore'], (Entities, _) ->
 
     class Component
-        type: 'AbstractComponent'
+        #@defaults
+        #    type: 'AbstractComponent'
         
         toString: () ->
             "#{@type}: #{JSON.stringify(this)}"
