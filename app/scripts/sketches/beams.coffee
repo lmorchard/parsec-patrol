@@ -4,6 +4,8 @@ define [
 ], (
     W, E, C, S, PubSub, $, _, Vector2D, Utils
 ) ->
+    MEASURE_DPS = false
+    MAX_ENEMIES = 24
 
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
@@ -22,34 +24,63 @@ define [
     )
     world.measure_fps = true
     
+    window.C = C
+    window.E = E
+    window.W = W
     window.world = world
 
     em = world.entities
-    world.current_scene = scene = em.createGroup(
-        e_sun = E.Star.create(em, 'Sun'),
-        e_hero = em.create(
-            new C.TypeName('HeroShip'),
-            new C.EntityName('hero'),
-            new C.Sprite('hero'),
-            new C.Position,
-            new C.Spawn('at', -65, 65),
-            new C.Collidable,
-            new C.Orbit(e_sun, Math.PI/4),
-            new C.Health(20000),
-            new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(
-                15, 9, 1250, 4500, 4500, 4500,
-                "#33f", "invaders"
-            ),
-            new C.Tombstone(
-                new C.TypeName('Explosion'),
-                new C.Position,
-                new C.Explosion(5, 100, 50, 1.5, 250, '#fff'),
-            ),
-        ),
-    )
-    
-    MAX_ENEMIES = 24
+
+    world.load(data = {
+        "entities": {
+            "sun": {
+                "Sprite": { "shape": "star" },
+                "Spawn": { "position_logic": "center" },
+                "Position": {}
+            },
+            "hero": {
+                "TypeName": { "name": "HeroShip" },
+                "Sprite": { "shape": "hero" },
+                "Position": {},
+                "Collidable": {},
+                "Spawn": { "x": -65, "y": 65 },
+                "Orbit": { "orbited_id": "sun", "rad_per_sec": Math.PI/4 },
+                # "Thruster": { "dv": 250, "max_v": 100, "active": false },
+                # "Seeker": { "rad_per_sec": Math.PI },
+                # "ClickCourse": { "stop_on_arrival": true },
+                "Health": { "max": "20000" }
+                "WeaponsTarget" : { "team": "commonwealth" },
+                "BeamWeapon": {
+                    "max_beams": 15,
+                    "active_beams": 9,
+                    "max_range": 1250,
+                    "max_power": 4500,
+                    "charge_rate": 4500,
+                    "discharge_rate": 4500,
+                    "color": "#33f",
+                    "target_team": "invaders"
+                }
+                "Tombstone": {
+                    "load": {
+                        "Position": {},
+                        "Explosion": {
+                            "ttl": 5,
+                            "radius": 70,
+                            "max_particles": 50,
+                            "max_particle_size": 1.5,
+                            "max_velocity": 300,
+                            "color": "#fff"
+                        }
+                    }
+                }
+            },
+        },
+        "groups": {
+            "main": [ "sun", "hero" ]
+        }
+    })
+    c_hero_beam = world.entities.get("hero", C.BeamWeapon)
+    world.current_scene = scene = _.keys(data.groups)[0]
 
     v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
@@ -63,24 +94,46 @@ define [
     spawn_enemy = () ->
         enemy_ct++
         v_spawn.rotateAround(v_center, (Math.PI*2) * Math.random())
-        em.addToGroup(scene, em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName("enemy-#{enemy_ct}"),
-            new C.Sprite('enemyscout', '#f33', 12, 12),
-            new C.Spawn('at', v_spawn.x, v_spawn.y),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_hero, Math.PI * 2),
-            new C.Health(300),
-            new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 75, 250, 250, 500, "#f44", "commonwealth"),
-            new C.Tombstone(
-                new C.TypeName('Explosion'),
-                new C.Position,
-                new C.Explosion(0.75, 40, 15, 1.25, 150, '#f33'),
-            ),
-        ))
+        components = em.loadComponents({
+            "TypeName": { "name": "EnemyScout" },
+            "Sprite": {
+                "shape": "enemyscout",
+                "stroke_style": "#f33",
+                "width": 12, "height": 12
+            },
+            "Spawn": { "x": v_spawn.x, "y": v_spawn.y },
+            "Position": {},
+            "Collidable": {},
+            "Thruster": { "dv": 100, "max_v": 50 },
+            "Seeker": { "target": "hero", "rad_per_sec": Math.PI }
+            "Health": { "max": "300" }
+            "WeaponsTarget" : { "team": "invaders" },
+            "BeamWeapon": {
+                "max_beams": 1,
+                "active_beams": 1,
+                "max_range": 75,
+                "max_power": 250,
+                "charge_rate": 250,
+                "discharge_rate": 500,
+                "color": "#f44",
+                "target_team": "commonwealth"
+            }
+            "Tombstone": {
+                "load": {
+                    "Position": {},
+                    "Explosion": {
+                        "ttl": 0.5,
+                        "radius": 40,
+                        "max_particles": 25,
+                        "max_particle_size": 1.25,
+                        "max_velocity": 250,
+                        "color": "#f33"
+                    }
+                }
+            }
+        })
+        e = em.create(components...)
+        em.addToGroup(scene, e)
 
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
         type_name = em.get(data.entity_id, C.TypeName)
@@ -100,34 +153,33 @@ define [
         for idx in [1..MAX_ENEMIES]
             spawn_enemy()
 
-    ###
-    damage_log = []
-    if false then world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
-        
-        # Only count hero ship DPS
-        type_name = em.get(data.from, C.TypeName)
-        return if type_name?.name isnt "HeroShip"
+    if MEASURE_DPS
+        damage_log = []
+        world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
+            
+            # Only count hero ship DPS
+            type_name = em.get(data.from, C.TypeName)
+            return if type_name?.name isnt "HeroShip"
 
-        # This is wasted damage - target already dead.
-        health = em.get(data.to, C.Health)
-        return if not health
+            # This is wasted damage - target already dead.
+            health = em.get(data.to, C.Health)
+            return if not health
 
-        t_now = Utils.now()
+            t_now = Utils.now()
 
-        damage_log.push([t_now, data.amount])
-        while t_now - damage_log[0][0] > 30000
-            damage_log.shift()
+            damage_log.push([t_now, data.amount])
+            while t_now - damage_log[0][0] > 30000
+                damage_log.shift()
 
-        t_start = damage_log[0][0]
-        t_end = damage_log[damage_log.length-1][0]
-        duration = t_end - t_start
+            t_start = damage_log[0][0]
+            t_end = damage_log[damage_log.length-1][0]
+            duration = t_end - t_start
 
-        dmg_sum = 0
-        for entry in damage_log
-            dmg_sum += entry[1]
-        
-        dps = dmg_sum / (duration/1000)
-        $('#dps').attr('value', "#{dps}")
-    ###
-
+            dmg_sum = 0
+            for entry in damage_log
+                dmg_sum += entry[1]
+            
+            dps = dmg_sum / (duration/1000)
+            $('#dps').attr('value', "#{dps}")
+    
     world.start()

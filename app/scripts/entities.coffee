@@ -10,13 +10,17 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
 
         load: (data) ->
             for eid, c_data of data.entities
-                components = []
-                for name, props of c_data
-                    components.push(new C[name](props))
+                components = @loadComponents(c_data)
                 @put(eid, components...)
 
             for gid, eids of data.groups
                 @addToGroup(gid, eids...)
+
+        loadComponents: (c_data) ->
+            components = []
+            for name, props of c_data
+                components.push(new C[name](props))
+            return components
 
         save: () ->
 

@@ -64,6 +64,7 @@ define ['entities', 'underscore'], (Entities, _) ->
     class Tombstone extends Component
         @defaults:
             type: 'Tombstone'
+            load: {}
             components: []
 
     class Sprite extends Component
@@ -141,7 +142,11 @@ define ['entities', 'underscore'], (Entities, _) ->
         @defaults:
             type: 'Health'
             max: 1000
-            current: 1000
+            current: null
+
+        constructor: (props) ->
+            super props
+            @current ?= @max
 
     class Explosion extends Component
         @defaults:

@@ -95,9 +95,13 @@ define [
             if spawn.destroy
                 tombstone = @world.entities.get(eid, C.Tombstone)
                 if tombstone
+                    components = if tombstone.load
+                        @world.entities.loadComponents(tombstone.load)
+                    else
+                        tombstone.components
                     t_eid = @world.entities.create(
-                        new C.Spawn('at', pos.x, pos.y),
-                        tombstone.components...
+                        new C.Spawn({x: pos.x, y: pos.y}),
+                        components...
                     )
                     gid = @world.entities.groupForEntity(eid)
                     if gid isnt null

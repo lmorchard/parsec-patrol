@@ -9,15 +9,6 @@ define [
     MAX_ENEMIES = 100
     RESPAWN_ENEMIES = false
     
-    class PointerFollower extends C.Component
-    
-    class PointerFollowerSystem extends S.System
-        match_component: PointerFollower
-        update_match: (dt, eid, pointer_follower) ->
-            pos = @world.entities.get(eid, C.Position)
-            pos.x = @world.inputs.pointer_world_x
-            pos.y = @world.inputs.pointer_world_y
-
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
         
@@ -25,7 +16,6 @@ define [
         vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0, 5.0),
         new S.RadarSystem(canvas, 0.28),
         new S.PointerInputSystem(canvas),
-        new PointerFollowerSystem,
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.SpinSystem,
@@ -38,103 +28,131 @@ define [
     )
     world.measure_fps = true
     
+    window.C = C
+    window.E = E
+    window.W = W
     window.world = world
     window.vp = vp
 
     em = world.entities
-    world.current_scene = scene = em.createGroup(
-        e_sun = em.create(
-            new C.TypeName('Star'),
-            new C.EntityName('sun'),
-            new C.Spawn('center'),
-            new C.Position,
-            new C.Sprite('star')
-            new C.RadarPing('#ff3'),
-        ),
-        e_hero = em.create(
-            new C.TypeName('HeroShip'),
-            new C.EntityName('hero'),
-            new C.Sprite('hero'),
-            new C.Position,
-            new C.Collidable,
-            new C.Spawn('at', -45, 45),
-            #new C.Orbit(e_sun, Math.PI/28),
-            new C.Seeker(null, Math.PI)
-            new C.Thruster(150, 75, 0, 0, false),
-            new C.ClickCourse(stop_on_arrival=true),
-            new C.Health(20000),
-            new C.WeaponsTarget("commonwealth"),
-            c_hero_beam = new C.BeamWeapon(
-                15, 4, 600, 4500, 4500, 4500,
-                "#33f", "invaders"
-            ),
-            new C.RadarPing('#3f3'),
-            new C.Tombstone(
-                new C.TypeName('Explosion'),
-                new C.Position,
-                new C.Explosion(5, 100, 50, 1.5, 250, '#fff'),
-            ),
-        ),
-    )
 
-    if POINTER_SHADOW
-        em.addToGroup(scene, e_torp = em.create(
-            new C.TypeName('Torpedo'),
-            new C.EntityName('torpedo1'),
-            new C.Spawn('at', 30, 0),
-            new C.Position,
-            new C.Collidable,
-            new PointerFollower,
-            new C.Spin(Math.PI * 2),
-            new C.Sprite('torpedo', '#222', 30, 30)
-        ))
+    world.load(data = {
+        "entities": {
+            "sun": {
+                "Sprite": { "shape": "star" },
+                "Spawn": { "position_logic": "center" },
+                "RadarPing": { "color": "#ff0" },
+                "Position": {}
+            },
+            "hero": {
+                "TypeName": { "name": "HeroShip" },
+                "Sprite": { "shape": "hero" },
+                "Position": {},
+                "Collidable": {},
+                "Spawn": { "x": -65, "y": 65 },
+                "Thruster": { "dv": 250, "max_v": 100, "active": false },
+                "Seeker": { "rad_per_sec": Math.PI },
+                "ClickCourse": { "stop_on_arrival": true },
+                "Health": { "max": "20000" }
+                "RadarPing": { "color": "#0f0" },
+                "WeaponsTarget" : { "team": "commonwealth" },
+                "BeamWeapon": {
+                    "max_beams": 15,
+                    "active_beams": 9,
+                    "max_range": 1250,
+                    "max_power": 4500,
+                    "charge_rate": 4500,
+                    "discharge_rate": 4500,
+                    "color": "#33f",
+                    "target_team": "invaders"
+                }
+                "Tombstone": {
+                    "load": {
+                        "Position": {},
+                        "Explosion": {
+                            "ttl": 5,
+                            "radius": 70,
+                            "max_particles": 50,
+                            "max_particle_size": 1.5,
+                            "max_velocity": 300,
+                            "color": "#fff"
+                        }
+                    }
+                }
+            },
+        },
+        "groups": {
+            "main": [ "sun", "hero" ]
+        }
+    })
+    c_hero_beam = world.entities.get("hero", C.BeamWeapon)
+    world.current_scene = scene = _.keys(data.groups)[0]
 
-    vp.follow_entity = e_hero
+    vp.follow_entity = "hero"
     
-    v_center = new Vector2D(0, 0)
-    enemy_ct = 0
-
     $('#beam_sel').click (ev) ->
         target_el = $(ev.target)
         c_hero_beam.active_beams = target_el.attr('value')
         return false
 
+    v_center = new Vector2D(0, 0)
     spawn_enemy = () ->
-        enemy_ct++
         v_spawn = new Vector2D(0, -1500 * Math.random())
         v_spawn.rotateAround(v_center, (Math.PI*2) * Math.random())
-        em.addToGroup(scene, em.create(
-            new C.TypeName('EnemyScout'),
-            new C.EntityName("enemy-#{enemy_ct}"),
-            new C.Sprite('enemyscout', '#f33', 12, 12),
-            new C.Spawn('at', v_spawn.x, v_spawn.y),
-            new C.Position,
-            new C.Collidable,
-            new C.Thruster(100, 50, 0, 0),
-            new C.Seeker(e_hero, Math.PI * 2),
-            new C.Health(300),
-            new C.WeaponsTarget("invaders"),
-            new C.BeamWeapon(1, 1, 100, 250, 250, 500, "#f44", "commonwealth"),
-            new C.RadarPing('#f33'),
-            new C.Tombstone(
-                new C.TypeName('Explosion'),
-                new C.Position,
-                new C.Explosion(0.5, 40, 25, 1.5, 175, '#f33'),
-            ),
-        ))
+        components = em.loadComponents({
+            "TypeName": { "name": "EnemyScout" },
+            "Sprite": {
+                "shape": "enemyscout",
+                "stroke_style": "#f33",
+                "width": 12, "height": 12
+            },
+            "Spawn": { "x": v_spawn.x, "y": v_spawn.y },
+            "Position": {},
+            "Collidable": {},
+            "Thruster": { "dv": 100, "max_v": 50 },
+            "Seeker": { "target": "hero", "rad_per_sec": Math.PI }
+            "Health": { "max": "300" }
+            "WeaponsTarget" : { "team": "invaders" },
+            "RadarPing": { "color": "#f00" },
+            "BeamWeapon": {
+                "max_beams": 1,
+                "active_beams": 1,
+                "max_range": 75,
+                "max_power": 250,
+                "charge_rate": 250,
+                "discharge_rate": 500,
+                "color": "#f44",
+                "target_team": "commonwealth"
+            }
+            "Tombstone": {
+                "load": {
+                    "Position": {},
+                    "Explosion": {
+                        "ttl": 0.5,
+                        "radius": 40,
+                        "max_particles": 25,
+                        "max_particle_size": 1.25,
+                        "max_velocity": 250,
+                        "color": "#f33"
+                    }
+                }
+            }
+        })
+        e = em.create(components...)
+        em.addToGroup(scene, e)
 
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
         type_name = em.get(data.entity_id, C.TypeName)
         
-        scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
-
         # Respawn an enemy, if necessary
-        if RESPAWN_ENEMIES and type_name?.name is "EnemyScout"
-            if scouts.length <= MAX_ENEMIES
+        if type_name?.name is "EnemyScout"
+            scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+            if RESPAWN_ENEMIES and scouts.length <= MAX_ENEMIES
                 spawn_enemy()
-        else if scouts.length is 0
-            r = () -> location.reload()
-            setTimeout r, 5000
+            $('#out').val("ENEMIES: #{scouts.length} #{scouts}")
+            if scouts.length is 1
+                r = () -> location.reload()
+                setTimeout r, 5000
 
         # Reload after a few seconds, if the hero ship dies
         if type_name?.name is "HeroShip"
@@ -142,7 +160,6 @@ define [
             setTimeout r, 5000
 
     if MAX_ENEMIES
-        for idx in [1..MAX_ENEMIES]
-            spawn_enemy()
+        spawn_enemy() for idx in [1..MAX_ENEMIES]
 
     () -> world.start()
