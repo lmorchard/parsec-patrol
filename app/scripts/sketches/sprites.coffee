@@ -1,11 +1,14 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore'
+    'underscore', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _
+    W, E, C, S, PubSub, $, _, dat
 ) ->
+    gui = new dat.GUI()
+
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
+
     world = new W.World(640, 480,
         new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.PointerInputSystem(canvas),
@@ -18,6 +21,7 @@ define [
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
+
     world.load(data = {
         entities: {
             "10": {
@@ -60,6 +64,7 @@ define [
             "10": ["10", "20", "30", "40", "50", "60"]
         },
     })
+
     world.measure_fps = true
     world.current_scene = _.keys(data.groups)[0]
     world.start()

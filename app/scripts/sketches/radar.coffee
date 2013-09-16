@@ -1,13 +1,14 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore', 'Vector2D', 'utils'
+    'underscore', 'Vector2D', 'utils', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _, Vector2D, Utils
+    W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
 ) ->
 
-    POINTER_SHADOW = false
-    MAX_ENEMIES = 100
-    RESPAWN_ENEMIES = true
+    options = {
+        max_enemies: 100
+        respawn_enemies: true
+    }
     
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
@@ -86,15 +87,11 @@ define [
         }
     })
     c_hero_beam = world.entities.get("hero", C.BeamWeapon)
+    c_hero_health = world.entities.get("hero", C.Health)
     world.current_scene = scene = _.keys(data.groups)[0]
 
     vp.follow_entity = "hero"
     
-    $('#beam_sel').click (ev) ->
-        target_el = $(ev.target)
-        c_hero_beam.active_beams = target_el.attr('value')
-        return false
-
     v_center = new Vector2D(0, 0)
     spawn_enemy = () ->
         v_spawn = new Vector2D(0, -1500 * Math.random())
@@ -141,15 +138,19 @@ define [
         e = em.create(components...)
         em.addToGroup(scene, e)
 
+    stats = {
+        enemy_ct: 0
+    }
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
         type_name = em.get(data.entity_id, C.TypeName)
+
+        scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+        stats.enemy_ct = scouts.length
         
         # Respawn an enemy, if necessary
         if type_name?.name is "EnemyScout"
-            scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
-            if RESPAWN_ENEMIES and scouts.length <= MAX_ENEMIES
+            if options.respawn_enemies and scouts.length <= options.max_enemies
                 spawn_enemy()
-            $('#out').val("ENEMIES: #{scouts.length} #{scouts}")
             if scouts.length is 1
                 r = () -> location.reload()
                 setTimeout r, 5000
@@ -159,8 +160,15 @@ define [
             r = () -> location.reload()
             setTimeout r, 5000
 
-    if MAX_ENEMIES
-        for idx in [1..MAX_ENEMIES]
+    if options.max_enemies
+        for idx in [1..options.max_enemies]
             spawn_enemy()
+
+    gui = new dat.GUI()
+    gui.add(vp, 'zoom', 1, 15).step(0.25)
+    gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
+    gui.add(options, 'max_enemies', 1, 200).step(10)
+    gui.add(options, 'respawn_enemies')
+    gui.add(stats, 'enemy_ct').listen()
 
     () -> world.start()

@@ -46,7 +46,7 @@ module.exports = function (grunt) {
                 options: { livereload: true }
             },
             scripts: {
-                files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
+                files: ['<%= yeoman.app %>/scripts/**/*.js'],
                 tasks: ['copy:scripts']
             },
             styles: {

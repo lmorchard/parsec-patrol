@@ -11,6 +11,7 @@ requirejs.config
         Hammer: '../bower_components/hammerjs/dist/hammer'
         Stats: '../bower_components/stats.js/src/Stats'
         'THREEx.KeyboardState': '../bower_components/threex.keyboardstate/threex.keyboardstate'
+        dat: 'vendor/dat.gui'
     shim:
         async:
             exports: 'async'
@@ -20,3 +21,5 @@ requirejs.config
             exports: 'Stats'
         'THREEx.KeyboardState':
             exports: 'THREEx.KeyboardState'
+        dat:
+            exports: 'dat'

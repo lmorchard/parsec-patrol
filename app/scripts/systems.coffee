@@ -127,7 +127,7 @@ define [
     class RadarSystem extends System
         match_component: C.Position
 
-        constructor: (@canvas, @gui_size=0.2) ->
+        constructor: (@canvas, @gui_size=0.2, @position='bottomright') ->
             @ctx = @canvas.getContext('2d')
 
         draw: (t_delta) ->
@@ -135,10 +135,17 @@ define [
             canvas_h = @canvas.height
             gui_size = @gui_size * Math.min(canvas_w, canvas_h)
 
-            x = canvas_w - gui_size
-            y = 0
-            w = gui_size
-            h = gui_size
+            switch @position
+                when 'topright'
+                    x = canvas_w - gui_size
+                    y = 0
+                    w = gui_size
+                    h = gui_size
+                when 'bottomright'
+                    x = canvas_w - gui_size
+                    y = canvas_h - gui_size
+                    w = gui_size
+                    h = gui_size
 
             ratio = if w < h
                 w / @world.width
@@ -185,7 +192,7 @@ define [
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
                       @zoom=1.0, @grid_size=150, @grid_color='#111',
-                      @use_sprite_cache=true) ->
+                      @use_sprite_cache=false) ->
             @ctx = @canvas.getContext('2d')
             @viewport_ratio = 1.0
             @follow_entity = null
