@@ -122,6 +122,7 @@ define ['entities', 'underscore'], (Entities, _) ->
             type: 'MissileWeapon'
             x: 0
             y: 0
+            turret_separation: 10
             max_turrets: 12
             active_turrets: 8
             loading_time: 1.0

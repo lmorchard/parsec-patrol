@@ -238,7 +238,6 @@ define [
                 canvas = document.createElement('canvas')
                 canvas.width = canvas_size
                 canvas.height = canvas_size
-                # $(@canvas).after(canvas)
                 @sprite_cache[name] = canvas
                 ctx = canvas.getContext("2d")
                 ctx.translate(canvas_size / 2, canvas_size / 2)
@@ -846,13 +845,17 @@ define [
 
         constructor: () ->
             @v_center = new Vector2D(0, 0)
-            @v_turret = new Vector2D(0, 0)
+            @v_pos = new Vector2D(0, 0)
+            @v_unit = new Vector2D(0, 0)
 
         update_match: (t_delta, eid, weapon) ->
-
             pos = @world.entities.get(eid, C.Position)
+            sprite = @world.entities.get(eid, C.Sprite)
+
             weapon.x = pos.x
             weapon.y = pos.y
+            weapon.rotation = pos.rotation
+            weapon.length = 50 #sprite.height
 
             @load_turrets(t_delta, weapon, eid)
             @target_turrets(t_delta, weapon, eid)
@@ -908,23 +911,36 @@ define [
 
         fire_turrets: (t_delta, weapon, eid, pos) ->
 
-            rad_per = (Math.PI * 2) / weapon.active_turrets
+            # TODO: This turret layout algorithm is horribly inefficient and
+            # needs a lot of work. Trying to simulate a a strip of launchers
+            # down the center of the ship, alternating port and starboard
+            # facing
             
+            @v_center.setValues(0, 0)
+            @v_unit.setValues(0, 0 - (weapon.length / weapon.active_turrets))
+
+            unit = weapon.length / weapon.active_turrets
+
             @v_center.setValues(weapon.x, weapon.y)
-            @v_turret.setValues(weapon.x, weapon.y - 20)
-            @v_turret.rotateAround(@v_center, pos.rotation)
 
             for idx in [0..weapon.active_turrets-1]
+
+                @v_pos.setValues(
+                    weapon.x + if (idx % 2) is 0 then 4 else -4,
+                    weapon.y + (weapon.length / 2) - (unit * Math.floor(idx/2) * 2 )
+                )
+                @v_pos.rotateAround(@v_center, pos.rotation)
 
                 turret = weapon.turrets[idx]
                 continue if turret.target is null or turret.loading > 0
 
-                #@v_turret.rotateAround(@v_center, rad_per)
-
                 missile = weapon.missile
-                size = 5
+                size = 4
                 color = missile.color
-                rotation = if (idx % 2) is 0 then 0 else Math.PI
+                rotation = pos.rotation + if (idx % 2) is 0
+                    Math.PI / 2
+                else
+                    0 - (Math.PI / 2)
 
                 missile_data =
                     Position: {}
@@ -934,8 +950,8 @@ define [
                         height: size
                         stroke_style: color
                     Spawn:
-                        x: (@v_turret.x - 30) + ( (15 * (idx/2)) % 50 )
-                        y: @v_turret.y
+                        x: @v_pos.x
+                        y: @v_pos.y
                         rotation: rotation
                         ttl: missile.ttl
                     Collidable:
