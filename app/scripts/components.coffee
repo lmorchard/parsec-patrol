@@ -145,6 +145,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     class Missile extends Component
         @defaults:
+            type: 'Missile'
             health: 100
             damage: 1000
             speed: 100
@@ -214,6 +215,20 @@ define ['entities', 'underscore'], (Entities, _) ->
                     s: 0, mr: 0
                 })
 
+    class VaporTrail extends Component
+        @defaults:
+            type: 'VaporTrail'
+            history: 20
+            width: 2
+            skip: 3
+            color: '#ccc'
+
+        constructor: (props) ->
+            super props
+            @particles = ({
+                x: 0, y: 0
+            } for idx in [0..@history-1])
+
     class RadarPing extends Component
         @defaults:
             type: 'RadarPing',
@@ -223,5 +238,5 @@ define ['entities', 'underscore'], (Entities, _) ->
         Component, TypeName, EntityName, Position, Orbit, Spin, Bouncer, Spawn,
         Tombstone, Collidable, Renderable, Sprite, Thruster, Seeker,
         ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion, RadarPing,
-        MissileWeapon, Missile
+        MissileWeapon, Missile, VaporTrail
     }

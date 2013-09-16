@@ -371,6 +371,11 @@ define [
                     continue
 
                 @ctx.save()
+
+                vapor_trail = @world.entities.get(eid, C.VaporTrail)
+                if vapor_trail
+                    @draw_vapor_trail t_delta, eid, vapor_trail
+
                 @ctx.translate(pos.x, pos.y)
 
                 sprite = @world.entities.get(eid, C.Sprite)
@@ -392,6 +397,19 @@ define [
                     @draw_explosion t_delta, eid, explosion
 
                 @ctx.restore()
+
+        draw_vapor_trail: (t_delta, eid, vapor_trail) ->
+            @ctx.save()
+            alpha_unit = 1.0 / vapor_trail.particles.length
+            @ctx.globalAlpha = 1.0
+            skip_ct = vapor_trail.skip
+            for p in vapor_trail.particles
+                continue if (skip_ct--) > 0
+                @ctx.globalAlpha -= alpha_unit
+                @ctx.fillStyle = vapor_trail.color
+                @ctx.fillRect(p.x, p.y,
+                              vapor_trail.width, vapor_trail.width)
+            @ctx.restore()
 
         draw_explosion: (t_delta, eid, explosion) ->
 
@@ -916,26 +934,22 @@ define [
             # down the center of the ship, alternating port and starboard
             # facing
             
-            @v_center.setValues(0, 0)
+            size = 4
+
             @v_unit.setValues(0, 0 - (weapon.length / weapon.active_turrets))
+            @v_unit.rotateAround({x:0, y:0}, pos.rotation)
 
-            unit = weapon.length / weapon.active_turrets
-
-            @v_center.setValues(weapon.x, weapon.y)
+            @v_pos.setValues(weapon.x, weapon.y + (weapon.length / 2))
+            @v_pos.rotateAround({x:weapon.x, y:weapon.y}, pos.rotation)
 
             for idx in [0..weapon.active_turrets-1]
 
-                @v_pos.setValues(
-                    weapon.x + if (idx % 2) is 0 then 4 else -4,
-                    weapon.y + (weapon.length / 2) - (unit * Math.floor(idx/2) * 2 )
-                )
-                @v_pos.rotateAround(@v_center, pos.rotation)
+                @v_pos.add(@v_unit)
 
                 turret = weapon.turrets[idx]
                 continue if turret.target is null or turret.loading > 0
 
                 missile = weapon.missile
-                size = 4
                 color = missile.color
                 rotation = pos.rotation + if (idx % 2) is 0
                     Math.PI / 2
@@ -973,6 +987,11 @@ define [
                     RadarPing:
                         color: color
                         size: 3
+                    VaporTrail:
+                        color: '#aaa'
+                        history: 15
+                        skip: 3
+                        width: 1
                     WeaponsTarget:
                         team: "invaders"
                     Tombstone:
@@ -1161,6 +1180,16 @@ define [
                 @world.publish SpawnSystem.MSG_DESPAWN,
                     entity_id: eid
 
+    class VaporTrailSystem extends System
+        match_component: C.VaporTrail
+
+        update_match: (t_delta, eid, vapor_trail) ->
+            pos = @world.entities.get(eid, C.Position)
+            particle = vapor_trail.particles.pop()
+            particle.x = pos.x
+            particle.y = pos.y
+            vapor_trail.particles.unshift(particle)
+
     class ExplosionSystem extends System
         match_component: C.Explosion
 
@@ -1212,5 +1241,5 @@ define [
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
         ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
         BeamWeaponSystem, HealthSystem, ExplosionSystem, RadarSystem,
-        MissileWeaponSystem
+        MissileWeaponSystem, VaporTrailSystem
     }

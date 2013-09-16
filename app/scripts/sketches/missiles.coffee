@@ -26,6 +26,7 @@ define [
         new S.HealthSystem,
         new S.BeamWeaponSystem,
         new S.MissileWeaponSystem,
+        new S.VaporTrailSystem,
         new S.ExplosionSystem,
     )
 
@@ -122,8 +123,8 @@ define [
                         "ttl": 6.0,
                         "color": "#f00",
                         "error": 0 #0.125,
-                        "rad_per_sec": Math.PI * 0.75
-                        "acquisition_delay": 0.5
+                        "rad_per_sec": Math.PI * 1.75
+                        "acquisition_delay": 0.75
                     }
                 },
                 "Tombstone": {
