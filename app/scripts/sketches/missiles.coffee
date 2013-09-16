@@ -169,8 +169,10 @@ define [
     gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
     gui.add(c_enemy_turrets, 'active_turrets', 1, 50).step(1)
 
+    ###
     f_missiles = gui.addFolder('turrets')
     for idx in [0..c_enemy_turrets.max_turrets-1]
         f_missiles.add(c_enemy_turrets.turrets[idx], 'loading', 0, 5).listen()
-
+    ###
+    
     () -> world.start()
