@@ -164,6 +164,7 @@ define [
             setTimeout r, 5000
 
     gui = new dat.GUI()
+    gui.add(world, 'is_paused')
     gui.add(vp, 'use_sprite_cache')
     gui.add(vp, 'zoom', 1, 15).step(0.25)
     gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)

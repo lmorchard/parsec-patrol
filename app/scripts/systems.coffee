@@ -326,7 +326,29 @@ define [
 
             @ctx.restore()
 
+            if @world.is_paused
+                @draw_paused_bezel(t_delta)
+            
             @screen_ctx.drawImage(@buffer_canvas, 0, 0)
+        
+        draw_paused_bezel: (t_delta) ->
+            width = @canvas.width * 0.75
+            height = @canvas.height * 0.25
+            left = (@canvas.width - width) / 2
+            top = (@canvas.height - height) / 2
+
+            @ctx.globalAlpha = 0.85
+            @ctx.strokeStyle = "#fff"
+            @ctx.fillStyle = "#000"
+            @ctx.fillRect(left, top, width, height)
+            @ctx.strokeRect(left, top, width, height)
+
+            @ctx.fillStyle = "#fff"
+            font_size = 48 * @viewport_ratio
+            @ctx.font = "#{font_size}px monospace"
+            @ctx.textAlign = 'center'
+            @ctx.textBaseline = 'middle'
+            @ctx.strokeText('Paused', left+(width/2), top+(height/2), width)
 
         draw_backdrop: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
             return if not @use_grid

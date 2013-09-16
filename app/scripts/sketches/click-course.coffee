@@ -1,14 +1,14 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore'
+    'underscore', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _
+    W, E, C, S, PubSub, $, _, dat
 ) ->
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
         
     world = new W.World(640, 480,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
@@ -88,6 +88,11 @@ define [
         "max_eid": "100",
         "current_scene": "main",
     })
+
+    gui = new dat.GUI()
+    gui.add(world, 'is_paused')
+    gui.add(vp, 'use_sprite_cache')
+    gui.add(vp, 'draw_bounding_boxes')
 
     window.world = world
     window.C = C

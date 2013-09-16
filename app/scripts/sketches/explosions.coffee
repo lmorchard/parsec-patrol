@@ -1,8 +1,8 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore', 'Vector2D', 'utils'
+    'underscore', 'Vector2D', 'utils', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _, Vector2D, Utils
+    W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
 ) ->
 
     canvas = document.getElementById('gameCanvas')
@@ -26,6 +26,8 @@ define [
     )
 
     spawn_explosion = () ->
+        return if world.is_paused
+
         v_spawn = new Vector2D(0, (250 - (150 * Math.random())))
         v_center = new Vector2D(0, 0)
         v_spawn.rotateAround(v_center, (Math.PI*2) * Math.random())
@@ -44,14 +46,13 @@ define [
 
     setInterval spawn_explosion, 0.5 * Math.random()
 
-    $('#save').click () ->
-        $('#out').val(JSON.stringify(world.save()))
-        return false
-
+    gui = new dat.GUI()
+    gui.add(world, 'is_paused')
 
     window.world = world
     window.C = C
     window.E = E
     window.S = S
 
+    world.measure_fps = true
     world.start()

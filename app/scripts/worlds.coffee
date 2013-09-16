@@ -120,7 +120,6 @@ define [
             @is_paused = true
 
         unpause: () ->
-            @t_last = Utils.now() - @tick_duration
             @is_paused = false
 
     class BasicWorld extends World

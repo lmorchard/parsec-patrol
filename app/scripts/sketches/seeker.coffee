@@ -1,8 +1,8 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore'
+    'underscore', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _
+    W, E, C, S, PubSub, $, _, dat
 ) ->
     class PointerFollower extends C.Component
         @defaults:
@@ -27,7 +27,7 @@ define [
         new S.SeekerSystem,
         new S.ThrusterSystem,
         new PointerFollowerSystem,
-        new S.ViewportSystem(
+        vp = new S.ViewportSystem(
             window, area, canvas, 1.0, 1.0
         ),
     )
@@ -100,6 +100,11 @@ define [
             "main": [ "sun", "torp", "enemy3", "enemy4", "enemy5", "enemy6" ]
         }
     })
+
+    gui = new dat.GUI()
+    gui.add(world, 'is_paused')
+    gui.add(vp, 'use_sprite_cache')
+    gui.add(vp, 'draw_bounding_boxes')
     
     window.world = world
     window.C = C

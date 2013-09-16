@@ -1,8 +1,8 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore'
+    'underscore', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _
+    W, E, C, S, PubSub, $, _, dat
 ) ->
 
     class ColorCollideSystem extends S.System
@@ -21,7 +21,7 @@ define [
         new S.OrbiterSystem,
         new S.CollisionSystem,
         new ColorCollideSystem,
-        render_system = new S.ViewportSystem(
+        vp = new S.ViewportSystem(
             window,
             document.getElementById('gameArea'),
             document.getElementById('gameCanvas'),
@@ -29,8 +29,6 @@ define [
             true
         )
     )
-
-    render_system.draw_bounding_boxes = true
 
     world.load(data = {
         entities: {
@@ -107,6 +105,11 @@ define [
             "10": [ "10", "15", "20", "25", "30", "35" ]
         }
     })
+
+    gui = new dat.GUI()
+    gui.add(world, 'is_paused')
+    gui.add(vp, 'use_sprite_cache')
+    gui.add(vp, 'draw_bounding_boxes')
 
     world.measure_fps = true
     world.current_scene = _.keys(data.groups)[0]
