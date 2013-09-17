@@ -59,17 +59,17 @@ define [
             @ticks++
             for s in @systems
                 s.update t_delta
-            return true
+            return @
 
         draw: (t_delta) ->
             for s in @systems
                 s.draw t_delta
-            return true
+            return @
 
         load: (data) ->
             @entities.load(data)
             @current_scene = data.current_scene
-            return data
+            return @
 
         save: (data) ->
             data = @entities.save()
@@ -113,14 +113,19 @@ define [
 
             requestAnimationFrame run_loop
 
+            return @
+
         stop: () ->
             @is_running = false
+            return @
 
         pause: () ->
             @is_paused = true
+            return @
 
         unpause: () ->
             @is_paused = false
+            return @
 
     class BasicWorld extends World
         constructor: () ->

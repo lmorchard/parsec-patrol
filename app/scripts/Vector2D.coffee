@@ -1,7 +1,8 @@
 define [], ()->
   "use strict"
   ###
-  @author Vitalii [Nayjest] Stepanenko <gmail@vitaliy.in>
+  Originally by Vitalii [Nayjest] Stepanenko <gmail@vitaliy.in>
+  Tweaky & fixes by Les Orchard <me@lmorchard.com>
   ###
   class Vector2D
 
@@ -50,6 +51,9 @@ define [], ()->
                 (vector.y - @y) * (vector.y - @y)
 
     normalise: ->
+        return @normalize()
+
+    normalize: ->
       if !@isZero()
         m = @magnitude()
         @x /= m
@@ -108,3 +112,6 @@ define [], ()->
       @x = Math.round @x
       @y = Math.round @y
       @
+
+    dot: (vector)->
+      return (@x * vector.x) + (@y * vector.y)

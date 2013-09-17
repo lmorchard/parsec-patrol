@@ -697,29 +697,95 @@ define [
                         ret.push(next)
             return ret
 
+    class MotionSystem extends System
+        match_component: C.Motion
+        update_match: (dt, eid, motion) ->
+            pos = @world.entities.get(eid, C.Position)
+            pos.x += motion.dx * dt
+            pos.y += motion.dy * dt
+            pos.rotation += motion.drotation * dt
+
     class BouncerSystem extends System
         match_component: C.Bouncer
 
         update_match: (dt, eid, bouncer) ->
-            [pos, collidable] = @world.entities.get(eid, C.Position,
-                                                         C.Collidable)
+            pos = @world.entities.get(eid, C.Position)
+            sprite = @world.entities.get(eid, C.Sprite)
+            motion = @world.entities.get(eid, C.Motion)
+            bouncer = @world.entities.get(eid, C.Bouncer)
+            collidable = @world.entities.get(eid, C.Collidable)
 
-            # TODO: This is a horrible bounce-on-collision algo
-            if collidable and _.keys(collidable.in_collision_with).length > 0
-                bouncer.x_dir = 0 - bouncer.x_dir
-                bouncer.y_dir = 0 - bouncer.y_dir
-            
             xb = @world.width / 2
             yb = @world.height / 2
 
-            if pos.x > xb then bouncer.x_dir = -1
-            if pos.x < -xb then bouncer.x_dir = 1
-            if pos.y > yb then bouncer.y_dir = -1
-            if pos.y < -yb then bouncer.y_dir = 1
+            if pos.x > xb or pos.x < -xb
+                motion.dx = 0 - motion.dx
+            if pos.y > yb or pos.y < -yb
+                motion.dy = 0 - motion.dy
 
-            pos.x += bouncer.x_dir * (dt * bouncer.x_sec)
-            pos.y += bouncer.y_dir * (dt * bouncer.y_sec)
+            for c_eid, ts of collidable.in_collision_with
+                c_pos = @world.entities.get(c_eid, C.Position)
+                c_sprite = @world.entities.get(c_eid, C.Sprite)
+                c_motion = @world.entities.get(c_eid, C.Motion)
+                c_bouncer = @world.entities.get(c_eid, C.Bouncer)
+
+                # See also: https://gist.github.com/kevinfjbecker/1670913
                 
+                # Vector between entities
+                dn = new Vector2D(pos.x - c_pos.x, pos.y - c_pos.y)
+
+                # Distance between entities
+                delta = dn.magnitude()
+                
+                # Normal vector of the collision plane
+                dn.normalize()
+                
+                # Tangential vector of the collision plane 
+                dt = new Vector2D(dn.y, -dn.x)
+                
+                # HACK: avoid divide by zero
+                c_pos.x += 0.01 if delta is 0
+                
+                # Get total mass for entities
+                m1 = bouncer.mass
+                m2 = c_bouncer.mass
+                M = m1 + m2
+ 
+                # Minimum translation vector to push entities apart
+                mt = {
+                    x: dn.x * (sprite.width + c_sprite.width - delta),
+                    y: dn.y * (sprite.width + c_sprite.width - delta)
+                }
+                 
+                # Push entities apart, proportional to mass
+                ###
+                pos.x = pos.x + mt.x * m2 / M
+                pos.y = pos.y + mt.y * m2 / M
+                c_pos.x = c_pos.x - mt.x * m1 / M
+                c_pos.y = c_pos.y - mt.y * m1 / M
+                ###
+                
+                # Velocity vectors of entities before collision
+                v1 = new Vector2D(motion.dx, motion.dy)
+                v2 = new Vector2D(c_motion.dx, c_motion.dy)
+                 
+                # split the velocity vector of the first entity into a normal
+                # and a tangential component in respect of the collision plane
+                v1n = new Vector2D(dn.x * v1.dot(dn), dn.y * v1.dot(dn))
+                v1t = new Vector2D(dt.x * v1.dot(dt), dt.y * v1.dot(dt))
+                 
+                # split the velocity vector of the second entity into a normal
+                # and a tangential component in respect of the collision plane
+                v2n = new Vector2D(dn.x * v2.dot(dn), dn.y * v2.dot(dn))
+                v2t = new Vector2D(dt.x * v2.dot(dt), dt.y * v2.dot(dt))
+                 
+                ## calculate new velocity vectors of the entitys, the tangential component stays
+                ## the same, the normal component changes analog to the 1-Dimensional case
+                motion.dx = v1t.x + dn.x * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
+                motion.dy = v1t.y + dn.y * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
+                c_motion.dx = v2t.x - dn.x * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
+                c_motion.dy = v2t.y - dn.y * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
+
     class SpinSystem extends System
         match_component: C.Spin
 
@@ -1252,9 +1318,9 @@ define [
                         entity_id: eid
 
     return {
-        System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
-        ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
-        ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
+        System, SpawnSystem, MotionSystem, BouncerSystem, SpinSystem,
+        OrbiterSystem, ViewportSystem, PointerInputSystem, CollisionSystem,
+        SeekerSystem, ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
         BeamWeaponSystem, HealthSystem, ExplosionSystem, RadarSystem,
         MissileWeaponSystem, VaporTrailSystem
     }

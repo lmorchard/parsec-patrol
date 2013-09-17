@@ -30,6 +30,22 @@ define ['entities', 'underscore'], (Entities, _) ->
             y: 0
             rotation: 0
     
+    class Motion extends Component
+        @defaults:
+            type: 'Motion'
+            dx: 0
+            dy: 0
+            drotation: 0
+
+    class Thruster extends Component
+        @defaults:
+            type: 'Thruster'
+            active: true
+            max_v: 0
+            dv: 0
+            dx: 0
+            dy: 0
+
     class Orbit extends Component
         @defaults:
             type: 'Orbit'
@@ -46,12 +62,7 @@ define ['entities', 'underscore'], (Entities, _) ->
     class Bouncer extends Component
         @defaults:
             type: 'Bouncer'
-            x_dir: 1
-            y_dir: 1
-            x_sec: null
-            y_sec: null
-            x_sec: -> _.random(20, 200)
-            y_sec: -> _.random(20, 200)
+            mass: 10.0
 
     class Spawn extends Component
         @defaults:
@@ -88,15 +99,6 @@ define ['entities', 'underscore'], (Entities, _) ->
         constructor: (props) ->
             super props
             @in_collision_with = {}
-
-    class Thruster extends Component
-        @defaults:
-            type: 'Thruster'
-            active: true
-            max_v: 0
-            dv: 0
-            dx: 0
-            dy: 0
 
     class Seeker extends Component
         @defaults:
@@ -235,8 +237,8 @@ define ['entities', 'underscore'], (Entities, _) ->
             color: '#fff'
 
     return {
-        Component, TypeName, EntityName, Position, Orbit, Spin, Bouncer, Spawn,
-        Tombstone, Collidable, Renderable, Sprite, Thruster, Seeker,
-        ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion, RadarPing,
-        MissileWeapon, Missile, VaporTrail
+        Component, TypeName, EntityName, Position, Motion, Orbit, Spin,
+        Bouncer, Spawn, Tombstone, Collidable, Renderable, Sprite, Thruster,
+        Seeker, ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion,
+        RadarPing, MissileWeapon, Missile, VaporTrail
     }
