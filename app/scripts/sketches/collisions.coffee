@@ -48,13 +48,15 @@ define [
         [170, -4, -100, 0, 10, 10, 10]
     ]
     spawn_presets = () ->
+        return if world.is_paused
+
         stats.entities_ct = (eid for eid, tn of world.entities.getComponents(C.Position)).length
         return if stats.entities_ct >= options.max_entities
 
         for [x, y, dx, dy, width, height, m] in presets
             components = world.entities.loadComponents
                 Sprite:
-                    shape: "torpedo"
+                    shape: "default"
                     width: width
                     height: height
                 Collidable: {}
@@ -83,6 +85,8 @@ define [
 
     v_center = new Vector2D(0, 0)
     spawn_random = () ->
+        return if world.is_paused
+
         stats.entities_ct = (eid for eid, tn of world.entities.getComponents(C.Position)).length
         return if stats.entities_ct >= options.max_entities
 
@@ -91,7 +95,7 @@ define [
         
         components = world.entities.loadComponents
             Sprite:
-                shape: "torpedo"
+                shape: "default"
                 width: 15
                 height: 15
             Spawn:

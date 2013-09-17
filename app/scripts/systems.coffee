@@ -571,9 +571,7 @@ define [
             shape_fn.call(@, @ctx, w, h)
         
         draw_sprite_default: (ctx, w, h) ->
-            ctx.beginPath()
-            ctx.arc(0, 0, w/2, 0, Math.PI*2, true)
-            ctx.stroke()
+            @ctx.strokeRect(0-(w/2), 0-(h/2), w, h)
 
         draw_sprite_star: (ctx, w, h) ->
             ctx.fillStyle = "#ccc"
@@ -644,6 +642,25 @@ define [
             ctx.stroke()
 
     class CollisionSystem extends System
+
+        # NOTES TO SELF: This CollisionSystem makes an attempt to optimize
+        # using QuadTrees, but could still use improvements with actual
+        # detecting shape intersections.
+        #
+        # And, it seems wasteful to reindex all the things by clearing the
+        # quadtree on every frame, but I'm not sure there's a such thing as an
+        # in-place modify with reindex here. Additionally, quadtree operations
+        # do not seem to be significant CPU wasters, even in bulk on every
+        # frame.
+        #
+        # Also, this makes some possibly fragile access directly into
+        # @world.entities.store that cuts down on a surprising amount of CPU
+        # time. 
+        #
+        # That means @world.entities.get() could use some big improvements,
+        # and/or I could just accept that direct data access to entity storage
+        # is a thing to support cautiously
+        
         constructor: () ->
             @quadtrees = {}
 
@@ -664,54 +681,68 @@ define [
             
             matches = @world.entities.getComponents(@match_component)
             for a_eid, a_collidable of matches
-                a_pos = @world.entities.get(a_eid, C.Position)
-                a_sprite = @world.entities.get(a_eid, C.Sprite)
+                a_pos = @world.entities.store.Position[a_eid]
+                a_sprite = @world.entities.store.Sprite[a_eid]
                 items = qt.retrieve({
                     x: a_pos.x,
                     y: a_pos.y,
                     width: a_sprite.width,
                     height: a_sprite.height
                 })
-                for item in items
-                    continue if item.eid is a_eid
-                    @check_collision(item.eid, a_eid, a_collidable, a_pos, a_sprite)
+                for b in items
+                    continue if b.eid is a_eid
+                    @check_collision(
+                        b.eid, b.collidable, b.pos, b.sprite,
+                        a_eid, a_collidable, a_pos, a_sprite)
 
         update_quadtree: (t_delta, gid) ->
             qt = @quadtrees[gid]
             qt.clear()
 
             for eid, ignore of @world.entities.entitiesForGroup(gid)
-                collidable = @world.entities.get(eid, C.Collidable)
+                collidable = @world.entities.store.Collidable[eid]
                 continue if not collidable
 
                 for k, v of collidable.in_collision_with
                     delete collidable.in_collision_with[k]
 
-                pos = @world.entities.get(eid, C.Position)
-                sprite = @world.entities.get(eid, C.Sprite)
-                qt.insert({
-                    eid: eid, x: pos.x, y: pos.y,
-                    width: sprite.width, height: sprite.height
-                })
+                pos = @world.entities.store.Position[eid]
+                sprite = @world.entities.store.Sprite[eid]
+                rec = {
+                    eid: eid,
+                    x: pos.x,
+                    y: pos.y,
+                    width: sprite.width,
+                    height: sprite.height,
+                    collidable: collidable,
+                    pos: pos,
+                    sprite: sprite,
+                }
+                qt.insert(rec)
 
             return qt
 
-        check_collision: (b_eid, a_eid, a_collidable, a_pos, a_sprite) ->
-            b_collidable = @world.entities.get(b_eid, C.Collidable)
+        check_collision: (b_eid, b_collidable, b_pos, b_sprite,
+                          a_eid, a_collidable, a_pos, a_sprite) ->
             already_in_collision = (
                 (b_eid of a_collidable.in_collision_with) and
                 (a_eid of b_collidable.in_collision_with)
             )
             if not already_in_collision
-                b_pos = @world.entities.get(b_eid, C.Position)
-                b_sprite = @world.entities.get(b_eid, C.Sprite)
-                if Utils.inCollision(
-                        a_pos.x, a_pos.y, a_sprite.width, a_sprite.height,
-                        b_pos.x, b_pos.y, b_sprite.width, b_sprite.height)
-                    a_collidable.in_collision_with[b_eid] = Utils.now()
-                    b_collidable.in_collision_with[a_eid] = Utils.now()
+                left_dist = Math.abs(a_pos.x - b_pos.x) * 2
+                top_dist = Math.abs(a_pos.y - b_pos.y) * 2
+                width_total = a_sprite.width + b_sprite.width
+                height_total = a_sprite.height + b_sprite.height
+                if (left_dist <= width_total and top_dist <= height_total)
+                    a_collidable.in_collision_with[b_eid] = Date.now()
+                    b_collidable.in_collision_with[a_eid] = Date.now()
 
-        update_old: (t_delta) ->
+    class OldCollisionSystem extends System
+        constructor: () ->
+
+        match_component: C.Collidable
+
+        update: (t_delta) ->
             matches = @world.entities.getComponents(@match_component)
 
             # TODO: Fix this horrible, naive collision detection
@@ -1415,7 +1446,7 @@ define [
     return {
         System, SpawnSystem, MotionSystem, BouncerSystem, SpinSystem,
         OrbiterSystem, ViewportSystem, PointerInputSystem, CollisionSystem,
-        SeekerSystem, ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
-        BeamWeaponSystem, HealthSystem, ExplosionSystem, RadarSystem,
-        MissileWeaponSystem, VaporTrailSystem
+        OldCollisionSystem, SeekerSystem, ThrusterSystem, ClickCourseSystem,
+        KeyboardInputSystem, BeamWeaponSystem, HealthSystem, ExplosionSystem,
+        RadarSystem, MissileWeaponSystem, VaporTrailSystem
     }
