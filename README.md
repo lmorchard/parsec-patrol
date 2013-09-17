@@ -4,13 +4,14 @@ Pew-pews in SPAAAAACE!
 
 ## Influences
 
-* Super Star Trek
-* Star Raiders
-* Subspace / Cosmic Rift
+* [Super Star Trek](http://en.wikipedia.org/wiki/Star_Trek_%28text_game%29)
+* [SEGA's Star Trek](http://www.youtube.com/watch?v=u28eDfO8SqU)
+* [Star Raiders](http://en.wikipedia.org/wiki/Star_Raiders)
+* [Subspace](http://en.wikipedia.org/wiki/SubSpace_%28video_game%29) / [Cosmic Rift](http://en.wikipedia.org/wiki/Cosmic_Rift)
 * [Bosconian](http://en.wikipedia.org/wiki/Bosconian)
-* XKobo
-* Netrek
-* EVE Online
+* [Kobo](http://www.olofson.net/kobodl/)
+* [Netrek](http://www.netrek.org/)
+* [EVE Online](http://www.eveonline.com/)
 
 ## Development
 
@@ -22,10 +23,57 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
-* Pause button and onscreen indicator.
-    * Auto-pause when not visible and/or when FPS dips below 10?
+* Destructable asteroids 
+    * Generate variable radius points around center, connect dots
+    * break into pieces using tombstones to spawn smaller ones?
+
+* Rework Position & Thruster & Seeker a bit
+    * Refactor inertia, acceleration, etc out of Thruster
+    * Refactor rotation, torque out of Seeker
+    * Then, repulsor & gravity effects can manipulate those values
+
+* "Splash" effect / waypoint sprite at click to indicate current destination
+    * Multiple waypoints on single-click? Set destination on double?
+
+* Damage & destruction on collision
+
+* Collision improvements, eg. quadtrees?
+
+* Gravity
+    * Black holes & etc to attract ships & bend courses
+    * More realistic orbits? would that be fun?
+
+* Inertia component and repulsor fields
+    * Inertia to resist incoming forces
+    * Inerial to impart outgoing forces
+    * Collisions from asteroids can impart an impulse
+    * Torpedo bursts can also push enemies away
+    * Maybe tractor beams someday?
+
+* Shield effects
+    * circle surrounding ship
+    * flash an arc segment of the circle centered on the direction of the damage
+    * thickness & arc degrees based on magnitude of damage
+
+* Destructable asteroids 
+    * Generate variable radius points around center, connect dots
+    * break into pieces using tombstones to spawn smaller ones?
+
+* Auto-pause when not visible and/or when FPS dips below 10?
+
+* Auto-pause if it looks like we're no longer in the foreground (ie. big drop
+  in FPS from rFA)
 
 * Merge world & entity manager - they're not really useful separately
+
+* Dumb bullet projectiles
+    * Keep them very simple, so we can have lots of them
+    * Entity pool / reuse rather than destruction when at end-of-life (eg. hit
+      target, expired)
+
+* Nuke torpedoes - fly to tap/click, splash damage radius, animated explosion
+
+* Flocking behavior for enemy scouts
 
 * Spawner component
     * Opposite of tombstone
@@ -40,6 +88,30 @@ open http://localhost:9000/sketches/
 * Multiplayer
     * Kinda have done this before, but [badly](https://github.com/lmorchard/webtrek)
     * I'm scared sarge
+
+* Ship power stores
+
+* Shield regeneration
+
+* Further beam weapon optimizations - that thing is a CPU hog
+
+* Flux capacitor control for defense / offense / speed power distribution
+
+* Arc slider for beam split control
+
+* Stargates for scene changes
+
+* Open Web App boilerplating
+
+* Per-system damage, when shields are down
+
+* Auto-adjust rendering features based on FPS and estimated spare CPU headroom.
+    * Glow on / off
+
+* EVE-style logi ships
+    * Work with flocking and damage priority
+    * Heal beam - pump shields into target
+    * Power beam - pump energy into target
 
 * Game types
     * Horde
@@ -56,50 +128,3 @@ open http://localhost:9000/sketches/
         * See also: multiplayer
     * Competitive Netrek clone
         * Neat idea, but yikes
-
-* Ship power stores
-
-* Shield regeneration
-
-* "Splash" effect / waypoint sprite at click to indicate current destination
-    * Multiple waypoints on single-click? Set destination on double?
-
-* Further beam weapon optimizations - that thing is a CPU hog
-
-* Flux capacitor control for defense / offense / speed power distribution
-
-* Arc slider for beam split control
-
-* Dumb bullet projectiles
-    * Keep them very simple, so we can have lots of them
-    * Entity pool / reuse rather than destruction when at end-of-life (eg. hit
-      target, expired)
-
-* Cluster seeker missiles - laser targets, low health, lots of em
-
-* Motion trails behind some sprites (eg. seeker missiles)
-
-* Nuke torpedoes - fly to tap/click, splash damage radius, animated explosion
-
-* Destructable asteroids 
-    * Generate variable radius points around center, connect dots
-    * break into pieces using tombstones to spawn smaller ones?
-
-* Flocking behavior for enemy scouts
-
-* EVE-style logi ships
-    * Work with flocking and damage priority
-    * Heal beam - pump shields into target
-    * Power beam - pump energy into target
-
-* Stargates for scene changes
-
-* Open Web App boilerplating
-
-* Per-system damage, when shields are down
-
-* Auto-adjust rendering features based on FPS and estimated spare CPU headroom.
-    * Glow on / off
-
-* Auto-pause if it looks like we're no longer in the foreground (ie. big drop
-  in FPS from rFA)
