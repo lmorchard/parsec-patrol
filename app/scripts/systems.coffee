@@ -314,11 +314,11 @@ define [
                 @viewport_center_left = @viewport_width / 2
                 @viewport_center_top = @viewport_height / 2
 
-                # Calculate parameters defining the visible portion of world
                 @zoomed_ratio = @viewport_ratio * @zoom
 
-            @visible_width = @viewport_width / @zoomed_ratio
-            @visible_height = @viewport_height / @zoomed_ratio
+                @visible_width = @viewport_width / @zoomed_ratio
+                @visible_height = @viewport_height / @zoomed_ratio
+
             @visible_left = (0 - @visible_width/2) + @camera_x
             @visible_top = (0 - @visible_height/2) + @camera_y
             @visible_right = @visible_left + @visible_width
