@@ -1,8 +1,8 @@
 define [
     'components', 'utils', 'jquery', 'underscore', 'pubsub', 'Vector2D',
-    'Hammer' #, 'THREEx.KeyboardState'
+    'Hammer', 'THREEx.KeyboardState', 'QuadTree'
 ], (
-    C, Utils, $, _, PubSub, Vector2D, Hammer, KeyboardState
+    C, Utils, $, _, PubSub, Vector2D, Hammer, KeyboardState, QuadTree
 ) ->
 
     class System
@@ -222,9 +222,13 @@ define [
 
         constructor: (@canvas) ->
 
-            @buffer_canvas = document.createElement('canvas')
-            @ctx = @buffer_canvas.getContext('2d')
-            @screen_ctx = @canvas.getContext('2d')
+            #@buffer_canvas = document.createElement('canvas')
+            #@ctx = @buffer_canvas.getContext('2d')
+            #@screen_ctx = @canvas.getContext('2d')
+
+            @buffer_canvas = null
+            @screen_ctx = null
+            @ctx = @canvas.getContext('2d')
 
             @viewport_width = 0
             @viewport_height = 0
@@ -641,17 +645,79 @@ define [
 
     class CollisionSystem extends System
         constructor: () ->
+            @quadtrees = {}
 
         match_component: C.Collidable
 
         update: (t_delta) ->
+
+            gid = @world.current_scene
+            if not @quadtrees[gid]
+                @quadtrees[gid] = new QuadTree({
+                    x: 0 - @world.width/2,
+                    y: 0 - @world.height/2,
+                    width: @world.width,
+                    height: @world.height
+                }, false)
+
+            qt = @update_quadtree(t_delta, gid)
+            
+            matches = @world.entities.getComponents(@match_component)
+            for a_eid, a_collidable of matches
+                a_pos = @world.entities.get(a_eid, C.Position)
+                a_sprite = @world.entities.get(a_eid, C.Sprite)
+                items = qt.retrieve({
+                    x: a_pos.x,
+                    y: a_pos.y,
+                    width: a_sprite.width,
+                    height: a_sprite.height
+                })
+                for item in items
+                    continue if item.eid is a_eid
+                    @check_collision(item.eid, a_eid, a_collidable, a_pos, a_sprite)
+
+        update_quadtree: (t_delta, gid) ->
+            qt = @quadtrees[gid]
+            qt.clear()
+
+            for eid, ignore of @world.entities.entitiesForGroup(gid)
+                collidable = @world.entities.get(eid, C.Collidable)
+                continue if not collidable
+
+                for k, v of collidable.in_collision_with
+                    delete collidable.in_collision_with[k]
+
+                pos = @world.entities.get(eid, C.Position)
+                sprite = @world.entities.get(eid, C.Sprite)
+                qt.insert({
+                    eid: eid, x: pos.x, y: pos.y,
+                    width: sprite.width, height: sprite.height
+                })
+
+            return qt
+
+        check_collision: (b_eid, a_eid, a_collidable, a_pos, a_sprite) ->
+            b_collidable = @world.entities.get(b_eid, C.Collidable)
+            already_in_collision = (
+                (b_eid of a_collidable.in_collision_with) and
+                (a_eid of b_collidable.in_collision_with)
+            )
+            if not already_in_collision
+                b_pos = @world.entities.get(b_eid, C.Position)
+                b_sprite = @world.entities.get(b_eid, C.Sprite)
+                if Utils.inCollision(
+                        a_pos.x, a_pos.y, a_sprite.width, a_sprite.height,
+                        b_pos.x, b_pos.y, b_sprite.width, b_sprite.height)
+                    a_collidable.in_collision_with[b_eid] = Utils.now()
+                    b_collidable.in_collision_with[a_eid] = Utils.now()
+
+        update_old: (t_delta) ->
             matches = @world.entities.getComponents(@match_component)
 
             # TODO: Fix this horrible, naive collision detection
             # No account for shape or rotation. No quadtrees, etc.
             # Probably good-enough for now
-            # See also: http://www.mikechambers.com/blog/2011/03/21/
-            #   javascript-quadtree-implementation/
+            # See also: http://www.mikechambers.com/blog/2011/03/21/javascript-quadtree-implementation/
             
             boxes = {}
             [COLLIDABLE, LEFT, TOP, HEIGHT, WIDTH] = [0..4]
@@ -718,10 +784,11 @@ define [
             xb = @world.width / 2
             yb = @world.height / 2
 
-            if pos.x > xb or pos.x < -xb
-                motion.dx = 0 - motion.dx
-            if pos.y > yb or pos.y < -yb
-                motion.dy = 0 - motion.dy
+            if motion
+                if pos.x > xb or pos.x < -xb
+                    motion.dx = 0 - motion.dx
+                if pos.y > yb or pos.y < -yb
+                    motion.dy = 0 - motion.dy
 
             for c_eid, ts of collidable.in_collision_with
                 c_pos = @world.entities.get(c_eid, C.Position)
@@ -729,63 +796,81 @@ define [
                 c_motion = @world.entities.get(c_eid, C.Motion)
                 c_bouncer = @world.entities.get(c_eid, C.Bouncer)
 
-                # See also: https://gist.github.com/kevinfjbecker/1670913
-                
-                # Vector between entities
-                dn = new Vector2D(pos.x - c_pos.x, pos.y - c_pos.y)
+                @resolve_elastic_collision(dt,
+                    pos, sprite, motion, bouncer,
+                    c_pos, c_sprite, c_motion, c_bouncer)
 
-                # Distance between entities
-                delta = dn.magnitude()
-                
-                # Normal vector of the collision plane
-                dn.normalize()
-                
-                # Tangential vector of the collision plane 
-                dt = new Vector2D(dn.y, -dn.x)
-                
-                # HACK: avoid divide by zero
-                c_pos.x += 0.01 if delta is 0
-                
-                # Get total mass for entities
-                m1 = bouncer.mass
-                m2 = c_bouncer.mass
-                M = m1 + m2
- 
-                # Minimum translation vector to push entities apart
-                mt = {
-                    x: dn.x * (sprite.width + c_sprite.width - delta),
-                    y: dn.y * (sprite.width + c_sprite.width - delta)
-                }
-                 
+        # See also: https://gist.github.com/kevinfjbecker/1670913
+        # TODO: Optimize this. Reuse vector objects, at least.
+        resolve_elastic_collision: (dt,
+                pos, sprite, motion, bouncer,
+                c_pos, c_sprite, c_motion, c_bouncer) ->
+            
+            # Vector between entities
+            dn = new Vector2D(pos.x - c_pos.x, pos.y - c_pos.y)
+
+            # Distance between entities
+            delta = dn.magnitude()
+            
+            # Normal vector of the collision plane
+            dn.normalize()
+            
+            # Tangential vector of the collision plane 
+            dt = new Vector2D(dn.y, -dn.x)
+            
+            # HACK: avoid divide by zero
+            c_pos.x += 0.01 if delta is 0
+            
+            # Get total mass for entities
+            m1 = bouncer.mass
+            m2 = c_bouncer.mass
+            M = m1 + m2
+
+            # Minimum translation vector to push entities apart
+            mt = {
+                x: dn.x * (sprite.width + c_sprite.width - delta),
+                y: dn.y * (sprite.width + c_sprite.width - delta)
+            }
+             
+            # TODO: This seems unnecessary and abrupt. Remove?
+            if false
                 # Push entities apart, proportional to mass
-                ###
                 pos.x = pos.x + mt.x * m2 / M
                 pos.y = pos.y + mt.y * m2 / M
                 c_pos.x = c_pos.x - mt.x * m1 / M
                 c_pos.y = c_pos.y - mt.y * m1 / M
-                ###
-                
-                # Velocity vectors of entities before collision
-                v1 = new Vector2D(motion.dx, motion.dy)
-                v2 = new Vector2D(c_motion.dx, c_motion.dy)
-                 
-                # split the velocity vector of the first entity into a normal
-                # and a tangential component in respect of the collision plane
-                v1n = new Vector2D(dn.x * v1.dot(dn), dn.y * v1.dot(dn))
-                v1t = new Vector2D(dt.x * v1.dot(dt), dt.y * v1.dot(dt))
-                 
-                # split the velocity vector of the second entity into a normal
-                # and a tangential component in respect of the collision plane
-                v2n = new Vector2D(dn.x * v2.dot(dn), dn.y * v2.dot(dn))
-                v2t = new Vector2D(dt.x * v2.dot(dt), dt.y * v2.dot(dt))
-                 
-                ## calculate new velocity vectors of the entitys, the tangential component stays
-                ## the same, the normal component changes analog to the 1-Dimensional case
+            
+            # Velocity vectors of entities before collision
+            v1 = if motion
+                new Vector2D(motion.dx, motion.dy)
+            else
+                new Vector2D(0, 0)
+            v2 = if c_motion
+                new Vector2D(c_motion.dx, c_motion.dy)
+            else
+                new Vector2D(0, 0)
+             
+            # split the velocity vector of the first entity into a normal
+            # and a tangential component in respect of the collision plane
+            v1n = new Vector2D(dn.x * v1.dot(dn), dn.y * v1.dot(dn))
+            v1t = new Vector2D(dt.x * v1.dot(dt), dt.y * v1.dot(dt))
+             
+            # split the velocity vector of the second entity into a normal
+            # and a tangential component in respect of the collision plane
+            v2n = new Vector2D(dn.x * v2.dot(dn), dn.y * v2.dot(dn))
+            v2t = new Vector2D(dt.x * v2.dot(dt), dt.y * v2.dot(dt))
+             
+            # calculate new velocity vectors of the entitys, the tangential
+            # component stays the same, the normal component changes analog to
+            # the 1-Dimensional case
+            if motion
                 motion.dx = v1t.x + dn.x * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
                 motion.dy = v1t.y + dn.y * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
+            if c_motion
                 c_motion.dx = v2t.x - dn.x * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
                 c_motion.dy = v2t.y - dn.y * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
 
+    # TODO: MotionSystem conflicts with & obsoletes this.
     class SpinSystem extends System
         match_component: C.Spin
 
@@ -794,6 +879,7 @@ define [
             d_angle = dt * spin.rad_per_sec
             pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
             
+    # TODO: Find a way to reconcile this with MotionSystem as orbit AI
     class OrbiterSystem extends System
         match_component: C.Orbit
 
@@ -831,6 +917,8 @@ define [
             pos = @world.entities.get(eid, C.Position)
             return if not pos
 
+            # Process a delay before the seeker "acquires" the target and
+            # starts steering. Makes missiles look interesting.
             if seeker.acquisition_delay > 0
                 seeker.acquisition_delay -= dt
                 return
@@ -847,6 +935,9 @@ define [
             # Get the target angle, ensuring a 0..2*Math.PI range.
             target_angle = @v_seeker.angleTo(@v_target) + (Math.PI*0.5)
             target_angle += 2*Math.PI if target_angle < 0
+
+            # TODO: This is probably a dumb idea. Random error introduced to
+            # make seekers imperfect and interesting.
             if seeker.error > 0
                 error = seeker.rad_per_sec * seeker.error
                 target_angle += (error/2) - (error * Math.random())
@@ -871,6 +962,8 @@ define [
             pos.rotation = (pos.rotation + (direction * d_angle)) % (Math.PI*2)
             pos.rotation += 2*Math.PI if pos.rotation < 0
 
+    # TODO: This conflicts with MotionSystem. Rework so that it just actuates
+    # Motion vectors, instead of managing motion directly
     class ThrusterSystem extends System
         match_component: C.Thruster
 
@@ -979,6 +1072,8 @@ define [
                     to_target.push(turret)
             return if to_target.length is 0
 
+            # TODO: Extract target rangefinding into a reusable utility
+            
             # Find valid targets within range
             max_range_sq = Math.pow(weapon.target_range, 2)
             targets = @world.entities.getComponents(C.WeaponsTarget)
