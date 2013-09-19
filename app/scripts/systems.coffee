@@ -176,13 +176,37 @@ define [
         draw_grid: true
         draw_bounding_boxes: false
         draw_beam_range: false
+        source_size: 100
+
+        sprite_names: [
+            'star', 'hero', 'enemyscout', 'enemycruiser', 'torpedo', 'default'
+        ]
 
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
-                      @zoom=1.0, @grid_size=150, @grid_color='#111') ->
+                      @zoom=1.0, @grid_size=150, @grid_color='#111',
+                      @use_sprite_cache=true) ->
             @ctx = @canvas.getContext('2d')
             @viewport_ratio = 1.0
             @follow_entity = null
+
+            @sprite_cache = {}
+            if true or @use_sprite_cache
+                for name in @sprite_names
+                    canvas_size = @source_size + 10
+                    canvas = $("""
+                        <canvas width="#{canvas_size}"
+                                height="#{canvas_size}"
+                                id="sprite_#{name}"></canvas>
+                    """)
+                    # $(@canvas).after(canvas)
+                    @sprite_cache[name] = canvas[0]
+                    ctx = canvas[0].getContext("2d")
+                    ctx.translate(canvas_size / 2, canvas_size / 2)
+                    ctx.lineWidth = 3
+                    ctx.strokeStyle = "#fff"
+                    @['draw_sprite_' + name](ctx, @source_size, @source_size)
+
 
         setWorld: (world) ->
             super world
@@ -386,6 +410,8 @@ define [
             v_turret.rotateAround(v_origin, pos.rotation)
             turret_rad = (Math.PI*2) / beam_weapon.active_beams
 
+            perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
+
             if @draw_beam_range
                 perc_active = beam_weapon.active_beams / beam_weapon.max_beams
                 range = beam_weapon.max_range / beam_weapon.active_beams
@@ -405,10 +431,12 @@ define [
 
                 v_turret.rotateAround(v_origin, turret_rad)
 
-                @ctx.fillStyle = beam_weapon.color
-                @ctx.beginPath()
-                @ctx.arc(v_turret.x, v_turret.y, 1.0, 0, Math.PI*2, true)
-                @ctx.fill()
+                # TODO: Drawing these turret dots seems amazingly expensive
+                if false
+                    @ctx.fillStyle = beam_weapon.color
+                    @ctx.beginPath()
+                    @ctx.arc(v_turret.x, v_turret.y, 1.0, 0, Math.PI*2, true)
+                    @ctx.fill()
                 
                 if beam?.target and not beam?.charging
                     fudge = 1.25
@@ -416,7 +444,6 @@ define [
                     target_y = beam.y + (Math.random() * fudge) - (fudge/2)
 
                     max_width = 2
-                    perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
                     @ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active))
 
                     @ctx.strokeStyle = beam_weapon.color
@@ -434,6 +461,13 @@ define [
 
             @ctx.rotate(pos.rotation)
 
+            if @use_sprite_cache
+                @ctx.drawImage(
+                    @sprite_cache[sprite.shape] || @sprite_cache['default'],
+                    5, 5, @source_size, @source_size,
+                    0, 0, w, h)
+                return
+
             @ctx.fillStyle = "#000"
             @ctx.strokeStyle = sprite.stroke_style
             if @glow
@@ -441,84 +475,86 @@ define [
                 @ctx.shadowBlur = 4
             @ctx.lineWidth = 1.25
 
-            # TODO: Yes, I know, this sucks. Refactor into something better
             switch sprite.shape
-
                 when 'star'
-                    @ctx.fillStyle = "#ccc"
-                    @ctx.beginPath()
-                    @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
-                    @ctx.fill()
-
+                    @draw_sprite_star(@ctx, w, h)
                 when 'hero'
-                    @ctx.rotate(Math.PI)
-                    @ctx.beginPath()
-                    @ctx.moveTo(0-(w*0.125), 0-(h/2))
-                    @ctx.lineTo(0-(w*0.25), 0-(h/2))
-                    @ctx.lineTo(0-(w*0.5), 0)
-                    @ctx.arc(0, 0, w/2, Math.PI, 0, true)
-                    @ctx.lineTo(w*0.25, 0-(h/2))
-                    @ctx.lineTo(w*0.125, 0-(h/2))
-                    @ctx.lineTo(w*0.25, 0)
-                    @ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
-                    @ctx.lineTo(0-(w*0.125), 0-(h/2))
-                    #@ctx.fill()
-                    @ctx.stroke()
-                    
+                    @draw_sprite_hero(@ctx, w, h)
                 when 'enemyscout'
-                    @ctx.beginPath()
-                    @ctx.moveTo(0, 0-(h*0.5))
-                    @ctx.lineTo(0-w*0.45, h*0.5)
-                    @ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
-                    @ctx.lineTo(w*0.45, h*0.5)
-                    @ctx.lineTo(0, 0-(h*0.5))
-                    @ctx.moveTo(0, 0-(h*0.5))
-                    #@ctx.fill()
-                    @ctx.stroke()
-
+                    @draw_sprite_enemyscout(@ctx, w, h)
                 when 'enemycruiser'
-                    hu = h / 5
-                    wu = w / 4
-
-                    @ctx.beginPath()
-                    @ctx.moveTo(0, 0-hu*2.5)
-                    @ctx.lineTo(-(wu*1), hu*0.5)
-                    @ctx.lineTo(-(wu*1.25), 0-hu*1.5)
-                    @ctx.lineTo(-(wu*2), hu*2.5)
-                    @ctx.arc(0-wu, hu*2.5, w*0.25, Math.PI, Math.PI/2, true)
-                    @ctx.lineTo(-wu*0.5, hu*2.5)
-                    @ctx.arc(0, hu*2.5, w*0.125, Math.PI, 0, true)
-                    @ctx.lineTo(wu, hu*3.75)
-                    @ctx.arc(wu, hu*2.5, w*0.25, Math.PI/2, 0, true)
-                    @ctx.lineTo(wu*1.25, 0-hu*1.5)
-                    @ctx.lineTo(wu*1, hu*0.5)
-                    @ctx.lineTo(0, 0-hu*2.5)
-
-                    @ctx.stroke()
-
+                    @draw_sprite_enemycruiser(@ctx, w, h)
                 when 'torpedo'
-                    @ctx.beginPath()
-                    
-                    @ctx.moveTo(0-(w*0.5), 0)
-                    @ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0,
-                             true)
-                    @ctx.moveTo(0, 0-(h*0.5))
-                    @ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5,
-                             true)
-                    @ctx.moveTo(0, h*0.5)
-                    @ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5,
-                             false)
-                    @ctx.moveTo(0-w*0.5, 0)
-                    @ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0,
-                             false)
-
-                    @ctx.stroke()
-
+                    @draw_sprite_torpedo(@ctx, w, h)
                 else
-                    @ctx.beginPath()
-                    @ctx.arc(0, 0, sprite_size/2, 0, Math.PI*2, true)
-                    @ctx.stroke()
+                    @draw_sprite_default(@ctx, w, h)
+        
+        draw_sprite_default: (ctx, w, h) ->
+            ctx.beginPath()
+            ctx.arc(0, 0, w/2, 0, Math.PI*2, true)
+            ctx.stroke()
 
+        draw_sprite_star: (ctx, w, h) ->
+            ctx.fillStyle = "#ccc"
+            ctx.beginPath()
+            ctx.arc(0, 0, w/2, 0, Math.PI*2, true)
+            ctx.fill()
+
+        draw_sprite_hero: (ctx, w, h) ->
+            ctx.rotate(Math.PI)
+            ctx.beginPath()
+            ctx.moveTo(0-(w*0.125), 0-(h/2))
+            ctx.lineTo(0-(w*0.25), 0-(h/2))
+            ctx.lineTo(0-(w*0.5), 0)
+            ctx.arc(0, 0, w/2, Math.PI, 0, true)
+            ctx.lineTo(w*0.25, 0-(h/2))
+            ctx.lineTo(w*0.125, 0-(h/2))
+            ctx.lineTo(w*0.25, 0)
+            ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
+            ctx.lineTo(0-(w*0.125), 0-(h/2))
+            ctx.stroke()
+
+        draw_sprite_enemyscout: (ctx, w, h) ->
+            ctx.beginPath()
+            ctx.moveTo(0, 0-(h*0.5))
+            ctx.lineTo(0-w*0.45, h*0.5)
+            ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
+            ctx.lineTo(w*0.45, h*0.5)
+            ctx.lineTo(0, 0-(h*0.5))
+            ctx.moveTo(0, 0-(h*0.5))
+            ctx.stroke()
+
+        draw_sprite_enemycruiser: (ctx, w, h) ->
+            hu = h / 5
+            wu = w / 4
+
+            ctx.beginPath()
+            ctx.moveTo(0, 0-hu*2.5)
+            ctx.lineTo(-(wu*1), hu*0.5)
+            ctx.lineTo(-(wu*1.25), 0-hu*1.5)
+            ctx.lineTo(-(wu*2), hu*2.5)
+            ctx.arc(0-wu, hu*2.5, w*0.25, Math.PI, Math.PI/2, true)
+            ctx.lineTo(-wu*0.5, hu*2.5)
+            ctx.arc(0, hu*2.5, w*0.125, Math.PI, 0, true)
+            ctx.lineTo(wu, hu*3.75)
+            ctx.arc(wu, hu*2.5, w*0.25, Math.PI/2, 0, true)
+            ctx.lineTo(wu*1.25, 0-hu*1.5)
+            ctx.lineTo(wu*1, hu*0.5)
+            ctx.lineTo(0, 0-hu*2.5)
+
+            ctx.stroke()
+
+        draw_sprite_torpedo: (ctx, w, h) ->
+            ctx.beginPath()
+            ctx.moveTo(0-(w*0.5), 0)
+            ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0, true)
+            ctx.moveTo(0, 0-(h*0.5))
+            ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5, true)
+            ctx.moveTo(0, h*0.5)
+            ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5, false)
+            ctx.moveTo(0-w*0.5, 0)
+            ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0, false)
+            ctx.stroke()
 
     class CollisionSystem extends System
         constructor: () ->

@@ -22,9 +22,6 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
-* Rework all component constructors to accept an object, looking forward to
-  JSON (de)serialization of the world
-
 * Spawner component
     * Opposite of tombstone
     * Generate entities periodically, randomly, up to a max on scene

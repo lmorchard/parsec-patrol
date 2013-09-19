@@ -7,7 +7,7 @@ define [
 
     POINTER_SHADOW = false
     MAX_ENEMIES = 100
-    RESPAWN_ENEMIES = false
+    RESPAWN_ENEMIES = true
     
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
