@@ -6,8 +6,27 @@ define [
 ) ->
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
-    world = new W.World(640, 480,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+
+    class PointerFollower extends C.Component
+        @defaults:
+            type: "PointerFollower"
+    
+    C.PointerFollower = PointerFollower
+
+    class PointerFollowerSystem extends S.System
+        match_component: PointerFollower
+        update_match: (dt, eid, pointer_follower) ->
+            pos = @world.entities.get(eid, C.Position)
+            pos.x = @world.inputs.pointer_world_x
+            pos.y = @world.inputs.pointer_world_y
+
+    class SaverSystem extends S.System
+        update: (dt) ->
+            $('#out').val(JSON.stringify(@world.save()))
+
+    world = new W.World(3000, 3000,
+        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0, 5.0),
+        new S.RadarSystem(canvas, 0.28),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
@@ -17,56 +36,40 @@ define [
         new S.HealthSystem,
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
+        new PointerFollowerSystem,
+        # new SaverSystem,
     )
-    data = {
-        entities: {
-            "10": {
-                Sprite: { shape: "sun" },
-                Spawn: { position_logic: "sun" },
-                Position: {}
-            },
-            "20": {
-                Sprite: { shape: "hero" },
-                Spawn: { position_logic: "at", x: 100, y: -100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "30": {
-                Sprite: { shape: "enemyscout" },
-                Spawn: { position_logic: "at", x: -100, y: -100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "40": {
-                Sprite: { shape: "enemycruiser" },
-                Spawn: { position_logic: "at", x: -150, y: 0 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "50": {
-                Sprite: { shape: "asteroid" },
-                Spawn: { position_logic: "at", x: -100, y: 100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "60": {
-                Sprite: { shape: "torpedo" },
-                Spawn: { position_logic: "at", x: 100, y: 100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-        },
-        groups: {
-            "10": ["10", "20", "30", "40", "50", "60"]
-        },
-    }
-    
+
+    $('#save').click () ->
+        $('#out').val(JSON.stringify(world.save()))
+        return false
+
+    $('#load').click () ->
+        world.load(JSON.parse($('#out').val()))
+        return false
+
+    $('#sample1').click () ->
+        $.getJSON 'json-sample1.json', (d, s, x) -> world.load(d)
+        return false
+
+    $('#sample2').click () ->
+        $.getJSON 'json-sample2.json', (d, s, x) -> world.load(d)
+        return false
+
+    $('#sample3').click () ->
+        $.getJSON 'json-sample3.json', (d, s, x) -> world.load(d)
+        return false
+
+    $('#sample4').click () ->
+        $.getJSON 'json-sample4.json', (d, s, x) -> world.load(d)
+        return false
+
     window.world = world
     window.C = C
     window.E = E
     window.S = S
 
-    world.load(data)
-    world.measure_fps = true
-    world.current_scene = _.keys(data.groups)[0]
-    world.start()
+    $.getJSON 'json-sample1.json', (data, status, xhr) ->
+        world.load(data)
+        world.measure_fps = true
+        world.start()

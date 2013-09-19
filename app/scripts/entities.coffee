@@ -3,18 +3,27 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
     class EntityManager
 
         constructor: () ->
+            @reset()
+
+        reset: () ->
             @store = {}
-            @gid = 0
+            @max_eid = 0
+            @max_gid = 0
             @entities_by_group = {}
             @groups_by_entity = {}
 
         load: (data) ->
+            @reset()
+
             for eid, c_data of data.entities
                 components = @loadComponents(c_data)
                 @put(eid, components...)
 
             for gid, eids of data.groups
                 @addToGroup(gid, eids...)
+
+            @max_eid = data.max_eid || 0
+            @max_gid = data.max_gid || 0
 
         loadComponents: (c_data) ->
             components = []
@@ -23,11 +32,23 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             return components
 
         save: () ->
+            data = {
+                @max_eid, @max_gid,
+                groups: {},
+                entities: {},
+            }
+            for gid, eids of @entities_by_group
+                data.groups[gid] = _.keys(eids)
+            for type, by_eid of @store
+                for eid, component of by_eid
+                    data.entities[eid] ?= {}
+                    data.entities[eid][type] = _.clone(component)
+            
+            return data
 
         # Create an entity with the given components
         create: (components...) ->
-            entity_id = Utils.generateID()
-            @put(entity_id, components...)
+            return @put(@max_eid++, components...)
 
         # Store a collection of components with given ID
         put: (entity_id, components...) ->
@@ -87,7 +108,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             @store[component.defaults.type] || {}
 
         createGroup: (entities...) ->
-            @entities_by_group[id = ++@gid] = {}
+            @entities_by_group[id = ++@max_gid] = {}
             if entities.length > 0
                 @addToGroup(id, entities...)
             return id

@@ -160,6 +160,7 @@ define [
             setTimeout r, 5000
 
     if MAX_ENEMIES
-        spawn_enemy() for idx in [1..MAX_ENEMIES]
+        for idx in [1..MAX_ENEMIES]
+            spawn_enemy()
 
     () -> world.start()

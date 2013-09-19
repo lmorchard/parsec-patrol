@@ -1,0 +1,245 @@
+{
+    "max_eid": "100",
+    "max_gid": "100",
+    "groups": {
+        "main": [
+            "sun",
+            "hero",
+            "enemy3",
+            "enemy4",
+            "enemy5",
+            "enemy6"
+        ]
+    },
+    "entities": {
+        "sun": {
+            "Sprite": {
+                "shape": "star",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "center",
+                "type": "Spawn",
+                "x": 0,
+                "y": 0,
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": 0,
+                "y": 0,
+                "rotation": 0
+            }
+        },
+        "hero": {
+            "Sprite": {
+                "shape": "hero",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "x": -40,
+                "y": -40,
+                "type": "Spawn",
+                "position_logic": "at",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -40,
+                "y": -40,
+                "rotation": 0
+            },
+            "Collidable": {
+                "type": "Collidable",
+                "in_collision_with": {}
+            },
+            "Thruster": {
+                "dv": 250,
+                "max_v": 100,
+                "active": false,
+                "type": "Thruster",
+                "dx": 0,
+                "dy": 0
+            },
+            "Seeker": {
+                "rad_per_sec": 3.141592653589793,
+                "type": "Seeker",
+                "target": null
+            },
+            "ClickCourse": {
+                "stop_on_arrival": true,
+                "type": "ClickCourse",
+                "active": true
+            }
+        },
+        "enemy3": {
+            "Sprite": {
+                "shape": "enemyscout",
+                "stroke_style": "#3ff",
+                "width": 15,
+                "height": 15,
+                "type": "Sprite"
+            },
+            "Spawn": {
+                "x": -80,
+                "y": 0,
+                "type": "Spawn",
+                "position_logic": "at",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -10.802816132918846,
+                "y": -31.203409658848074,
+                "rotation": 4.97418031888043
+            },
+            "Collidable": {
+                "type": "Collidable",
+                "in_collision_with": {}
+            },
+            "Thruster": {
+                "dv": 150,
+                "max_v": 75,
+                "type": "Thruster",
+                "active": true,
+                "dx": -0.5021356822612573,
+                "dy": 58.27428103829519
+            },
+            "Seeker": {
+                "target": "hero",
+                "rad_per_sec": 3.141592653589793,
+                "type": "Seeker"
+            }
+        },
+        "enemy4": {
+            "Sprite": {
+                "shape": "enemyscout",
+                "stroke_style": "#f3f",
+                "width": 15,
+                "height": 15,
+                "type": "Sprite"
+            },
+            "Spawn": {
+                "x": 0,
+                "y": 80,
+                "type": "Spawn",
+                "position_logic": "at",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -67.4366943227667,
+                "y": -53.081504472731055,
+                "rotation": 1.9088763271573503
+            },
+            "Collidable": {
+                "type": "Collidable",
+                "in_collision_with": {}
+            },
+            "Thruster": {
+                "dv": 150,
+                "max_v": 75,
+                "type": "Thruster",
+                "active": true,
+                "dx": 0.6007913522407029,
+                "dy": -59.3497898626922
+            },
+            "Seeker": {
+                "target": "enemy3",
+                "rad_per_sec": 3.141592653589793,
+                "type": "Seeker"
+            }
+        },
+        "enemy5": {
+            "Sprite": {
+                "shape": "enemyscout",
+                "stroke_style": "#ff3",
+                "width": 15,
+                "height": 15,
+                "type": "Sprite"
+            },
+            "Spawn": {
+                "x": 80,
+                "y": 0,
+                "type": "Spawn",
+                "position_logic": "at",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -7.034936891115037,
+                "y": -24.987000834339867,
+                "rotation": 5.12170181784205
+            },
+            "Collidable": {
+                "type": "Collidable",
+                "in_collision_with": {}
+            },
+            "Thruster": {
+                "dv": 150,
+                "max_v": 75,
+                "type": "Thruster",
+                "active": true,
+                "dx": 2.914812465253698,
+                "dy": 55.13487241262558
+            },
+            "Seeker": {
+                "target": "enemy4",
+                "rad_per_sec": 3.141592653589793,
+                "type": "Seeker"
+            }
+        },
+        "enemy6": {
+            "Sprite": {
+                "shape": "enemyscout",
+                "stroke_style": "#3f3",
+                "width": 15,
+                "height": 15,
+                "type": "Sprite"
+            },
+            "Spawn": {
+                "x": 80,
+                "y": -80,
+                "type": "Spawn",
+                "position_logic": "at",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -70.44312085378318,
+                "y": -6.476528370707562,
+                "rotation": 1.2622825730460376
+            },
+            "Collidable": {
+                "type": "Collidable",
+                "in_collision_with": {}
+            },
+            "Thruster": {
+                "dv": 150,
+                "max_v": 75,
+                "type": "Thruster",
+                "active": true,
+                "dx": 30.747708056413423,
+                "dy": -55.558308752969474
+            },
+            "Seeker": {
+                "target": "enemy5",
+                "rad_per_sec": 3.141592653589793,
+                "type": "Seeker"
+            }
+        }
+    },
+    "current_scene": "main"
+}

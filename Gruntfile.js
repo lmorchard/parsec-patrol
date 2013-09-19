@@ -39,8 +39,8 @@ module.exports = function (grunt) {
             },
             html: {
                 files: [
-                    '<%= yeoman.app %>/*.html',
-                    '<%= yeoman.app %>/sketches/*.html'
+                    '<%= yeoman.app %>/*.{html,json}',
+                    '<%= yeoman.app %>/sketches/*.{html,json}'
                 ],
                 tasks: ['copy:html'],
                 options: { livereload: true }
@@ -277,7 +277,7 @@ module.exports = function (grunt) {
                 dot: true,
                 cwd: '<%= yeoman.app %>',
                 dest: '.tmp/',
-                src: '{,*/}*.html'
+                src: '{,*/}*.{html,json}'
             },
             scripts: {
                 expand: true,

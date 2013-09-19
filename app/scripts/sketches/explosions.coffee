@@ -44,4 +44,14 @@ define [
 
     setInterval spawn_explosion, 0.5 * Math.random()
 
+    $('#save').click () ->
+        $('#out').val(JSON.stringify(world.save()))
+        return false
+
+
+    window.world = world
+    window.C = C
+    window.E = E
+    window.S = S
+
     world.start()

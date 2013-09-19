@@ -83,8 +83,16 @@ define [
         },
         "groups": {
             "main": [ "sun", "hero", "enemy3", "enemy4", "enemy5", "enemy6" ]
-        }
+        },
+        "max_gid": "100",
+        "max_eid": "100",
+        "current_scene": "main",
     })
+
+    window.world = world
+    window.C = C
+    window.E = E
+    window.S = S
+
     world.measure_fps = true
-    world.current_scene = _.keys(data.groups)[0]
     world.start()

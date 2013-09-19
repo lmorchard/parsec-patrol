@@ -1,0 +1,190 @@
+{
+    "max_eid": 100,
+    "max_gid": 100,
+    "groups": {
+        "10": [
+            "10",
+            "20",
+            "30",
+            "40",
+            "50",
+            "60"
+        ]
+    },
+    "current_scene": "10",
+    "entities": {
+        "10": {
+            "Sprite": {
+                "shape": "sun",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "sun",
+                "type": "Spawn",
+                "x": 0,
+                "y": 0,
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": 0,
+                "y": 0,
+                "rotation": 0
+            }
+        },
+        "20": {
+            "Sprite": {
+                "shape": "hero",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "at",
+                "x": 100,
+                "y": -100,
+                "type": "Spawn",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": 91.85105465991144,
+                "y": 107.53317515010134,
+                "rotation": 4.00286407352567
+            },
+            "Orbit": {
+                "orbited_id": "10",
+                "rad_per_sec": 0.31415,
+                "type": "Orbit",
+                "rotate": true,
+                "angle": 0
+            }
+        },
+        "30": {
+            "Sprite": {
+                "shape": "enemyscout",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "at",
+                "x": -100,
+                "y": -100,
+                "type": "Spawn",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": 107.53317515010134,
+                "y": -91.85105465991144,
+                "rotation": 2.4320677467307728
+            },
+            "Orbit": {
+                "orbited_id": "10",
+                "rad_per_sec": 0.31415,
+                "type": "Orbit",
+                "rotate": true,
+                "angle": 0
+            }
+        },
+        "40": {
+            "Sprite": {
+                "shape": "enemycruiser",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "at",
+                "x": -150,
+                "y": 0,
+                "type": "Spawn",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": 11.76159036764251,
+                "y": -149.53817235750972,
+                "rotation": 1.6466695833333116
+            },
+            "Orbit": {
+                "orbited_id": "10",
+                "rad_per_sec": 0.31415,
+                "type": "Orbit",
+                "rotate": true,
+                "angle": 0
+            }
+        },
+        "50": {
+            "Sprite": {
+                "shape": "asteroid",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "at",
+                "x": -100,
+                "y": 100,
+                "type": "Spawn",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -91.85105465991144,
+                "y": -107.53317515010134,
+                "rotation": 0.8612714199358762
+            },
+            "Orbit": {
+                "orbited_id": "10",
+                "rad_per_sec": 0.31415,
+                "type": "Orbit",
+                "rotate": true,
+                "angle": 0
+            }
+        },
+        "60": {
+            "Sprite": {
+                "shape": "torpedo",
+                "type": "Sprite",
+                "stroke_style": "#fff",
+                "width": 30,
+                "height": 30
+            },
+            "Spawn": {
+                "position_logic": "at",
+                "x": 100,
+                "y": 100,
+                "type": "Spawn",
+                "destroy": false,
+                "spawned": true
+            },
+            "Position": {
+                "type": "Position",
+                "x": -107.53317515010134,
+                "y": 91.85105465991144,
+                "rotation": -0.7095249068590204
+            },
+            "Orbit": {
+                "orbited_id": "10",
+                "rad_per_sec": 0.31415,
+                "type": "Orbit",
+                "rotate": true,
+                "angle": 0
+            }
+        }
+    }
+}

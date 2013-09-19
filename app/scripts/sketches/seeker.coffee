@@ -100,6 +100,12 @@ define [
             "main": [ "sun", "torp", "enemy3", "enemy4", "enemy5", "enemy6" ]
         }
     })
+    
+    window.world = world
+    window.C = C
+    window.E = E
+    window.S = S
+
     world.measure_fps = true
     world.current_scene = _.keys(data.groups)[0]
     world.start()

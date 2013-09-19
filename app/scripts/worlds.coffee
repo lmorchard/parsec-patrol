@@ -68,6 +68,13 @@ define [
 
         load: (data) ->
             @entities.load(data)
+            @current_scene = data.current_scene
+            return data
+
+        save: (data) ->
+            data = @entities.save()
+            data.current_scene = @current_scene
+            return data
 
         start: () ->
             return if @is_running
