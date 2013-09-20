@@ -58,7 +58,6 @@ define [
     })
 
     gui = new dat.GUI()
-    gui.add(vp, 'use_draw_buffer')
     gui.add(vp, 'use_sprite_cache')
     gui.add(vp, 'draw_bounding_boxes')
 

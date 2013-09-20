@@ -191,7 +191,6 @@ define [
     
     gui = new dat.GUI()
     # gui.add(vp, 'use_sprite_cache')
-    # gui.add(vp, 'use_draw_buffer')
     gui.add(options, 'max_enemies', 1, 200).step(10)
     gui.add(stats, 'enemies_ct').listen()
     gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)

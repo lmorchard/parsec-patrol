@@ -196,7 +196,6 @@ define [
         @MSG_CAPTURE_CAMERA = 'viewport.capture_camera'
 
         glow: false
-        draw_grid: true
         draw_bounding_boxes: false
         draw_beam_range: false
         source_size: 100
@@ -208,13 +207,15 @@ define [
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
                       @zoom=1.0, @grid_size=150, @grid_color='#111',
-                      @use_sprite_cache=false, @use_draw_buffer=true) ->
+                      @use_sprite_cache=false, @use_draw_buffer=true,
+                      @use_grid=true,
+                      @camera_x=0, @camera_y=0) ->
 
             @buffer_canvas = document.createElement('canvas')
             @buffer_canvas.width = @canvas.width
             @buffer_canvas.height = @canvas.height
 
-            @buffer_ctx = @buffer_canvas.getContext('2d')
+            @ctx = @buffer_canvas.getContext('2d')
             @screen_ctx = @canvas.getContext('2d')
 
             @viewport_ratio = 1.0
@@ -269,73 +270,77 @@ define [
 
         draw: (t_delta) ->
 
-            if @use_draw_buffer
-                @ctx = @buffer_ctx
-            else
-                @ctx = @screen_ctx
-
             zoomed_ratio = @viewport_ratio * @zoom
 
-            if @world.inputs.pointer_x
-                @world.inputs.pointer_world_x = (
-                    @world.inputs.pointer_x - (@viewport_width/2)
-                ) / zoomed_ratio
-                @world.inputs.pointer_world_y = (
-                    @world.inputs.pointer_y - (@viewport_height/2)
-                ) / zoomed_ratio
-
-            @ctx.save()
-
-            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-            @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
-
-            @ctx.translate(@viewport_width / 2, @viewport_height / 2)
-            @ctx.scale(zoomed_ratio, zoomed_ratio)
-
-            visible_width = @viewport_width / zoomed_ratio
-            visible_height = @viewport_height / zoomed_ratio
-            visible_left = 0 - visible_width/2
-            visible_top = 0 - visible_height/2
-
+            # If we have a followed entity, move the camera center
             if @follow_entity
                 pos = @world.entities.get(@follow_entity, C.Position)
                 if pos
-                    @ctx.translate(0-pos.x, 0-pos.y)
-                    @world.inputs.pointer_world_x += pos.x
-                    @world.inputs.pointer_world_y += pos.y
-                    if @draw_grid
-                        visible_left += pos.x
-                        visible_top += pos.y
+                    @camera_x = pos.x
+                    @camera_y = pos.y
 
+            # Adjust pointer-to-world coords based on camera
+            if @world.inputs.pointer_x
+                @world.inputs.pointer_world_x = ((
+                    @world.inputs.pointer_x - (@viewport_width/2)
+                ) / zoomed_ratio) + @camera_x
+                @world.inputs.pointer_world_y = ((
+                    @world.inputs.pointer_y - (@viewport_height/2)
+                ) / zoomed_ratio) + @camera_y
+
+            # Calculate parameters defining the visible portion of world
+            visible_width = @viewport_width / zoomed_ratio
+            visible_height = @viewport_height / zoomed_ratio
+            visible_left = (0 - visible_width/2) + @camera_x
+            visible_top = (0 - visible_height/2) + @camera_y
             visible_right = visible_left + visible_width
             visible_bottom = visible_top + visible_height
 
-            if @draw_grid
-                @ctx.strokeStyle = @grid_color
-                @ctx.lineWidth = 1
+            # Clear the canvas
+            @ctx.save()
+            @ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
+            @ctx.fillRect(0, 0, @canvas.width, @canvas.height)
 
-                grid_offset_x = visible_left % @grid_size
-                start = visible_left - grid_offset_x
-                end = visible_left + visible_width
-                for left in [start..end] by @grid_size
-                    @ctx.moveTo(left, visible_top)
-                    @ctx.lineTo(left, visible_top + visible_height)
+            # Translate and scale based on the viewport center and zoom level
+            @ctx.translate(@viewport_width / 2, @viewport_height / 2)
+            @ctx.scale(zoomed_ratio, zoomed_ratio)
 
-                grid_offset_y = visible_top % @grid_size
-                start = visible_top - grid_offset_y
-                end = visible_top + visible_height
-                for top in [start..end] by @grid_size
-                    @ctx.moveTo(visible_left, top)
-                    @ctx.lineTo(visible_left + visible_width, top)
+            # Adjust the camera center
+            @ctx.translate(0-@camera_x, 0-@camera_y)
 
-                @ctx.stroke()
+            @draw_backdrop(t_delta, visible_left, visible_top,
+                           visible_right, visible_bottom)
 
-            @draw_scene(t_delta, visible_left, visible_top, visible_right, visible_bottom)
+            @draw_scene(t_delta, visible_left, visible_top,
+                        visible_right, visible_bottom)
 
             @ctx.restore()
 
-            if @use_draw_buffer
-                @screen_ctx.drawImage(@buffer_canvas, 0, 0)
+            @screen_ctx.drawImage(@buffer_canvas, 0, 0)
+
+        draw_backdrop: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
+            return if not @use_grid
+
+            @ctx.save()
+            @ctx.strokeStyle = @grid_color
+            @ctx.lineWidth = 1
+
+            grid_offset_x = visible_left % @grid_size
+            start = visible_left - grid_offset_x
+            end = visible_right
+            for left in [start..end] by @grid_size
+                @ctx.moveTo(left, visible_top)
+                @ctx.lineTo(left, visible_bottom)
+
+            grid_offset_y = visible_top % @grid_size
+            start = visible_top - grid_offset_y
+            end = visible_bottom
+            for top in [start..end] by @grid_size
+                @ctx.moveTo(visible_left, top)
+                @ctx.lineTo(visible_right, top)
+
+            @ctx.stroke()
+            @ctx.restore()
 
         draw_scene: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
             scene = @world.entities.entitiesForGroup(@world.current_scene)
