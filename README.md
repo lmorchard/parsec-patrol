@@ -22,6 +22,9 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
+* Pause button and onscreen indicator.
+    * Auto-pause when not visible and/or when FPS dips below 10?
+
 * Merge world & entity manager - they're not really useful separately
 
 * Spawner component
@@ -33,8 +36,6 @@ open http://localhost:9000/sketches/
     * Generate one or more from a random selection of assemblages
 
 * Stop entities at world boundary?
-
-* Refactor sprites - no more ginormous switch statement, maybe animations?
 
 * Multiplayer
     * Kinda have done this before, but [badly](https://github.com/lmorchard/webtrek)
