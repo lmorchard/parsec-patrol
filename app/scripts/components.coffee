@@ -59,6 +59,8 @@ define ['entities', 'underscore'], (Entities, _) ->
             position_logic: 'at'
             x: 0
             y: 0
+            rotation: 0
+            ttl: null
             destroy: false
             capture_camera: false
 
@@ -100,6 +102,8 @@ define ['entities', 'underscore'], (Entities, _) ->
         @defaults:
             type: 'Seeker'
             target: null
+            error: 0
+            acquisition_delay: 0
             rad_per_sec: 0
 
     class ClickCourse extends Component
@@ -112,6 +116,38 @@ define ['entities', 'underscore'], (Entities, _) ->
         @defaults:
             type: 'WeaponsTarget'
             team: 'foe'
+
+    class MissileWeapon extends Component
+        @defaults:
+            type: 'MissileWeapon'
+            x: 0
+            y: 0
+            max_turrets: 12
+            active_turrets: 8
+            loading_time: 1.0
+            target_range: 1000
+            missile:
+                health: 100
+                damage: 1000
+                speed: 100
+                ttl: 3.0
+                color: '#f00'
+                rad_per_sec: Math.PI
+                acquisition_delay: 0.5
+
+        constructor: (props) ->
+            super props
+            @turrets = ({
+                loading: 0,
+                target: null
+            } for idx in [1..@max_turrets])
+
+    class Missile extends Component
+        @defaults:
+            health: 100
+            damage: 1000
+            speed: 100
+            ttl: 3.0
 
     class BeamWeapon extends Component
         @defaults:
@@ -148,6 +184,7 @@ define ['entities', 'underscore'], (Entities, _) ->
             type: 'Health'
             max: 1000
             current: null
+            show_bar: true
 
         constructor: (props) ->
             super props
@@ -184,5 +221,6 @@ define ['entities', 'underscore'], (Entities, _) ->
     return {
         Component, TypeName, EntityName, Position, Orbit, Spin, Bouncer, Spawn,
         Tombstone, Collidable, Renderable, Sprite, Thruster, Seeker,
-        ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion, RadarPing
+        ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion, RadarPing,
+        MissileWeapon, Missile
     }

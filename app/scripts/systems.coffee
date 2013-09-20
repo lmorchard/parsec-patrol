@@ -124,9 +124,11 @@ define [
                     when 'random'
                         pos.x = _.random(0-(@world.width/2), @world.width/2)
                         pos.y = _.random(0-(@world.height/2), @world.height/2)
+                        pos.rotation = _.random(0, Math.PI*2)
                     when 'at'
                         pos.x = spawn.x
                         pos.y = spawn.y
+                        pos.rotation = spawn.rotation
                     else
                         pos.x = pos.y = 0
 
@@ -137,6 +139,12 @@ define [
                 if spawn.capture_camera
                     @world.publish ViewportSystem.MSG_CAPTURE_CAMERA,
                         entity_id: eid
+
+            else if spawn.ttl isnt null
+                # Process time-to-live for this entity, if any
+                spawn.ttl -= t_delta
+                if spawn.ttl <= 0
+                    spawn.destroy = true
 
     class RadarSystem extends System
         match_component: C.Position
@@ -198,7 +206,13 @@ define [
         glow: false
         draw_bounding_boxes: false
         draw_beam_range: false
+        grid_size: 150
+        grid_color: '#111'
         source_size: 100
+        use_sprite_cache: false
+        use_grid: true
+        camera_x: 0
+        camera_y: 0
 
         sprite_names: [
             'star', 'hero', 'enemyscout', 'enemycruiser', 'torpedo', 'default'
@@ -206,10 +220,7 @@ define [
 
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
-                      @zoom=1.0, @grid_size=150, @grid_color='#111',
-                      @use_sprite_cache=false, @use_draw_buffer=true,
-                      @use_grid=true,
-                      @camera_x=0, @camera_y=0) ->
+                      @zoom=1.0) ->
 
             @buffer_canvas = document.createElement('canvas')
             @buffer_canvas.width = @canvas.width
@@ -413,7 +424,7 @@ define [
 
         draw_health_bar: (t_delta, eid, w, h) ->
             health = @world.entities.get(eid, C.Health)
-            return if not health
+            return if not health or not health.show_bar
 
             perc = (health.current / health.max)
             
@@ -722,6 +733,10 @@ define [
             pos = @world.entities.get(eid, C.Position)
             return if not pos
 
+            if seeker.acquisition_delay > 0
+                seeker.acquisition_delay -= dt
+                return
+
             target_pos = seeker.target
             if not _.isObject(target_pos)
                 target_pos = @world.entities.get(seeker.target, C.Position)
@@ -734,6 +749,9 @@ define [
             # Get the target angle, ensuring a 0..2*Math.PI range.
             target_angle = @v_seeker.angleTo(@v_target) + (Math.PI*0.5)
             target_angle += 2*Math.PI if target_angle < 0
+            if seeker.error > 0
+                error = seeker.rad_per_sec * seeker.error
+                target_angle += (error/2) - (error * Math.random())
 
             # Pick the direction from current to target angle
             direction =
@@ -821,6 +839,149 @@ define [
                     thruster?.active = false
                 seeker?.target = null
 
+    class MissileWeaponSystem extends System
+        @DAMAGE_TYPE = 'Missile'
+
+        match_component: C.MissileWeapon
+
+        constructor: () ->
+            @v_center = new Vector2D(0, 0)
+            @v_turret = new Vector2D(0, 0)
+
+        update_match: (t_delta, eid, weapon) ->
+
+            pos = @world.entities.get(eid, C.Position)
+            weapon.x = pos.x
+            weapon.y = pos.y
+
+            @load_turrets(t_delta, weapon, eid)
+            @target_turrets(t_delta, weapon, eid)
+            @fire_turrets(t_delta, weapon, eid, pos)
+
+        load_turrets: (t_delta, weapon, eid) ->
+            for idx in [0..weapon.active_turrets-1]
+                turret = weapon.turrets[idx]
+                if turret.loading > 0
+                    turret.loading -= t_delta
+                if turret.loading <= 0
+                    turret.loading = 0
+                    turret.target = null
+
+        target_turrets: (t_delta, weapon, eid) ->
+
+            # Get turrets ready for targeting
+            to_target = []
+            for idx in [0..weapon.active_turrets-1]
+                turret = weapon.turrets[idx]
+                if turret.loading is 0 and turret.target is null
+                    to_target.push(turret)
+            return if to_target.length is 0
+
+            # Find valid targets within range
+            max_range_sq = Math.pow(weapon.target_range, 2)
+            targets = @world.entities.getComponents(C.WeaponsTarget)
+            by_range = []
+            for t_eid, target of targets
+
+                # Do not target self!
+                continue if t_eid is eid
+
+                # Target only the intended team.
+                continue if target.team isnt weapon.target_team
+
+                # Finally, let's see if the target is in range.
+                t_pos = @world.entities.get(t_eid, C.Position)
+                t_range_sq = ((t_pos.x - weapon.x) * (t_pos.x - weapon.x) +
+                             (t_pos.y - weapon.y) * (t_pos.y - weapon.y))
+                # t_range = Math.sqrt t_range_sq
+                if t_range_sq <= max_range_sq
+                    by_range.push([t_range_sq, t_eid])
+
+            # Assign available beams to closest targets (if any)
+            if by_range.length
+                by_range.sort (a, b) -> a[0] - b[0]
+                while to_target.length
+                    for [t_range_sq, t_eid] in by_range
+                        turret = to_target.pop()
+                        break if not turret
+                        turret.target = t_eid
+
+        fire_turrets: (t_delta, weapon, eid, pos) ->
+
+            rad_per = (Math.PI * 2) / weapon.active_turrets
+            
+            @v_center.setValues(weapon.x, weapon.y)
+            @v_turret.setValues(weapon.x, weapon.y - 20)
+            @v_turret.rotateAround(@v_center, pos.rotation)
+
+            for idx in [0..weapon.active_turrets-1]
+
+                turret = weapon.turrets[idx]
+                continue if turret.target is null or turret.loading > 0
+
+                #@v_turret.rotateAround(@v_center, rad_per)
+
+                missile = weapon.missile
+                size = 5
+                color = missile.color
+                rotation = if (idx % 2) is 0 then 0 else Math.PI
+
+                missile_data =
+                    Position: {}
+                    Sprite:
+                        shape: 'enemyscout'
+                        width: size
+                        height: size
+                        stroke_style: color
+                    Spawn:
+                        x: (@v_turret.x - 50) + ( (11 * (idx/2)) % 50 )
+                        y: @v_turret.y
+                        rotation: rotation
+                        ttl: missile.ttl
+                    Collidable:
+                        on_collide:
+                            destruct: true
+                            damage: missile.damage
+                    Thruster:
+                        dv: missile.speed
+                        max_v: missile.speed
+                        active: true
+                    Seeker:
+                        rad_per_sec: missile.rad_per_sec
+                        acquisition_delay: missile.acquisition_delay
+                        error: missile.error
+                        target: turret.target
+                    Health:
+                        max: missile.health
+                        show_bar: false
+                    RadarPing:
+                        color: color
+                        size: 3
+                    WeaponsTarget:
+                        team: "invaders"
+                    Tombstone:
+                        load:
+                            Position: {}
+                            Explosion:
+                                ttl: 0.75
+                                radius: size * 2
+                                max_particles: 15
+                                max_particle_size: 1.5
+                                max_velocity: 100
+                                color: color
+
+                missile_data['Missile'] = {}
+                for k,v in missile
+                    missile_data.Missile[k] = v
+
+                components = @world.entities.loadComponents(missile_data)
+                e = @world.entities.create(components...)
+                gid = @world.entities.groupForEntity(eid)
+                @world.entities.addToGroup(gid, e)
+
+                turret.loading = weapon.loading_time
+                turret.target = null
+
     class BeamWeaponSystem extends System
         @DAMAGE_TYPE = 'Beam'
 
@@ -828,6 +989,30 @@ define [
         
         constructor: () ->
             @stats = {}
+
+        update_match: (t_delta, eid, weap) ->
+
+            pos = @world.entities.get(eid, C.Position)
+            weap.x = pos.x
+            weap.y = pos.y
+            
+            # Figure out the number of available beams
+            weap.active_beams = Math.min(weap.active_beams,
+                                         weap.max_beams)
+            return if weap.active_beams is 0
+
+            # Calculate current beam weapon parameters
+            stats = @calculate_stats(weap)
+            for k, v of stats
+                weap.current_stats[k] = v
+
+            # Charge beams, target any that have become available.
+            to_target = @charge_beams(t_delta, stats, weap)
+            if to_target.length > 0
+                @target_beams(t_delta, stats, weap, eid, to_target)
+
+            # Discharge beams, apply damage to targets
+            @discharge_beams(t_delta, stats, weap, eid)
 
         calculate_stats: (weap) ->
             # Scale beam parameters so that more beams are faster, yet have the
@@ -857,30 +1042,6 @@ define [
                     dmg_penalty: 1.0 - (perc_active * weap.dmg_penalty)
 
             return @stats[key]
-
-        update_match: (t_delta, eid, weap) ->
-
-            pos = @world.entities.get(eid, C.Position)
-            weap.x = pos.x
-            weap.y = pos.y
-            
-            # Figure out the number of available beams
-            weap.active_beams = Math.min(weap.active_beams,
-                                         weap.max_beams)
-            return if weap.active_beams is 0
-
-            # Calculate current beam weapon parameters
-            stats = @calculate_stats(weap)
-            for k, v of stats
-                weap.current_stats[k] = v
-
-            # Charge beams, target any that have become available.
-            to_target = @charge_beams(t_delta, stats, weap)
-            if to_target.length > 0
-                @target_beams(t_delta, stats, weap, eid, to_target)
-
-            # Discharge beams, apply damage to targets
-            @discharge_beams(t_delta, stats, weap, eid)
         
         # Perform beam charging. Immediately after charging, a beam can target.
         charge_beams: (t_delta, stats, weap) ->
@@ -1034,5 +1195,6 @@ define [
         System, SpawnSystem, BouncerSystem, SpinSystem, OrbiterSystem,
         ViewportSystem, PointerInputSystem, CollisionSystem, SeekerSystem,
         ThrusterSystem, ClickCourseSystem, KeyboardInputSystem,
-        BeamWeaponSystem, HealthSystem, ExplosionSystem, RadarSystem
+        BeamWeaponSystem, HealthSystem, ExplosionSystem, RadarSystem,
+        MissileWeaponSystem
     }
