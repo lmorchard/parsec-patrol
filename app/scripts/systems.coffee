@@ -85,7 +85,8 @@ define [
             
             @world.subscribe SpawnSystem.MSG_DESPAWN, (msg, data) =>
                 spawn = @world.entities.get(data.entity_id, C.Spawn)
-                spawn.destroy = true
+                if spawn
+                    spawn.destroy = true
 
         update_match: (t_delta, eid, spawn) ->
             return if not @world
@@ -95,14 +96,23 @@ define [
             if spawn.destroy
                 tombstone = @world.entities.get(eid, C.Tombstone)
                 if tombstone
+
                     components = if tombstone.load
                         @world.entities.loadComponents(tombstone.load)
                     else
                         tombstone.components
-                    t_eid = @world.entities.create(
-                        new C.Spawn({x: pos.x, y: pos.y}),
-                        components...
-                    )
+
+                    # Modify existing Spawn component, or add new one, that
+                    # positions tombstone at last position of destroyed
+                    found_spawn = false
+                    for c in components when c.type is 'Spawn'
+                        found_spawn = true
+                        c.x = pos.x
+                        c.y = pos.y
+                    if not found_spawn
+                        components.push(new C.Spawn({x: pos.x, y: pos.y}))
+
+                    t_eid = @world.entities.create(components...)
                     gid = @world.entities.groupForEntity(eid)
                     if gid isnt null
                         @world.entities.addToGroup(gid, t_eid)
@@ -123,6 +133,10 @@ define [
                 spawn.spawned = true
                 @world.publish @constructor.MSG_SPAWN,
                     entity_id: eid, spawn: spawn
+
+                if spawn.capture_camera
+                    @world.publish ViewportSystem.MSG_CAPTURE_CAMERA,
+                        entity_id: eid
 
     class RadarSystem extends System
         match_component: C.Position
@@ -179,6 +193,8 @@ define [
             @ctx.restore()
 
     class ViewportSystem extends System
+        @MSG_CAPTURE_CAMERA = 'viewport.capture_camera'
+
         glow: false
         draw_grid: true
         draw_bounding_boxes: false
@@ -224,6 +240,9 @@ define [
             bound_resize = () => @resize()
             @window.addEventListener 'resize', bound_resize, false
             @window.addEventListener 'orientationchange', bound_resize, false
+
+            @world.subscribe @constructor.MSG_CAPTURE_CAMERA, (msg, data) =>
+                @follow_entity = data.entity_id
 
         setViewportSize: (width, height) ->
             @viewport_width = width

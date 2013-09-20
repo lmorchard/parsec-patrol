@@ -60,6 +60,7 @@ define ['entities', 'underscore'], (Entities, _) ->
             x: 0
             y: 0
             destroy: false
+            capture_camera: false
 
     class Tombstone extends Component
         @defaults:

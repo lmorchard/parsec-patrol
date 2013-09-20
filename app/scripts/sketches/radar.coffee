@@ -41,7 +41,7 @@ define [
         "entities": {
             "sun": {
                 "Sprite": { "shape": "star" },
-                "Spawn": { "position_logic": "center" },
+                "Spawn": { "position_logic": "center", },
                 "RadarPing": { "color": "#ff0" },
                 "Position": {}
             },
@@ -50,7 +50,10 @@ define [
                 "Sprite": { "shape": "hero" },
                 "Position": {},
                 "Collidable": {},
-                "Spawn": { "x": -65, "y": 65 },
+                "Spawn": {
+                    "x": -65, "y": 65,
+                    "capture_camera": true
+                },
                 "Thruster": { "dv": 250, "max_v": 100, "active": false },
                 "Seeker": { "rad_per_sec": Math.PI },
                 "ClickCourse": { "stop_on_arrival": true },
@@ -77,6 +80,9 @@ define [
                             "max_particle_size": 1.5,
                             "max_velocity": 300,
                             "color": "#fff"
+                        },
+                        "Spawn": {
+                            "capture_camera": true
                         }
                     }
                 }
@@ -90,8 +96,6 @@ define [
     c_hero_health = world.entities.get("hero", C.Health)
     world.current_scene = scene = _.keys(data.groups)[0]
 
-    vp.follow_entity = "hero"
-    
     v_center = new Vector2D(0, 0)
     spawn_enemy = () ->
         v_spawn = new Vector2D(0, -1500 * Math.random())
