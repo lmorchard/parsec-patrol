@@ -934,7 +934,7 @@ define [
                         height: size
                         stroke_style: color
                     Spawn:
-                        x: (@v_turret.x - 50) + ( (11 * (idx/2)) % 50 )
+                        x: (@v_turret.x - 30) + ( (15 * (idx/2)) % 50 )
                         y: @v_turret.y
                         rotation: rotation
                         ttl: missile.ttl
@@ -948,7 +948,7 @@ define [
                         active: true
                     Seeker:
                         rad_per_sec: missile.rad_per_sec
-                        acquisition_delay: missile.acquisition_delay
+                        acquisition_delay: missile.acquisition_delay * Math.random()
                         error: missile.error
                         target: turret.target
                     Health:
