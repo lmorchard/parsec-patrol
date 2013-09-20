@@ -130,6 +130,10 @@ define ['entities', 'underscore'], (Entities, _) ->
 
         constructor: (props) ->
             super props
+            @current_stats = {
+                max_charge: 0, charge_rate: 0, discharge_rate: 0,
+                beam_range: 0, beam_range_sq: 0, dmg_penalty: 0
+            }
             @beams = ({
                 target: null,
                 x: 0,

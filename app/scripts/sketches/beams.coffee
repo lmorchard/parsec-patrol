@@ -1,17 +1,23 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore', 'Vector2D', 'utils'
+    'underscore', 'Vector2D', 'utils', 'dat'
 ], (
-    W, E, C, S, PubSub, $, _, Vector2D, Utils
+    W, E, C, S, PubSub, $, _, Vector2D, Utils, dat
 ) ->
-    MEASURE_DPS = false
-    MAX_ENEMIES = 24
+    stats = {
+        dps: 0,
+        enemies_ct: 0,
+    }
+    options = {
+        max_enemies: 24,
+        measure_dps: true
+    }
 
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
         
     world = new W.World(640, 480,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
+        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
@@ -53,6 +59,7 @@ define [
                 "BeamWeapon": {
                     "max_beams": 15,
                     "active_beams": 9,
+                    "dmg_penalty": 0.2,
                     "max_range": 1250,
                     "max_power": 4500,
                     "charge_rate": 4500,
@@ -85,11 +92,6 @@ define [
     v_spawn = new Vector2D(0, -300)
     v_center = new Vector2D(0, 0)
     enemy_ct = 0
-
-    $('#beam_sel').click (ev) ->
-        target_el = $(ev.target)
-        c_hero_beam.active_beams = target_el.attr('value')
-        return false
 
     spawn_enemy = () ->
         enemy_ct++
@@ -135,13 +137,19 @@ define [
         e = em.create(components...)
         em.addToGroup(scene, e)
 
+    world.subscribe S.SpawnSystem.MSG_SPAWN, (msg, data) =>
+        scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+        stats.enemies_ct = scouts.length
+
     world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
         type_name = em.get(data.entity_id, C.TypeName)
         
+        scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
+        stats.enemies_ct = scouts.length
+
         # Respawn an enemy, if necessary
         if type_name?.name is "EnemyScout"
-            scouts = (eid for eid, tn of em.getComponents(C.TypeName) when tn.name is 'EnemyScout')
-            if scouts.length <= MAX_ENEMIES
+            if scouts.length <= options.max_enemies
                 spawn_enemy()
 
         # Reload after a few seconds, if the hero ship dies
@@ -149,37 +157,54 @@ define [
             r = () -> location.reload()
             setTimeout r, 5000
 
-    if MAX_ENEMIES
-        for idx in [1..MAX_ENEMIES]
+    if options.max_enemies
+        for idx in [1..options.max_enemies]
             spawn_enemy()
 
-    if MEASURE_DPS
-        damage_log = []
-        world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
-            
-            # Only count hero ship DPS
-            type_name = em.get(data.from, C.TypeName)
-            return if type_name?.name isnt "HeroShip"
+    damage_log = []
+    world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
+        return if not options.measure_dps
+        
+        # Only count hero ship DPS
+        type_name = em.get(data.from, C.TypeName)
+        return if type_name?.name isnt "HeroShip"
 
-            # This is wasted damage - target already dead.
-            health = em.get(data.to, C.Health)
-            return if not health
+        # This is wasted damage - target already dead.
+        health = em.get(data.to, C.Health)
+        return if not health
 
-            t_now = Utils.now()
+        t_now = Utils.now()
 
-            damage_log.push([t_now, data.amount])
-            while t_now - damage_log[0][0] > 30000
-                damage_log.shift()
+        damage_log.push([t_now, data.amount])
+        while t_now - damage_log[0][0] > 30000
+            damage_log.shift()
 
-            t_start = damage_log[0][0]
-            t_end = damage_log[damage_log.length-1][0]
-            duration = t_end - t_start
+        t_start = damage_log[0][0]
+        t_end = damage_log[damage_log.length-1][0]
+        duration = t_end - t_start
 
-            dmg_sum = 0
-            for entry in damage_log
-                dmg_sum += entry[1]
-            
-            dps = dmg_sum / (duration/1000)
-            $('#dps').attr('value', "#{dps}")
+        dmg_sum = 0
+        for entry in damage_log
+            dmg_sum += entry[1]
+        
+        stats.dps = dmg_sum / (duration/1000)
     
+    gui = new dat.GUI()
+    # gui.add(vp, 'use_sprite_cache')
+    # gui.add(vp, 'use_draw_buffer')
+    gui.add(options, 'max_enemies', 1, 200).step(10)
+    gui.add(stats, 'enemies_ct').listen()
+    gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
+    gui.add(options, 'measure_dps')
+    gui.add(stats, 'dps').listen()
+    gui.add(c_hero_beam.current_stats, 'beam_range').listen()
+    gui.add(c_hero_beam.current_stats, 'max_charge').listen()
+    gui.add(c_hero_beam.current_stats, 'charge_rate').listen()
+    gui.add(c_hero_beam.current_stats, 'discharge_rate').listen()
+    gui.add(c_hero_beam.current_stats, 'dmg_penalty', 0.0, 1.0).step(0.001).listen()
+
+    f_beams = gui.addFolder('beams')
+    for idx in [0..c_hero_beam.max_beams-1]
+        f_beams.add(c_hero_beam.beams[idx], 'charge', 0, 4500).listen()
+
     world.start()

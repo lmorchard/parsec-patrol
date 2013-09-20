@@ -830,7 +830,8 @@ define [
                     # during target range-finding later. (Maybe this is dumb?)
                     beam_range_sq: Math.pow(beam_range, 2)
                     # Damage penalty for splitting the beam
-                    dmg_penalty: 1 - (perc_active * weap.dmg_penalty)
+                    dmg_penalty: 1.0 - (perc_active * weap.dmg_penalty)
+
             return @stats[key]
 
         update_match: (t_delta, eid, weap) ->
@@ -846,6 +847,8 @@ define [
 
             # Calculate current beam weapon parameters
             stats = @calculate_stats(weap)
+            for k, v of stats
+                weap.current_stats[k] = v
 
             # Charge beams, target any that have become available.
             to_target = @charge_beams(t_delta, stats, weap)
@@ -866,7 +869,9 @@ define [
                         beam.charge = stats.max_charge
                         beam.charging = false
                         beam.target = null
-                        to_target.push(beam)
+
+                if beam.target is null
+                    to_target.push(beam)
 
             return to_target
 
@@ -904,14 +909,9 @@ define [
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
 
-                # A beam charging does no damage.
-                continue if beam.charging
-
-                # Update the beam's end-point, if the target still exists.
-                t_pos = @world.entities.get(beam.target, C.Position)
-                if t_pos
-                    beam.x = t_pos.x
-                    beam.y = t_pos.y
+                # A beam charging does no damage
+                if beam.charging or beam.target is null
+                    continue
 
                 # Consume charge for beam, start charging cycle if needed
                 discharge = stats.discharge_rate * t_delta
@@ -924,12 +924,17 @@ define [
                 # Damage is power discharged, with some wasteage
                 dmg = discharge * stats.dmg_penalty
 
-                # Send damage to the target
-                @world.publish HealthSystem.MSG_DAMAGE,
-                    to: beam.target
-                    from: eid
-                    kind: @constructor.DAMAGE_TYPE
-                    amount: dmg
+                # Update the beam's end-point and send damage, if the target
+                # still exists.
+                t_pos = @world.entities.get(beam.target, C.Position)
+                if t_pos
+                    beam.x = t_pos.x
+                    beam.y = t_pos.y
+                    @world.publish HealthSystem.MSG_DAMAGE,
+                        to: beam.target
+                        from: eid
+                        kind: @constructor.DAMAGE_TYPE
+                        amount: dmg
 
     class HealthSystem extends System
         @MSG_DAMAGE = 'health.damage'
@@ -973,7 +978,7 @@ define [
                     p.dx = @v_scratch.x
                     p.dy = @v_scratch.y
                     p.mr = explosion.radius * Math.random()
-                    p.s = explosion.max_particle_size #* Math.random()
+                    p.s = explosion.max_particle_size # * Math.random()
                     p.free = false
 
                 if not p.free
