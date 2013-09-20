@@ -165,6 +165,8 @@ define [
             spawn_enemy()
 
     gui = new dat.GUI()
+    gui.add(vp, 'use_sprite_cache')
+    gui.add(vp, 'use_draw_buffer')
     gui.add(vp, 'zoom', 1, 15).step(0.25)
     gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
     gui.add(options, 'max_enemies', 1, 200).step(10)

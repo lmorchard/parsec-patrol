@@ -192,28 +192,31 @@ define [
         constructor: (@window, @game_area, @canvas,
                       @window_scale_x=1.0, @window_scale_y=1.0,
                       @zoom=1.0, @grid_size=150, @grid_color='#111',
-                      @use_sprite_cache=false) ->
-            @ctx = @canvas.getContext('2d')
+                      @use_sprite_cache=false, @use_draw_buffer=true) ->
+
+            @buffer_canvas = document.createElement('canvas')
+            @buffer_canvas.width = @canvas.width
+            @buffer_canvas.height = @canvas.height
+
+            @buffer_ctx = @buffer_canvas.getContext('2d')
+            @screen_ctx = @canvas.getContext('2d')
+
             @viewport_ratio = 1.0
             @follow_entity = null
 
             @sprite_cache = {}
-            if true or @use_sprite_cache
-                for name in @sprite_names
-                    canvas_size = @source_size + 10
-                    canvas = $("""
-                        <canvas width="#{canvas_size}"
-                                height="#{canvas_size}"
-                                id="sprite_#{name}"></canvas>
-                    """)
-                    # $(@canvas).after(canvas)
-                    @sprite_cache[name] = canvas[0]
-                    ctx = canvas[0].getContext("2d")
-                    ctx.translate(canvas_size / 2, canvas_size / 2)
-                    ctx.lineWidth = 3
-                    ctx.strokeStyle = "#fff"
-                    @['draw_sprite_' + name](ctx, @source_size, @source_size)
-
+            for name in @sprite_names
+                canvas_size = @source_size + 10
+                canvas = document.createElement('canvas')
+                canvas.width = canvas_size
+                canvas.height = canvas_size
+                # $(@canvas).after(canvas)
+                @sprite_cache[name] = canvas
+                ctx = canvas.getContext("2d")
+                ctx.translate(canvas_size / 2, canvas_size / 2)
+                ctx.lineWidth = 3
+                ctx.strokeStyle = "#fff"
+                @['draw_sprite_' + name](ctx, @source_size, @source_size)
 
         setWorld: (world) ->
             super world
@@ -240,10 +243,17 @@ define [
             
             @canvas.width = new_w * @window_scale_x
             @canvas.height = new_h * @window_scale_y
+            @buffer_canvas.width = @canvas.width
+            @buffer_canvas.height = @canvas.height
 
             @setViewportSize(@canvas.width, @canvas.height)
 
         draw: (t_delta) ->
+
+            if @use_draw_buffer
+                @ctx = @buffer_ctx
+            else
+                @ctx = @screen_ctx
 
             zoomed_ratio = @viewport_ratio * @zoom
 
@@ -305,6 +315,9 @@ define [
 
             @ctx.restore()
 
+            if @use_draw_buffer
+                @screen_ctx.drawImage(@buffer_canvas, 0, 0)
+
         draw_scene: (t_delta, visible_left, visible_top, visible_right, visible_bottom) ->
             scene = @world.entities.entitiesForGroup(@world.current_scene)
             for eid, ignore of scene
@@ -317,16 +330,17 @@ define [
 
                 @draw_beams t_delta, eid, pos
 
-                continue if pos.x < visible_left or pos.x > visible_right
-                continue if pos.y < visible_top or pos.y > visible_bottom
+                # Skip drawing offscreen entities
+                # FIXME: Account for partially-offscreen entities
+                if pos.x < visible_left or pos.x > visible_right or
+                        pos.y < visible_top or pos.y > visible_bottom
+                    continue
 
                 @ctx.save()
                 @ctx.translate(pos.x, pos.y)
 
                 sprite = @world.entities.get(eid, C.Sprite)
                 if sprite
-                    sprite_size = 20
-
                     w = sprite.width
                     h = sprite.height
 
@@ -337,7 +351,7 @@ define [
                         @ctx.strokeRect(0-wb, 0-wb, w, h)
 
                     @draw_health_bar t_delta, eid, w, h
-                    @draw_sprite t_delta, eid, w, h, pos, sprite_size, sprite
+                    @draw_sprite t_delta, eid, w, h, pos, sprite
 
                 explosion = @world.entities.get(eid, C.Explosion)
                 if explosion
@@ -464,7 +478,7 @@ define [
 
                 @ctx.restore()
 
-        draw_sprite: (t_delta, eid, w, h, pos, sprite_size, sprite) ->
+        draw_sprite: (t_delta, eid, w, h, pos, sprite) ->
 
             @ctx.rotate(pos.rotation)
 
@@ -472,7 +486,7 @@ define [
                 @ctx.drawImage(
                     @sprite_cache[sprite.shape] || @sprite_cache['default'],
                     5, 5, @source_size, @source_size,
-                    0, 0, w, h)
+                    0-(w/2), 0-(h/2), w, h)
                 return
 
             @ctx.fillStyle = "#000"
@@ -482,19 +496,8 @@ define [
                 @ctx.shadowBlur = 4
             @ctx.lineWidth = 1.25
 
-            switch sprite.shape
-                when 'star'
-                    @draw_sprite_star(@ctx, w, h)
-                when 'hero'
-                    @draw_sprite_hero(@ctx, w, h)
-                when 'enemyscout'
-                    @draw_sprite_enemyscout(@ctx, w, h)
-                when 'enemycruiser'
-                    @draw_sprite_enemycruiser(@ctx, w, h)
-                when 'torpedo'
-                    @draw_sprite_torpedo(@ctx, w, h)
-                else
-                    @draw_sprite_default(@ctx, w, h)
+            shape_fn = @['draw_sprite_' + sprite.shape] || @draw_sprite_default
+            shape_fn.call(@, @ctx, w, h)
         
         draw_sprite_default: (ctx, w, h) ->
             ctx.beginPath()
@@ -525,7 +528,13 @@ define [
             ctx.beginPath()
             ctx.moveTo(0, 0-(h*0.5))
             ctx.lineTo(0-w*0.45, h*0.5)
-            ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
+
+            ctx.lineTo(0-w*0.125, h*0.125)
+            ctx.lineTo(0, h*0.25)
+            ctx.lineTo(0+w*0.125, h*0.125)
+            
+            #ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
+            
             ctx.lineTo(w*0.45, h*0.5)
             ctx.lineTo(0, 0-(h*0.5))
             ctx.moveTo(0, 0-(h*0.5))

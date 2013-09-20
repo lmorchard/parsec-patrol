@@ -4,22 +4,13 @@ define [
 ], (
     W, E, C, S, PubSub, $, _, dat
 ) ->
-    gui = new dat.GUI()
-
     canvas = document.getElementById('gameCanvas')
     area = document.getElementById('gameArea')
 
     world = new W.World(640, 480,
-        new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
-        new S.PointerInputSystem(canvas),
-        new S.ClickCourseSystem,
+        vp = new S.ViewportSystem(window, area, canvas, 1.0, 1.0),
         new S.SpawnSystem,
         new S.OrbiterSystem,
-        new S.SeekerSystem,
-        new S.ThrusterSystem,
-        new S.HealthSystem,
-        new S.BeamWeaponSystem,
-        new S.ExplosionSystem,
     )
 
     world.load(data = {
@@ -63,8 +54,20 @@ define [
         groups: {
             "10": ["10", "20", "30", "40", "50", "60"]
         },
+        current_scene: '10'
     })
 
+    gui = new dat.GUI()
+    gui.add(vp, 'use_draw_buffer')
+    gui.add(vp, 'use_sprite_cache')
+    gui.add(vp, 'draw_bounding_boxes')
+
     world.measure_fps = true
-    world.current_scene = _.keys(data.groups)[0]
-    world.start()
+    
+    window.C = C
+    window.E = E
+    window.W = W
+    window.world = world
+    window.vp = vp
+    
+    () -> world.start()

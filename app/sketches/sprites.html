@@ -14,7 +14,7 @@
                 requirejs.config({
                     baseUrl: '../scripts'
                 });
-                require(['sketches/sprites']);
+                require(['sketches/sprites'], function (p) { p(); });
             });
         </script>
     </body>
