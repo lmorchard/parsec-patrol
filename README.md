@@ -22,6 +22,8 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
+* Merge world & entity manager - they're not really useful separately
+
 * Spawner component
     * Opposite of tombstone
     * Generate entities periodically, randomly, up to a max on scene
