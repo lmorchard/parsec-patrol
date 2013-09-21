@@ -1,6 +1,6 @@
 {
   "name": "underscore-amd",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "repository": {
     "type": "git",
     "url": "git://github.com/amdjs/underscore.git"

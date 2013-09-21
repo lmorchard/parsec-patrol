@@ -1,12 +1,12 @@
 <!doctype html>
 <html class="no-js">
     <head>
-        <title>Beams - Sketches</title>
+        <title>Missiles - Sketches</title>
         <link rel="stylesheet" href="../styles/styls.css">
         <style type="text/css">
             #readouts {
                 position: absolute;
-                left:0; bottom: 0; right: 0; top: 95%;
+                left:0; bottom: 0; right: 0; top: 85%;
                 opacity: 0.55; background: #000; color: #fff
             }
             #readouts ul { list-style-type: none; margin: 0; padding: 0 }
@@ -23,7 +23,7 @@
                 requirejs.config({
                     baseUrl: '../scripts'
                 });
-                require(['sketches/beams']);
+                require(['sketches/missiles'], function (p) { p(); });
             });
         </script>
     </body>
