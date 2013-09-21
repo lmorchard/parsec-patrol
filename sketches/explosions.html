@@ -3,31 +3,22 @@
     <head>
         <title>Explosions - Sketches</title>
         <link rel="stylesheet" href="../styles/styls.css">
-        <style type="text/css">
-            #readouts {
-                position: absolute;
-                left:0; bottom: 0; right: 0; top: 85%;
-                opacity: 0.55; background: #000; color: #fff
-            }
-            #readouts ul { list-style-type: none; margin: 0; padding: 0 }
-            #readouts ul li { width: 50%; float: left }
-        </style>
     </head>
     <body>
-        <div id="gameArea">
-            <canvas style="height: 100%" id="gameCanvas"></canvas>
-            <form id="readouts">
-                <button id="save">Save</button>
-                <textarea id="out" rows="8" style="width: 100%"></textarea>
-            </form>
-        </div>
+        <canvas style="height: 100%" id="gameCanvas"></canvas>
         <script src="../bower_components/requirejs/require.js"></script>
         <script>
             require(['../scripts/common'], function (config) {
                 requirejs.config({
                     baseUrl: '../scripts'
                 });
-                require(['sketches/explosions']);
+                require(['utils', 'sketches/explosions'],
+                    function (utils, p) {
+                        canvas = document.getElementById('gameCanvas')
+                        utils.maximizeCanvas(window, canvas)
+                        p(canvas).start()
+                    }
+                );
             });
         </script>
     </body>

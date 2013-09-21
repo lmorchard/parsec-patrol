@@ -1,1 +1,1 @@
-(function(){define([],function(){var e;return e=0,{generateID:function(){return e++},now:function(){return Date.now()}}})}).call(this);
+(function(){define([],function(){var e;return e=0,{generateID:function(){return e++},now:function(){return Date.now()},maximizeCanvas:function(e,t){var n;return n=function(){return t.style.width=e.innerWidth+"px",t.width=e.innerWidth,t.style.height=e.innerHeight+"px",t.height=e.innerHeight},n(),e.addEventListener("resize",n,!1),e.addEventListener("orientationchange",n,!1)}}})}).call(this);

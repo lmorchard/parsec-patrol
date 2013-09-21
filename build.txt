@@ -1,43 +1,11 @@
 
-bower_components/mocha/mocha.css
+styles/styls.css
 ----------------
-bower_components/mocha/mocha.css
+styles/styls.css
 
-bower_components/backbone-amd/test/vendor/qunit.css
+styles/main.css
 ----------------
-bower_components/backbone-amd/test/vendor/qunit.css
-
-bower_components/backbone-amd/docs/docco.css
-----------------
-bower_components/backbone-amd/docs/docco.css
-
-bower_components/backbone-amd/docs/public/stylesheets/normalize.css
-----------------
-bower_components/backbone-amd/docs/public/stylesheets/normalize.css
-
-bower_components/backbone-amd/examples/todos/todos.css
-----------------
-bower_components/backbone-amd/examples/todos/todos.css
-
-bower_components/hammerjs/tests/libs/qunit.css
-----------------
-bower_components/hammerjs/tests/libs/qunit.css
-
-bower_components/underscore-amd/test/vendor/qunit.css
-----------------
-bower_components/underscore-amd/test/vendor/qunit.css
-
-bower_components/underscore-amd/docs/docco.css
-----------------
-bower_components/underscore-amd/docs/docco.css
-
-bower_components/underscore-amd/docs/public/stylesheets/normalize.css
-----------------
-bower_components/underscore-amd/docs/public/stylesheets/normalize.css
-
-bower_components/async/deps/nodeunit.css
-----------------
-bower_components/async/deps/nodeunit.css
+styles/main.css
 
 bower_components/modernizr/test/caniuse_files/style.css
 ----------------
@@ -47,13 +15,45 @@ bower_components/modernizr/test/qunit/qunit.css
 ----------------
 bower_components/modernizr/test/qunit/qunit.css
 
-styles/main.css
+bower_components/mocha/mocha.css
 ----------------
-styles/main.css
+bower_components/mocha/mocha.css
 
-styles/styls.css
+bower_components/async/deps/nodeunit.css
 ----------------
-styles/styls.css
+bower_components/async/deps/nodeunit.css
+
+bower_components/underscore-amd/docs/docco.css
+----------------
+bower_components/underscore-amd/docs/docco.css
+
+bower_components/underscore-amd/docs/public/stylesheets/normalize.css
+----------------
+bower_components/underscore-amd/docs/public/stylesheets/normalize.css
+
+bower_components/underscore-amd/test/vendor/qunit.css
+----------------
+bower_components/underscore-amd/test/vendor/qunit.css
+
+bower_components/backbone-amd/examples/todos/todos.css
+----------------
+bower_components/backbone-amd/examples/todos/todos.css
+
+bower_components/backbone-amd/docs/docco.css
+----------------
+bower_components/backbone-amd/docs/docco.css
+
+bower_components/backbone-amd/docs/public/stylesheets/normalize.css
+----------------
+bower_components/backbone-amd/docs/public/stylesheets/normalize.css
+
+bower_components/backbone-amd/test/vendor/qunit.css
+----------------
+bower_components/backbone-amd/test/vendor/qunit.css
+
+bower_components/hammerjs/tests/libs/qunit.css
+----------------
+bower_components/hammerjs/tests/libs/qunit.css
 
 scripts/common.js
 ----------------
@@ -81,18 +81,22 @@ scripts/sketches/beams.js
 
 scripts/sketches/click-course.js
 ----------------
+scripts/vendor/dat.gui.js
 scripts/sketches/click-course.js
 
 scripts/sketches/collisions.js
 ----------------
+scripts/vendor/dat.gui.js
 scripts/sketches/collisions.js
 
 scripts/sketches/explosions.js
 ----------------
+scripts/vendor/dat.gui.js
 scripts/sketches/explosions.js
 
 scripts/sketches/seeker.js
 ----------------
+scripts/vendor/dat.gui.js
 scripts/sketches/seeker.js
 
 scripts/sketches/sprites.js
