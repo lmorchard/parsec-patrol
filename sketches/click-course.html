@@ -16,7 +16,7 @@
                     function (utils, p) {
                         canvas = document.getElementById('gameCanvas')
                         utils.maximizeCanvas(window, canvas)
-                        p(canvas).start()
+                        utils.pauseWhenHidden(p(canvas).start(), false)
                     }
                 );
             });

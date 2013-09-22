@@ -30,7 +30,7 @@
             </li>
             <li>
                 <p><a href="sketches/click-course.html">click-course</a></p>
-                <canvas id="click-course" width="400" height="300"></canvas>
+                <canvas id="clickcourse" width="400" height="300"></canvas>
             </li>
             <li>
                 <p><a href="sketches/explosions.html">explosions</a></p>
@@ -61,14 +61,18 @@
                          'sketches/radar','sketches/missiles'],
                     function (utils, sprites, collisions, seeker, clickcourse,
                               explosions, beams, radar, missiles) {
-                        sprites(document.getElementById('sprites'), false, false).start();
-                        collisions(document.getElementById('collisions'), false, false).start();
-                        seeker(document.getElementById('seeker'), false, false).start();
-                        clickcourse(document.getElementById('click-course'), false, false).start();
-                        explosions(document.getElementById('explosions'), false, false).start();
-                        beams(document.getElementById('beams'), false, false).start();
-                        radar(document.getElementById('radar'), false, false).start();
-                        missiles(document.getElementById('missiles'), false, false).start();
+                        sketches = [
+                            [sprites, 'sprites'], [collisions, 'collisions'],
+                            [seeker, 'seeker'], [clickcourse, 'clickcourse'],
+                            [explosions, 'explosions'], [beams, 'beams'],
+                            [radar, 'radar'], [missiles, 'missiles']
+                        ];
+                        for (var i=0; i<sketches.length; i++) {
+                            var fn = sketches[i][0],
+                                id = sketches[i][1],
+                                canvas = document.getElementById(id);
+                            utils.pauseWhenHidden(fn(canvas, false, false).start());
+                        }
                     }
                 );
             });
