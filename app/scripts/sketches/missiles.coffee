@@ -103,12 +103,12 @@ define [
                 "WeaponsTarget" : { "team": "invaders" },
                 "MissileWeapon": {
                     "target_team": "commonwealth",
-                    "max_turrets": 50,
-                    "active_turrets": 20,
+                    "max_turrets": 100,
+                    "active_turrets": 15,
                     "loading_time": 3.0,
                     "target_range": 1000,
                     "missile": {
-                        "health": 70,
+                        "health": 20,
                         "damage": 1000,
                         "speed": 125,
                         "ttl": 6.0,
@@ -165,9 +165,10 @@ define [
         gui = new dat.GUI()
         gui.add(world, 'is_paused')
         gui.add(vp, 'use_sprite_cache')
-        gui.add(vp, 'zoom', 1, 15).step(0.25)
+        gui.add(vp, 'zoom', 0.125, 15).step(0.125)
+        gui.add(vp, 'use_grid')
         gui.add(c_hero_beam, 'active_beams', 1, 15).step(1)
-        gui.add(c_enemy_turrets, 'active_turrets', 1, 50).step(1)
+        gui.add(c_enemy_turrets, 'active_turrets', 1, 100).step(1)
 
     ###
     f_missiles = gui.addFolder('turrets')

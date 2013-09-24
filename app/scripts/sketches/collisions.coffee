@@ -13,6 +13,9 @@ define [
         entities_ct: 0
     }
 
+    update_stats = () ->
+        stats.entities_ct = (eid for eid, s of world.entities.getComponents(C.Spawn) when (s.spawned and !s.destroy)).length
+
     class ColorCollideSystem extends S.System
         match_component: C.Collidable
         update_match: (dt, eid, collidable) ->
@@ -45,18 +48,20 @@ define [
 
     presets = [
         [-170, 4, 100, 0, 10, 10, 10],
-        [170, -4, -100, 0, 10, 10, 10]
+        [170, -4, -100, 0, 10, 10, 10],
+        [4, -170, 0, 100, 10, 10, 10],
+        [-4, 170, 0, -100, 10, 10, 10]
     ]
     spawn_presets = () ->
         return if world.is_paused
 
-        stats.entities_ct = (eid for eid, tn of world.entities.getComponents(C.Position)).length
+        update_stats()
         return if stats.entities_ct >= options.max_entities
 
         for [x, y, dx, dy, width, height, m] in presets
             components = world.entities.loadComponents
                 Sprite:
-                    shape: "default"
+                    shape: "asteroid"
                     width: width
                     height: height
                 Collidable: {}
@@ -67,7 +72,7 @@ define [
                 Motion:
                     dx: dx
                     dy: dy
-                    drotation: 0 #(Math.PI * 2) * Math.random()
+                    drotation: (Math.PI*4) * Math.random()
                 Bouncer:
                     mass: m
                 Tombstone:
@@ -87,15 +92,15 @@ define [
     spawn_random = () ->
         return if world.is_paused
 
-        stats.entities_ct = (eid for eid, tn of world.entities.getComponents(C.Position)).length
+        update_stats()
         return if stats.entities_ct >= options.max_entities
 
         v_spawn = new Vector2D(0, 20 + (100 * Math.random()))
-        v_spawn.rotateAround(v_center, (Math.PI*2) * Math.random())
+        v_spawn.rotateAround(v_center, (Math.PI*4) * Math.random())
         
         components = world.entities.loadComponents
             Sprite:
-                shape: "default"
+                shape: "asteroid"
                 width: 15
                 height: 15
             Spawn:
@@ -104,7 +109,7 @@ define [
             Motion:
                 dx: options.max_speed - (options.max_speed * 2 * Math.random())
                 dy: options.max_speed - (options.max_speed * 2 * Math.random())
-                drotation: 0 # (Math.PI * 2) * Math.random()
+                drotation: (Math.PI * 1) * Math.random()
             Bouncer:
                 mass: 15
             Collidable: {}
@@ -123,18 +128,16 @@ define [
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
 
-    if options.max_entities then for idx in [1..options.max_entities/2]
-        spawn_random()
-
-    setInterval spawn_presets, 500
-    setInterval spawn_random, 500
+    setInterval spawn_presets, 700
+    setInterval spawn_random, 200
 
     vp.draw_bounding_boxes = false
     world.measure_fps = measure_fps
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused').listen()
-        gui.add(vp, 'zoom', 0.125, 3).step(0.25)
+        gui.add(vp, 'zoom', 0.125, 3).step(0.125)
+        gui.add(vp, 'use_grid')
         gui.add(vp, 'use_sprite_cache')
         gui.add(vp, 'draw_bounding_boxes')
         gui.add(options, 'max_entities', 1, 500).step(1)

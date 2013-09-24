@@ -1,8 +1,8 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore', 'dat'
+    'underscore', 'dat', 'Vector2D'
 ], (
-    W, E, C, S, PubSub, $, _, dat
+    W, E, C, S, PubSub, $, _, dat, Vector2D
 ) -> (canvas, use_gui=true, measure_fps=true) ->
 
     world = new W.World(640, 480,
@@ -11,50 +11,43 @@ define [
         new S.OrbiterSystem,
     )
 
-    world.load(data = {
-        entities: {
-            "10": {
-                Sprite: { shape: "star" },
-                Spawn: { position_logic: "center" },
+    world.load
+        entities:
+            sun:
+                Sprite:
+                    shape: "star"
                 Position: {}
-            },
-            "20": {
-                Sprite: { shape: "hero" },
-                Spawn: { position_logic: "at", x: 100, y: -100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "30": {
-                Sprite: { shape: "enemyscout" },
-                Spawn: { position_logic: "at", x: -100, y: -100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "40": {
-                Sprite: { shape: "enemycruiser" },
-                Spawn: { position_logic: "at", x: -150, y: 0 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "50": {
-                Sprite: { shape: "asteroid" },
-                Spawn: { position_logic: "at", x: -100, y: 100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-            "60": {
-                Sprite: { shape: "torpedo" },
-                Spawn: { position_logic: "at", x: 100, y: 100 },
-                Orbit: { orbited_id: "10", rad_per_sec: 0.31415 },
-                Position: {}
-            },
-        },
-        groups: {
-            "10": ["10", "20", "30", "40", "50", "60"]
-        },
-        current_scene: '10'
-    })
+                Spawn:
+                    x: 0
+                    y: 0
+        groups:
+            main: ['sun']
+        current_scene: 'main'
 
+    sprites = [
+        'hero', 'enemyscout', 'enemycruiser', 'asteroid', 'torpedo'
+    ]
+
+    rad_per = (Math.PI*2) / sprites.length
+    v_center = new Vector2D(0, 0)
+    v_spawn = new Vector2D(0, -200)
+    for name in sprites
+        v_spawn.rotateAround(v_center, rad_per)
+        components = world.entities.loadComponents
+            Sprite:
+                shape: name
+                width: 50
+                height: 50
+            Position: {}
+            Spawn:
+                x: v_spawn.x
+                y: v_spawn.y
+            Orbit:
+                orbited_id: 'sun'
+                rad_per_sec: Math.PI / 10
+        eid = world.entities.create components...
+        world.entities.addToGroup 'main', eid
+    
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused')

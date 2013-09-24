@@ -222,13 +222,14 @@ define [
 
         constructor: (@canvas) ->
 
-            #@buffer_canvas = document.createElement('canvas')
-            #@ctx = @buffer_canvas.getContext('2d')
-            #@screen_ctx = @canvas.getContext('2d')
-
-            @buffer_canvas = null
-            @screen_ctx = null
-            @ctx = @canvas.getContext('2d')
+            if true
+                @buffer_canvas = document.createElement('canvas')
+                @ctx = @buffer_canvas.getContext('2d')
+                @screen_ctx = @canvas.getContext('2d')
+            else
+                @buffer_canvas = null
+                @screen_ctx = null
+                @ctx = @canvas.getContext('2d')
 
             @viewport_width = 0
             @viewport_height = 0
@@ -568,18 +569,18 @@ define [
             @ctx.lineWidth = 1.25
 
             shape_fn = @['draw_sprite_' + sprite.shape] || @draw_sprite_default
-            shape_fn.call(@, @ctx, w, h)
+            shape_fn.call(@, @ctx, w, h, sprite, t_delta)
         
-        draw_sprite_default: (ctx, w, h) ->
+        draw_sprite_default: (ctx, w, h, sprite, t_delta) ->
             @ctx.strokeRect(0-(w/2), 0-(h/2), w, h)
-
-        draw_sprite_star: (ctx, w, h) ->
+            
+        draw_sprite_star: (ctx, w, h, sprite, t_delta) ->
             ctx.fillStyle = "#ccc"
             ctx.beginPath()
             ctx.arc(0, 0, w/2, 0, Math.PI*2, true)
             ctx.fill()
 
-        draw_sprite_hero: (ctx, w, h) ->
+        draw_sprite_hero: (ctx, w, h, sprite, t_delta) ->
             ctx.rotate(Math.PI)
             ctx.beginPath()
             ctx.moveTo(0-(w*0.125), 0-(h/2))
@@ -593,7 +594,7 @@ define [
             ctx.lineTo(0-(w*0.125), 0-(h/2))
             ctx.stroke()
 
-        draw_sprite_enemyscout: (ctx, w, h) ->
+        draw_sprite_enemyscout: (ctx, w, h, sprite, t_delta) ->
             ctx.beginPath()
             ctx.moveTo(0, 0-(h*0.5))
             ctx.lineTo(0-w*0.45, h*0.5)
@@ -609,7 +610,7 @@ define [
             ctx.moveTo(0, 0-(h*0.5))
             ctx.stroke()
 
-        draw_sprite_enemycruiser: (ctx, w, h) ->
+        draw_sprite_enemycruiser: (ctx, w, h, sprite, t_delta) ->
             hu = h / 5
             wu = w / 4
 
@@ -629,7 +630,7 @@ define [
 
             ctx.stroke()
 
-        draw_sprite_torpedo: (ctx, w, h) ->
+        draw_sprite_torpedo: (ctx, w, h, sprite, t_delta) ->
             ctx.beginPath()
             ctx.moveTo(0-(w*0.5), 0)
             ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0, true)
@@ -639,6 +640,28 @@ define [
             ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5, false)
             ctx.moveTo(0-w*0.5, 0)
             ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0, false)
+            ctx.stroke()
+
+        draw_sprite_asteroid: (ctx, w, h, sprite, t_delta) ->
+            if not sprite.points
+                NUM_POINTS = 6 + Math.floor(9 * Math.random())
+                MAX_RADIUS = w / 2
+                MIN_RADIUS = MAX_RADIUS * 0.75
+                ROTATION = (Math.PI*2) / NUM_POINTS
+
+                v_center = new Vector2D(0, 0)
+                v_point = new Vector2D(0, 0)
+                sprite.points = []
+                for idx in [1..NUM_POINTS]
+                    v_point.setValues(_.random(MIN_RADIUS, MAX_RADIUS), 0)
+                    v_point.rotateAround(v_center, idx * ROTATION)
+                    sprite.points.push([v_point.x, v_point.y])
+
+            ctx.beginPath()
+            ctx.moveTo(sprite.points[0][0], sprite.points[0][1])
+            for idx in [1..sprite.points.length-1]
+                ctx.lineTo(sprite.points[idx][0], sprite.points[idx][1])
+            ctx.lineTo(sprite.points[0][0], sprite.points[0][1])
             ctx.stroke()
 
     class CollisionSystem extends System
@@ -681,6 +704,9 @@ define [
             
             matches = @world.entities.getComponents(@match_component)
             for a_eid, a_collidable of matches
+                spawn = @world.entities.store.Spawn[a_eid]
+                continue if not spawn or (spawn.destroy) or (not spawn.spawned)
+
                 a_pos = @world.entities.store.Position[a_eid]
                 a_sprite = @world.entities.store.Sprite[a_eid]
                 items = qt.retrieve({
@@ -702,6 +728,9 @@ define [
             for eid, ignore of @world.entities.entitiesForGroup(gid)
                 collidable = @world.entities.store.Collidable[eid]
                 continue if not collidable
+
+                spawn = @world.entities.store.Spawn[eid]
+                continue if not spawn or (spawn.destroy) or (not spawn.spawned)
 
                 for k, v of collidable.in_collision_with
                     delete collidable.in_collision_with[k]
@@ -730,12 +759,13 @@ define [
             )
             if not already_in_collision
                 left_dist = Math.abs(a_pos.x - b_pos.x) * 2
-                top_dist = Math.abs(a_pos.y - b_pos.y) * 2
                 width_total = a_sprite.width + b_sprite.width
-                height_total = a_sprite.height + b_sprite.height
-                if (left_dist <= width_total and top_dist <= height_total)
-                    a_collidable.in_collision_with[b_eid] = Date.now()
-                    b_collidable.in_collision_with[a_eid] = Date.now()
+                if left_dist <= width_total
+                    top_dist = Math.abs(a_pos.y - b_pos.y) * 2
+                    height_total = a_sprite.height + b_sprite.height
+                    if top_dist <= height_total
+                        a_collidable.in_collision_with[b_eid] = 1 #Date.now()
+                        b_collidable.in_collision_with[a_eid] = 1 #Date.now()
 
     class OldCollisionSystem extends System
         constructor: () ->
