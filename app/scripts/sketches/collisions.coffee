@@ -46,72 +46,23 @@ define [
             main: [ ]
         current_scene: "main"
 
-    presets = [
-        [-170, 4, 100, 0, 10, 10, 10],
-        [170, -4, -100, 0, 10, 10, 10],
-        [4, -170, 0, 100, 10, 10, 10],
-        [-4, 170, 0, -100, 10, 10, 10]
-    ]
-    spawn_presets = () ->
-        return if world.is_paused
-
-        update_stats()
-        return if stats.entities_ct >= options.max_entities
-
-        for [x, y, dx, dy, width, height, m] in presets
-            components = world.entities.loadComponents
-                Sprite:
-                    shape: "asteroid"
-                    width: width
-                    height: height
-                Collidable: {}
-                Position: {}
-                Spawn:
-                    x: x
-                    y: y
-                Motion:
-                    dx: dx
-                    dy: dy
-                    drotation: (Math.PI*4) * Math.random()
-                Bouncer:
-                    mass: m
-                Tombstone:
-                    load:
-                        Position: {}
-                        Explosion:
-                            ttl: 0.5
-                            radius: 40
-                            max_particles: 25
-                            max_particle_size: 1.25
-                            max_velocity: 250
-                            color: "#f33"
-            eid = world.entities.create(components...)
-            world.entities.addToGroup('main', eid)
-
-    v_center = new Vector2D(0, 0)
-    spawn_random = () ->
-        return if world.is_paused
-
-        update_stats()
-        return if stats.entities_ct >= options.max_entities
-
-        v_spawn = new Vector2D(0, 20 + (100 * Math.random()))
-        v_spawn.rotateAround(v_center, (Math.PI*4) * Math.random())
-        
+    spawn_asteroid = (x, y, width, height, dx, dy, dr, mass, health) ->
         components = world.entities.loadComponents
             Sprite:
                 shape: "asteroid"
-                width: 15
-                height: 15
+                width: width
+                height: height
             Spawn:
-                x: v_spawn.x
-                y: v_spawn.y
+                x: x
+                y: y
             Motion:
-                dx: options.max_speed - (options.max_speed * 2 * Math.random())
-                dy: options.max_speed - (options.max_speed * 2 * Math.random())
-                drotation: (Math.PI * 1) * Math.random()
+                dx: dx
+                dy: dy
+                drotation: dr
             Bouncer:
-                mass: 15
+                mass: mass
+            Health:
+                max: health
             Collidable: {}
             Position: {}
             Tombstone:
@@ -127,6 +78,41 @@ define [
 
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
+
+    presets = [
+        [-170, 4, 100, 0, 10, 10, 10],
+        [170, -4, -100, 0, 10, 10, 10],
+        [4, -170, 0, 100, 10, 10, 10],
+        [-4, 170, 0, -100, 10, 10, 10]
+    ]
+    spawn_presets = () ->
+        return if world.is_paused
+
+        update_stats()
+        return if stats.entities_ct >= options.max_entities
+
+        for [x, y, dx, dy, width, height, m] in presets
+            dr = (Math.PI*4) * Math.random()
+            spawn_asteroid(x, y, width, height, dx, dy, dr, m, 200)
+
+    v_center = new Vector2D(0, 0)
+    spawn_random = () ->
+        return if world.is_paused
+
+        update_stats()
+        return if stats.entities_ct >= options.max_entities
+
+        v_spawn = new Vector2D(0, 20 + (100 * Math.random()))
+        v_spawn.rotateAround(v_center, (Math.PI*4) * Math.random())
+        
+        spawn_asteroid(
+            v_spawn.x, v_spawn.y, 15, 15
+            options.max_speed - (options.max_speed * 2 * Math.random()),
+            options.max_speed - (options.max_speed * 2 * Math.random()),
+            (Math.PI * 1) * Math.random(),
+            15,
+            400
+        )
 
     setInterval spawn_presets, 700
     setInterval spawn_random, 200

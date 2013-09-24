@@ -465,7 +465,7 @@ define [
 
             perc = (health.current / health.max)
             
-            top = 0 - (h/2) - 10
+            top = 0 - (h/2) - 5
             left = 0 - (w/2)
            
             @ctx.save()
