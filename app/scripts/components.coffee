@@ -63,6 +63,7 @@ define ['entities', 'underscore'], (Entities, _) ->
         @defaults:
             type: 'Bouncer'
             mass: 10.0
+            damage: 0.0
 
     class Spawn extends Component
         @defaults:

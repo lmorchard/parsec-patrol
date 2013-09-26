@@ -833,6 +833,8 @@ define [
             pos.rotation += motion.drotation * dt
 
     class BouncerSystem extends System
+        @DAMAGE_TYPE = 'Bounce'
+
         match_component: C.Bouncer
 
         update_match: (dt, eid, bouncer) ->
@@ -858,14 +860,14 @@ define [
                 c_bouncer = @world.entities.get(c_eid, C.Bouncer)
 
                 @resolve_elastic_collision(dt,
-                    pos, sprite, motion, bouncer,
-                    c_pos, c_sprite, c_motion, c_bouncer)
+                    eid, pos, sprite, motion, bouncer,
+                    c_eid, c_pos, c_sprite, c_motion, c_bouncer)
 
         # See also: https://gist.github.com/kevinfjbecker/1670913
         # TODO: Optimize this. Reuse vector objects, at least.
         resolve_elastic_collision: (dt,
-                pos, sprite, motion, bouncer,
-                c_pos, c_sprite, c_motion, c_bouncer) ->
+                eid, pos, sprite, motion, bouncer,
+                c_eid, c_pos, c_sprite, c_motion, c_bouncer) ->
             
             # Vector between entities
             dn = new Vector2D(pos.x - c_pos.x, pos.y - c_pos.y)
@@ -893,14 +895,6 @@ define [
                 y: dn.y * (sprite.width + c_sprite.width - delta)
             }
              
-            # TODO: This seems unnecessary and abrupt. Remove?
-            if false
-                # Push entities apart, proportional to mass
-                pos.x = pos.x + mt.x * m2 / M
-                pos.y = pos.y + mt.y * m2 / M
-                c_pos.x = c_pos.x - mt.x * m1 / M
-                c_pos.y = c_pos.y - mt.y * m1 / M
-            
             # Velocity vectors of entities before collision
             v1 = if motion
                 new Vector2D(motion.dx, motion.dy)
@@ -924,12 +918,58 @@ define [
             # calculate new velocity vectors of the entitys, the tangential
             # component stays the same, the normal component changes analog to
             # the 1-Dimensional case
+            
             if motion
-                motion.dx = v1t.x + dn.x * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
-                motion.dy = v1t.y + dn.y * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
+
+                v_motion = new Vector2D(
+                    v1t.x + dn.x * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
+                    v1t.y + dn.y * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
+                )
+
+                if bouncer.damage
+                    # Convert a fraction of the rebound velocity into damage
+                    # relative to mass
+                    v_motion.multiplyScalar(1.0 - bouncer.damage)
+                    dmg = v_motion.magnitude() * bouncer.damage * m1
+                    @world.publish HealthSystem.MSG_DAMAGE,
+                        to: eid
+                        from: c_eid
+                        kind: @constructor.DAMAGE_TYPE
+                        amount: dmg / 2
+                    @world.publish HealthSystem.MSG_DAMAGE,
+                        to: c_eid
+                        from: eid
+                        kind: @constructor.DAMAGE_TYPE
+                        amount: dmg / 2
+                
+                motion.dx = v_motion.x
+                motion.dy = v_motion.y
+
             if c_motion
-                c_motion.dx = v2t.x - dn.x * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
-                c_motion.dy = v2t.y - dn.y * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
+                
+                v_c_motion = new Vector2D(
+                    v2t.x - dn.x * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
+                    v2t.y - dn.y * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
+                )
+
+                if c_bouncer.damage
+                    # Convert a fraction of the rebound velocity into damage
+                    # relative to mass
+                    v_c_motion.multiplyScalar(1.0 - c_bouncer.damage)
+                    dmg = v_c_motion.magnitude() * c_bouncer.damage * m2
+                    @world.publish HealthSystem.MSG_DAMAGE,
+                        to: eid
+                        from: c_eid
+                        kind: @constructor.DAMAGE_TYPE
+                        amount: dmg / 2
+                    @world.publish HealthSystem.MSG_DAMAGE,
+                        to: c_eid
+                        from: eid
+                        kind: @constructor.DAMAGE_TYPE
+                        amount: dmg / 2
+
+                c_motion.dx = v_c_motion.x
+                c_motion.dy = v_c_motion.y
 
     # TODO: MotionSystem conflicts with & obsoletes this.
     class SpinSystem extends System

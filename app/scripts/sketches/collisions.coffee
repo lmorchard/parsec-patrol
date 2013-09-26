@@ -25,12 +25,13 @@ define [
             else
                 sprite.stroke_style = "#f33"
                 # Destroy colliding entities if we're over capacity
-                if stats.entities_ct >= options.max_entities
-                    @world.entities.get(eid, C.Spawn).destroy = true
+                #if stats.entities_ct >= options.max_entities
+                #    @world.entities.get(eid, C.Spawn).destroy = true
 
-    world = new W.World(400, 400,
+    world = new W.World(600, 600,
         vp = new S.ViewportSystem(canvas),
         new S.SpawnSystem,
+        new S.HealthSystem,
         new S.CollisionSystem,
         new S.BouncerSystem,
         new S.MotionSystem,
@@ -38,7 +39,7 @@ define [
         new S.ExplosionSystem,
         new ColorCollideSystem,
     )
-    vp.zoom = 1
+    vp.zoom = 1.0
 
     world.load
         entities: {}
@@ -59,10 +60,11 @@ define [
                 dx: dx
                 dy: dy
                 drotation: dr
-            Bouncer:
-                mass: mass
             Health:
                 max: health
+            Bouncer:
+                mass: mass
+                damage: 0.007
             Collidable: {}
             Position: {}
             Tombstone:
@@ -74,16 +76,16 @@ define [
                         max_particles: 25
                         max_particle_size: 1.25
                         max_velocity: 250
-                        color: "#f33"
+                        color: "#fff"
 
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
 
     presets = [
-        [-170, 4, 100, 0, 10, 10, 10],
-        [170, -4, -100, 0, 10, 10, 10],
-        [4, -170, 0, 100, 10, 10, 10],
-        [-4, 170, 0, -100, 10, 10, 10]
+        [-270, 4, 100, 0, 15, 15, 100],
+        [270, -4, -100, 0, 15, 15, 100],
+        [4, -270, 0, 100, 15, 15, 100],
+        [-4, 270, 0, -100, 15, 15, 100]
     ]
     spawn_presets = () ->
         return if world.is_paused
@@ -93,7 +95,7 @@ define [
 
         for [x, y, dx, dy, width, height, m] in presets
             dr = (Math.PI*4) * Math.random()
-            spawn_asteroid(x, y, width, height, dx, dy, dr, m, 200)
+            spawn_asteroid(x, y, width, height, dx, dy, dr, m, 400)
 
     v_center = new Vector2D(0, 0)
     spawn_random = () ->
@@ -102,20 +104,23 @@ define [
         update_stats()
         return if stats.entities_ct >= options.max_entities
 
-        v_spawn = new Vector2D(0, 20 + (100 * Math.random()))
+        v_spawn = new Vector2D(0, 40 + (200 * Math.random()))
         v_spawn.rotateAround(v_center, (Math.PI*4) * Math.random())
         
         spawn_asteroid(
-            v_spawn.x, v_spawn.y, 15, 15
+            v_spawn.x, v_spawn.y, 30, 30
             options.max_speed - (options.max_speed * 2 * Math.random()),
             options.max_speed - (options.max_speed * 2 * Math.random()),
             (Math.PI * 1) * Math.random(),
-            15,
-            400
+            400,
+            4000
         )
 
-    setInterval spawn_presets, 700
+    setInterval spawn_presets, 400
     setInterval spawn_random, 200
+
+    #world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
+    #    console.log("DMG #{msg} #{JSON.stringify(data)}")
 
     vp.draw_bounding_boxes = false
     world.measure_fps = measure_fps
