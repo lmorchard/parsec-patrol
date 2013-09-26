@@ -644,9 +644,9 @@ define [
 
         draw_sprite_asteroid: (ctx, w, h, sprite, t_delta) ->
             if not sprite.points
-                NUM_POINTS = 6 + Math.floor(9 * Math.random())
+                NUM_POINTS = 5 + Math.floor(12 * Math.random())
                 MAX_RADIUS = w / 2
-                MIN_RADIUS = MAX_RADIUS * 0.75
+                MIN_RADIUS = MAX_RADIUS * 0.7
                 ROTATION = (Math.PI*2) / NUM_POINTS
 
                 v_center = new Vector2D(0, 0)
@@ -919,6 +919,8 @@ define [
             # component stays the same, the normal component changes analog to
             # the 1-Dimensional case
             
+            # TODO: refactor below
+            
             if motion
 
                 v_motion = new Vector2D(
@@ -928,7 +930,7 @@ define [
 
                 if bouncer.damage
                     # Convert a fraction of the rebound velocity into damage
-                    # relative to mass
+                    # proportionate to mass
                     v_motion.multiplyScalar(1.0 - bouncer.damage)
                     dmg = v_motion.magnitude() * bouncer.damage * m1
                     @world.publish HealthSystem.MSG_DAMAGE,
@@ -954,7 +956,7 @@ define [
 
                 if c_bouncer.damage
                     # Convert a fraction of the rebound velocity into damage
-                    # relative to mass
+                    # proportionate to mass
                     v_c_motion.multiplyScalar(1.0 - c_bouncer.damage)
                     dmg = v_c_motion.magnitude() * c_bouncer.damage * m2
                     @world.publish HealthSystem.MSG_DAMAGE,
