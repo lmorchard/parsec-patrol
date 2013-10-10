@@ -395,7 +395,7 @@ define [
                 vapor_trail = @world.entities.get(eid, C.VaporTrail)
                 if vapor_trail
                     @draw_vapor_trail t_delta, eid, vapor_trail
-
+                
                 @ctx.translate(pos.x, pos.y)
 
                 sprite = @world.entities.get(eid, C.Sprite)
@@ -415,7 +415,7 @@ define [
                 explosion = @world.entities.get(eid, C.Explosion)
                 if explosion
                     @draw_explosion t_delta, eid, explosion
-
+                
                 @ctx.restore()
 
         draw_vapor_trail: (t_delta, eid, vapor_trail) ->
@@ -552,7 +552,11 @@ define [
 
         draw_sprite: (t_delta, eid, w, h, pos, sprite) ->
 
+            BASE_W = 100
+            BASE_H = 100
+
             @ctx.rotate(pos.rotation)
+            @ctx.scale(w / BASE_W, h / BASE_H)
 
             if @use_sprite_cache
                 @ctx.drawImage(
@@ -569,29 +573,29 @@ define [
             @ctx.lineWidth = 1.25
 
             shape_fn = @['draw_sprite_' + sprite.shape] || @draw_sprite_default
-            shape_fn.call(@, @ctx, w, h, sprite, t_delta)
-        
+            shape_fn.call(@, @ctx, BASE_W, BASE_H, sprite, t_delta)
+
         draw_sprite_default: (ctx, w, h, sprite, t_delta) ->
-            @ctx.strokeRect(0-(w/2), 0-(h/2), w, h)
+            ctx.strokeRect(-50, -50, 100, 100)
             
         draw_sprite_star: (ctx, w, h, sprite, t_delta) ->
             ctx.fillStyle = "#ccc"
             ctx.beginPath()
-            ctx.arc(0, 0, w/2, 0, Math.PI*2, true)
+            ctx.arc(0, 0, 50, 0, Math.PI*2, true)
             ctx.fill()
 
         draw_sprite_hero: (ctx, w, h, sprite, t_delta) ->
             ctx.rotate(Math.PI)
             ctx.beginPath()
-            ctx.moveTo(0-(w*0.125), 0-(h/2))
-            ctx.lineTo(0-(w*0.25), 0-(h/2))
-            ctx.lineTo(0-(w*0.5), 0)
-            ctx.arc(0, 0, w/2, Math.PI, 0, true)
-            ctx.lineTo(w*0.25, 0-(h/2))
-            ctx.lineTo(w*0.125, 0-(h/2))
-            ctx.lineTo(w*0.25, 0)
-            ctx.arc(0, 0, (w*0.25), 0, Math.PI, true)
-            ctx.lineTo(0-(w*0.125), 0-(h/2))
+            ctx.moveTo(-12.5, -50)
+            ctx.lineTo(-25, -50)
+            ctx.lineTo(-50, 0)
+            ctx.arc(0, 0, 50, Math.PI, 0, true)
+            ctx.lineTo(25, -50)
+            ctx.lineTo(12.5, -50)
+            ctx.lineTo(25, 0)
+            ctx.arc(0, 0, 25, 0, Math.PI, true)
+            ctx.lineTo(-12.5, -50)
             ctx.stroke()
 
         draw_sprite_enemyscout: (ctx, w, h, sprite, t_delta) ->
@@ -632,21 +636,21 @@ define [
 
         draw_sprite_torpedo: (ctx, w, h, sprite, t_delta) ->
             ctx.beginPath()
-            ctx.moveTo(0-(w*0.5), 0)
-            ctx.arc(0-(w*0.5), 0-(h*0.5), w*0.5, Math.PI*0.5, 0, true)
-            ctx.moveTo(0, 0-(h*0.5))
-            ctx.arc(w*0.5, 0-(h*0.5), w*0.5, Math.PI, Math.PI*0.5, true)
-            ctx.moveTo(0, h*0.5)
-            ctx.arc(w*0.5, h*0.5, w*0.5, Math.PI*1.0, Math.PI*1.5, false)
-            ctx.moveTo(0-w*0.5, 0)
-            ctx.arc(0-(w*0.5), h*0.5, w*0.5, Math.PI*1.5, 0, false)
+            ctx.moveTo(-50, 0)
+            ctx.arc(-50, -50, 50, Math.PI*0.5, 0, true)
+            ctx.moveTo(0, -50)
+            ctx.arc(50, -50, 50, Math.PI, Math.PI*0.5, true)
+            ctx.moveTo(0, 50)
+            ctx.arc(50, 50, 50, Math.PI*1.0, Math.PI*1.5, false)
+            ctx.moveTo(-50, 0)
+            ctx.arc(-50, 50, 50, Math.PI*1.5, 0, false)
             ctx.stroke()
 
         draw_sprite_asteroid: (ctx, w, h, sprite, t_delta) ->
             if not sprite.points
-                NUM_POINTS = 5 + Math.floor(12 * Math.random())
-                MAX_RADIUS = w / 2
-                MIN_RADIUS = MAX_RADIUS * 0.7
+                NUM_POINTS = 7 + Math.floor(12 * Math.random())
+                MAX_RADIUS = 50
+                MIN_RADIUS = 35
                 ROTATION = (Math.PI*2) / NUM_POINTS
 
                 v_center = new Vector2D(0, 0)
