@@ -351,9 +351,10 @@ define [
         draw_backdrop: (t_delta) ->
             return if not @use_grid
 
-            @ctx.save()
             @ctx.strokeStyle = @grid_color
             @ctx.lineWidth = 1
+
+            @ctx.beginPath()
 
             grid_offset_x = @visible_left % @grid_size
             start = @visible_left - grid_offset_x
@@ -370,7 +371,6 @@ define [
                 @ctx.lineTo(@visible_right, top)
 
             @ctx.stroke()
-            @ctx.restore()
 
         draw_scene: (t_delta) ->
             scene = @world.entities.entitiesForGroup(@world.current_scene)
