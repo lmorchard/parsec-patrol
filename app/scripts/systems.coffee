@@ -248,7 +248,7 @@ define [
                 ctx.translate(canvas_size / 2, canvas_size / 2)
                 ctx.lineWidth = 3
                 ctx.strokeStyle = "#fff"
-                @['draw_sprite_' + name](ctx, @source_size, @source_size)
+                @['draw_sprite_' + name](ctx)
 
         setWorld: (world) ->
             super world
@@ -567,24 +567,25 @@ define [
 
             @ctx.fillStyle = "#000"
             @ctx.strokeStyle = sprite.stroke_style
+            line_ratio = (BASE_W / w)
             if @glow
                 @ctx.shadowColor = sprite.stroke_style
-                @ctx.shadowBlur = 4
-            @ctx.lineWidth = 1.25
+                @ctx.shadowBlur = 4.0 * line_ratio
+            @ctx.lineWidth = 1.0 * line_ratio
 
             shape_fn = @['draw_sprite_' + sprite.shape] || @draw_sprite_default
-            shape_fn.call(@, @ctx, BASE_W, BASE_H, sprite, t_delta)
+            shape_fn.call(@, @ctx, sprite, t_delta)
 
-        draw_sprite_default: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_default: (ctx, sprite, t_delta) ->
             ctx.strokeRect(-50, -50, 100, 100)
             
-        draw_sprite_star: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_star: (ctx, sprite, t_delta) ->
             ctx.fillStyle = "#ccc"
             ctx.beginPath()
             ctx.arc(0, 0, 50, 0, Math.PI*2, true)
             ctx.fill()
 
-        draw_sprite_hero: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_hero: (ctx, sprite, t_delta) ->
             ctx.rotate(Math.PI)
             ctx.beginPath()
             ctx.moveTo(-12.5, -50)
@@ -598,23 +599,22 @@ define [
             ctx.lineTo(-12.5, -50)
             ctx.stroke()
 
-        draw_sprite_enemyscout: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_enemyscout: (ctx, sprite, t_delta) ->
             ctx.beginPath()
-            ctx.moveTo(0, 0-(h*0.5))
-            ctx.lineTo(0-w*0.45, h*0.5)
-
-            ctx.lineTo(0-w*0.125, h*0.125)
-            ctx.lineTo(0, h*0.25)
-            ctx.lineTo(0+w*0.125, h*0.125)
-            
-            #ctx.arc(0, h*0.125, w*0.125, Math.PI, 0, true)
-            
-            ctx.lineTo(w*0.45, h*0.5)
-            ctx.lineTo(0, 0-(h*0.5))
-            ctx.moveTo(0, 0-(h*0.5))
+            ctx.moveTo(0, -50)
+            ctx.lineTo(-45, 50)
+            ctx.lineTo(-12.5, 12.5)
+            ctx.lineTo(0, 25)
+            ctx.lineTo(12.5, 12.5)
+            #ctx.arc(0, 12.5, 12.5, Math.PI, 0, true)
+            ctx.lineTo(45, 50)
+            ctx.lineTo(0, -50)
+            ctx.moveTo(0, -50)
             ctx.stroke()
 
-        draw_sprite_enemycruiser: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_enemycruiser: (ctx, sprite, t_delta) ->
+            w = 100
+            h = 100
             hu = h / 5
             wu = w / 4
 
@@ -634,7 +634,7 @@ define [
 
             ctx.stroke()
 
-        draw_sprite_torpedo: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_torpedo: (ctx, sprite, t_delta) ->
             ctx.beginPath()
             ctx.moveTo(-50, 0)
             ctx.arc(-50, -50, 50, Math.PI*0.5, 0, true)
@@ -646,9 +646,9 @@ define [
             ctx.arc(-50, 50, 50, Math.PI*1.5, 0, false)
             ctx.stroke()
 
-        draw_sprite_asteroid: (ctx, w, h, sprite, t_delta) ->
+        draw_sprite_asteroid: (ctx, sprite, t_delta) ->
             if not sprite.points
-                NUM_POINTS = 7 + Math.floor(12 * Math.random())
+                NUM_POINTS = 8 + Math.floor(8 * Math.random())
                 MAX_RADIUS = 50
                 MIN_RADIUS = 35
                 ROTATION = (Math.PI*2) / NUM_POINTS

@@ -164,6 +164,7 @@ define [
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused')
+        gui.add(vp, 'glow')
         gui.add(vp, 'use_sprite_cache')
         gui.add(vp, 'zoom', 0.125, 15).step(0.125)
         gui.add(vp, 'use_grid')

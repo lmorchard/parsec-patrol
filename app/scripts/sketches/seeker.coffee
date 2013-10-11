@@ -20,6 +20,7 @@ define [
     world = new W.World(320, 240,
         new S.PointerInputSystem(canvas),
         new S.SpawnSystem,
+        new S.OrbiterSystem,
         new S.SpinSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
@@ -35,14 +36,16 @@ define [
                 "Position": {}
             },
             "torp": {
-                "Spawn": { "x": 30, "y": 0 },
+                "Spawn": { "x": 70, "y": 0 },
                 "Position": {},
                 "Collidable": {},
-                "PointerFollower": {},
-                "Spin": { "rad_per_sec": Math.PI * 2 },
+                Orbit: {
+                    orbited_id: 'sun',
+                    rad_per_sec: Math.PI * 0.27
+                },
                 "Sprite": {
                     "shape": "torpedo", "stroke_style": "#f33",
-                    "width": 10, "height": 10
+                    "width": 20, "height": 20
                 }
             },
             "enemy3": {
