@@ -64,6 +64,7 @@ define ['entities', 'underscore'], (Entities, _) ->
             type: 'Bouncer'
             mass: 10.0
             damage: 0.0
+            target_team: null
 
     class Spawn extends Component
         @defaults:

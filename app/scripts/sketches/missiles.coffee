@@ -16,9 +16,12 @@ define [
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
+        new S.SpinSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
         new S.MotionSystem,
+        new S.CollisionSystem,
+        new S.BouncerSystem,
         new S.HealthSystem,
         new S.BeamWeaponSystem,
         new S.MissileWeaponSystem,
@@ -42,19 +45,24 @@ define [
                 "TypeName": { "name": "HeroShip" },
                 "Sprite": { "shape": "hero" },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
+                "Bouncer": {
+                    "mass": 1000,
+                    "damage": 0.007
+                },
                 "Spawn": {
                     "x": 200,
                     "y": 0,
                 },
-                "Thruster": { "dv": 250, "max_v": 100, "active": false },
+                "Thruster": { "dv": 250, "max_v": 100, "stop": true },
                 "Seeker": { "rad_per_sec": Math.PI },
                 "ClickCourse": { "stop_on_arrival": true },
                 "Health": { "max": "20000" }
                 "RadarPing": { "color": "#0f0" },
                 "WeaponsTarget" : { "team": "commonwealth" },
                 "BeamWeapon": {
-                    "max_beams": 15,
+                    "max_beams": 1,
                     "active_beams": 10,
                     "max_range": 1250,
                     "max_power": 4500,
@@ -74,9 +82,7 @@ define [
                             "max_velocity": 300,
                             "color": "#fff"
                         },
-                        "Spawn": {
-                            "capture_camera": true
-                        }
+                        "Spawn": { }
                     }
                 }
             },
@@ -88,6 +94,7 @@ define [
                     "stroke_style": "#f33"
                 },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Spin": { "rad_per_sec": Math.PI / 16 }
                 "Spawn": {

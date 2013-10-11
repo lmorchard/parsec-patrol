@@ -858,10 +858,12 @@ define [
                     motion.dy = 0 - motion.dy
 
             for c_eid, ts of collidable.in_collision_with
+                c_bouncer = @world.entities.get(c_eid, C.Bouncer)
+                continue if not c_bouncer
+
                 c_pos = @world.entities.get(c_eid, C.Position)
                 c_sprite = @world.entities.get(c_eid, C.Sprite)
                 c_motion = @world.entities.get(c_eid, C.Motion)
-                c_bouncer = @world.entities.get(c_eid, C.Bouncer)
 
                 @resolve_elastic_collision(dt,
                     eid, pos, sprite, motion, bouncer,
@@ -932,21 +934,7 @@ define [
                     v1t.y + dn.y * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
                 )
 
-                if bouncer.damage
-                    # Convert a fraction of the rebound velocity into damage
-                    # proportionate to mass
-                    v_motion.multiplyScalar(1.0 - bouncer.damage)
-                    dmg = v_motion.magnitude() * bouncer.damage * m1
-                    @world.publish HealthSystem.MSG_DAMAGE,
-                        to: eid
-                        from: c_eid
-                        kind: @constructor.DAMAGE_TYPE
-                        amount: dmg / 2
-                    @world.publish HealthSystem.MSG_DAMAGE,
-                        to: c_eid
-                        from: eid
-                        kind: @constructor.DAMAGE_TYPE
-                        amount: dmg / 2
+                @process_damage(eid, c_eid, v_motion, bouncer, m1)
                 
                 motion.dx = v_motion.x
                 motion.dy = v_motion.y
@@ -958,33 +946,42 @@ define [
                     v2t.y - dn.y * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
                 )
 
-                if c_bouncer.damage
-                    # Convert a fraction of the rebound velocity into damage
-                    # proportionate to mass
-                    v_c_motion.multiplyScalar(1.0 - c_bouncer.damage)
-                    dmg = v_c_motion.magnitude() * c_bouncer.damage * m2
-                    @world.publish HealthSystem.MSG_DAMAGE,
-                        to: eid
-                        from: c_eid
-                        kind: @constructor.DAMAGE_TYPE
-                        amount: dmg / 2
-                    @world.publish HealthSystem.MSG_DAMAGE,
-                        to: c_eid
-                        from: eid
-                        kind: @constructor.DAMAGE_TYPE
-                        amount: dmg / 2
+                @process_damage(eid, c_eid, v_c_motion, c_bouncer, m2)
 
                 c_motion.dx = v_c_motion.x
                 c_motion.dy = v_c_motion.y
+
+        process_damage: (eid, c_eid, v_motion, bouncer, m1) ->
+            return if not bouncer.damage
+
+            if bouncer.target_team
+                c_wt = @world.entities.get(c_wt, C.WeaponsTarget)
+                return if not c_wt
+                return if c_wt.team isnt bouncer.target_team
+            
+            # Convert a fraction of the rebound velocity into damage by mass
+            v_motion.multiplyScalar(1.0 - bouncer.damage)
+            dmg = v_motion.magnitude() * bouncer.damage * m1
+
+            @world.publish HealthSystem.MSG_DAMAGE,
+                to: eid
+                from: c_eid
+                kind: @constructor.DAMAGE_TYPE
+                amount: dmg / 2
+
+            @world.publish HealthSystem.MSG_DAMAGE,
+                to: c_eid
+                from: eid
+                kind: @constructor.DAMAGE_TYPE
+                amount: dmg / 2
 
     # TODO: MotionSystem conflicts with & obsoletes this.
     class SpinSystem extends System
         match_component: C.Spin
 
         update_match: (dt, eid, spin) ->
-            pos = @world.entities.get(eid, C.Position)
-            d_angle = dt * spin.rad_per_sec
-            pos.rotation = (pos.rotation + d_angle) % (Math.PI*2)
+            motion = @world.entities.get(eid, C.Motion)
+            motion.drotation =  spin.rad_per_sec
             
     # TODO: Find a way to reconcile this with MotionSystem as orbit AI
     class OrbiterSystem extends System
@@ -1238,8 +1235,6 @@ define [
                     0 - (Math.PI / 2)
 
                 missile_data =
-                    Position: {}
-                    Motion: {}
                     Sprite:
                         shape: 'enemyscout'
                         width: size
@@ -1250,10 +1245,13 @@ define [
                         y: @v_pos.y
                         rotation: rotation
                         ttl: missile.ttl
-                    Collidable:
-                        on_collide:
-                            destruct: true
-                            damage: missile.damage
+                    Position: {}
+                    Motion: {}
+                    Collidable: {}
+                    Bouncer:
+                        mass: 100
+                        damage: 0.007
+                        target_team: weapon.target_team
                     Thruster:
                         dv: missile.speed
                         max_v: missile.speed
