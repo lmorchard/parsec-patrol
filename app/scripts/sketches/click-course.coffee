@@ -13,6 +13,7 @@ define [
         new S.SpinSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
+        new S.MotionSystem,
     )
 
     em = world.entities
@@ -27,9 +28,10 @@ define [
             "hero": {
                 "Sprite": { "shape": "hero" },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Spawn": { "x": -40, "y": -40 },
-                "Thruster": { "dv": 250, "max_v": 100, "active": false },
+                "Thruster": { "dv": 250, "max_v": 100, "stop": true },
                 "Seeker": { "rad_per_sec": Math.PI },
                 "ClickCourse": { "stop_on_arrival": true },
             },
@@ -41,6 +43,7 @@ define [
                 },
                 "Spawn": { "x": -80, "y": 0 },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Thruster": { "dv": 150, "max_v": 75 },
                 "Seeker": { "target": "hero", "rad_per_sec": Math.PI }
@@ -52,6 +55,7 @@ define [
                 },
                 "Spawn": { "x": 0, "y": 80 },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Thruster": { "dv": 150, "max_v": 75 },
                 "Seeker": { "target": "enemy3", "rad_per_sec": Math.PI }
@@ -63,6 +67,7 @@ define [
                 },
                 "Spawn": { "x": 80, "y": 0 },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Thruster": { "dv": 150, "max_v": 75 },
                 "Seeker": { "target": "enemy4", "rad_per_sec": Math.PI }
@@ -74,6 +79,7 @@ define [
                 },
                 "Spawn": { "x": 80, "y": -80 },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Thruster": { "dv": 150, "max_v": 75 },
                 "Seeker": { "target": "enemy5", "rad_per_sec": Math.PI }

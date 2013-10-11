@@ -22,6 +22,7 @@ define [
         new S.OrbiterSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
+        new S.MotionSystem,
         new S.HealthSystem,
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
@@ -45,6 +46,7 @@ define [
                 "TypeName": { "name": "HeroShip" },
                 "Sprite": { "shape": "hero" },
                 "Position": {},
+                "Motion": {},
                 "Collidable": {},
                 "Spawn": { "x": -65, "y": 65 },
                 "Orbit": { "orbited_id": "sun", "rad_per_sec": Math.PI/4 },
@@ -102,6 +104,7 @@ define [
             },
             "Spawn": { "x": v_spawn.x, "y": v_spawn.y },
             "Position": {},
+            "Motion": {},
             "Collidable": {},
             "Thruster": { "dv": 100, "max_v": 50 },
             "Seeker": { "target": "hero", "rad_per_sec": Math.PI }

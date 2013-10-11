@@ -1042,12 +1042,6 @@ define [
             target_angle = @v_seeker.angleTo(@v_target) + (Math.PI*0.5)
             target_angle += 2*Math.PI if target_angle < 0
 
-            # TODO: This is probably a dumb idea. Random error introduced to
-            # make seekers imperfect and interesting.
-            if seeker.error > 0
-                error = seeker.rad_per_sec * seeker.error
-                target_angle += (error/2) - (error * Math.random())
-
             # Pick the direction from current to target angle
             direction =
                 if target_angle < pos.rotation then -1
@@ -1068,43 +1062,51 @@ define [
             pos.rotation = (pos.rotation + (direction * d_angle)) % (Math.PI*2)
             pos.rotation += 2*Math.PI if pos.rotation < 0
 
-    # TODO: This conflicts with MotionSystem. Rework so that it just actuates
-    # Motion vectors, instead of managing motion directly
     class ThrusterSystem extends System
+        # Simple-minded thruster system. Pushes entity in the direction of
+        # rotation, attempts to apply brakes to enforce a max velocity.
+        
         match_component: C.Thruster
 
         constructor: () ->
             @v_inertia = new Vector2D()
             @v_thrust = new Vector2D()
+            @v_brakes = new Vector2D()
 
         update_match: (dt, eid, thruster) ->
+            return if not thruster.active
+
             pos = @world.entities.get(eid, C.Position)
             motion = @world.entities.get(eid, C.Motion)
+            return if not pos or not motion
 
             @v_inertia.setValues(motion.dx, motion.dy)
 
+            # delta-v available for the current tick
             tick_dv = dt * thruster.dv
-            if not thruster.active
-                # Fire retro-thrusters until inertia is gone
-                @v_inertia.addScalar(0 - tick_dv)
-                @v_inertia.x = 0 if @v_inertia.x < 0
-                @v_inertia.y = 0 if @v_inertia.y < 0
-            else
-                # Create a thrust vector pointing straight up, then rotate it to
-                # correspond with entity
+
+            if not thruster.stop
+                # Create thrust vector per rotation and add to inertia.
                 @v_thrust.setValues(0, 0-tick_dv)
                 @v_thrust.rotate(pos.rotation)
-
-                # Try adding thrust to our current inertia
                 @v_inertia.add(@v_thrust)
 
-                # Enforce the speed limit by scaling the inertia vector back
-                curr_v = @v_inertia.magnitude()
-                if curr_v > thruster.max_v
-                    drag = thruster.max_v / curr_v
-                    @v_inertia.multiplyScalar(drag)
+            if thruster.use_brakes
+                # Try to enforce the max_v limit with braking thrust.
+                max_v = if thruster.stop then 0 else thruster.max_v
+                over_v = @v_inertia.magnitude() - max_v
+                if over_v > 0
+                    # Braking delta-v is max thruster output or remaining overage,
+                    # whichever is smallest. Braking vector opposes inertia.
+                    braking_dv = Math.min(tick_dv, over_v)
+                    @v_brakes.setValues(@v_inertia.x, @v_inertia.y)
+                    @v_brakes.normalize()
+                    @v_brakes.multiplyScalar(0-braking_dv)
+                    @v_inertia.add(@v_brakes)
 
-            # Update inertia
+            # Update inertia. Note that we've been careful only to make changes
+            # to inertia within the delta-v of the thruster. Other influences
+            # on inertia should be preserved.
             motion.dx = @v_inertia.x
             motion.dy = @v_inertia.y
 
@@ -1120,7 +1122,7 @@ define [
             if click_course.active and (@world.inputs.pointer_button_left)
                 click_course.x = @world.inputs.pointer_world_x
                 click_course.y = @world.inputs.pointer_world_y
-                thruster?.active = true
+                thruster?.stop = false
                 seeker?.target =
                     x: click_course.x,
                     y: click_course.y
@@ -1130,7 +1132,7 @@ define [
             y_offset = Math.abs(pos.y - click_course.y)
             if x_offset < sprite.width/2 and y_offset < sprite.height/2
                 if click_course.stop_on_arrival
-                    thruster?.active = false
+                    thruster?.stop = true
                 seeker?.target = null
 
     class MissileWeaponSystem extends System
@@ -1237,6 +1239,7 @@ define [
 
                 missile_data =
                     Position: {}
+                    Motion: {}
                     Sprite:
                         shape: 'enemyscout'
                         width: size
@@ -1258,7 +1261,6 @@ define [
                     Seeker:
                         rad_per_sec: missile.rad_per_sec
                         acquisition_delay: missile.acquisition_delay * Math.random()
-                        error: missile.error
                         target: turret.target
                     Health:
                         max: missile.health

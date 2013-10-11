@@ -41,10 +41,10 @@ define ['entities', 'underscore'], (Entities, _) ->
         @defaults:
             type: 'Thruster'
             active: true
+            stop: false
+            use_brakes: true
             max_v: 0
             dv: 0
-            dx: 0
-            dy: 0
 
     class Orbit extends Component
         @defaults:
@@ -105,7 +105,6 @@ define ['entities', 'underscore'], (Entities, _) ->
         @defaults:
             type: 'Seeker'
             target: null
-            error: 0
             acquisition_delay: 0
             rad_per_sec: 0
 

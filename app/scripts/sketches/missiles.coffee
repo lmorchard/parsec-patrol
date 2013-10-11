@@ -16,10 +16,9 @@ define [
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
         new S.SpawnSystem,
-        new S.SpinSystem,
-        new S.OrbiterSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
+        new S.MotionSystem,
         new S.HealthSystem,
         new S.BeamWeaponSystem,
         new S.MissileWeaponSystem,
@@ -113,7 +112,6 @@ define [
                         "speed": 125,
                         "ttl": 6.0,
                         "color": "#f00",
-                        "error": 0 #0.125,
                         "rad_per_sec": Math.PI * 1.75
                         "acquisition_delay": 0.75
                     }
