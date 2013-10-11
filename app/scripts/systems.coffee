@@ -562,7 +562,7 @@ define [
                 @ctx.drawImage(
                     @sprite_cache[sprite.shape] || @sprite_cache['default'],
                     5, 5, @source_size, @source_size,
-                    0-(w/2), 0-(h/2), w, h)
+                    -50, -50, 100, 100)
                 return
 
             @ctx.fillStyle = "#000"
@@ -571,7 +571,7 @@ define [
             if @glow
                 @ctx.shadowColor = sprite.stroke_style
                 @ctx.shadowBlur = 4.0 * line_ratio
-            @ctx.lineWidth = 1.0 * line_ratio
+            @ctx.lineWidth = 0.75 * line_ratio
 
             shape_fn = @['draw_sprite_' + sprite.shape] || @draw_sprite_default
             shape_fn.call(@, @ctx, sprite, t_delta)
@@ -1019,16 +1019,15 @@ define [
             @v_target = new Vector2D()
 
         update_match: (dt, eid, seeker) ->
-            return if not seeker.target
-
-            pos = @world.entities.get(eid, C.Position)
-            return if not pos
 
             # Process a delay before the seeker "acquires" the target and
             # starts steering. Makes missiles look interesting.
             if seeker.acquisition_delay > 0
                 seeker.acquisition_delay -= dt
                 return
+
+            pos = @world.entities.get(eid, C.Position)
+            return if not pos
 
             target_pos = seeker.target
             if not _.isObject(target_pos)
@@ -1080,8 +1079,9 @@ define [
 
         update_match: (dt, eid, thruster) ->
             pos = @world.entities.get(eid, C.Position)
+            motion = @world.entities.get(eid, C.Motion)
 
-            @v_inertia.setValues(thruster.dx, thruster.dy)
+            @v_inertia.setValues(motion.dx, motion.dy)
 
             tick_dv = dt * thruster.dv
             if not thruster.active
@@ -1105,12 +1105,8 @@ define [
                     @v_inertia.multiplyScalar(drag)
 
             # Update inertia
-            thruster.dx = @v_inertia.x
-            thruster.dy = @v_inertia.y
-
-            # Finally, update position based on inertia
-            pos.x += dt * thruster.dx
-            pos.y += dt * thruster.dy
+            motion.dx = @v_inertia.x
+            motion.dy = @v_inertia.y
 
     class ClickCourseSystem extends System
         match_component: C.ClickCourse
@@ -1281,10 +1277,10 @@ define [
                         load:
                             Position: {}
                             Explosion:
-                                ttl: 0.75
-                                radius: size * 2
+                                ttl: 0.5
+                                radius: size * 4
                                 max_particles: 15
-                                max_particle_size: 1.5
+                                max_particle_size: 1
                                 max_velocity: 100
                                 color: color
 
