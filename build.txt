@@ -1,15 +1,11 @@
 
-styles/main.css
-----------------
-styles/main.css
-
 styles/styls.css
 ----------------
 styles/styls.css
 
-bower_components/underscore-amd/test/vendor/qunit.css
+styles/main.css
 ----------------
-bower_components/underscore-amd/test/vendor/qunit.css
+styles/main.css
 
 bower_components/underscore-amd/docs/docco.css
 ----------------
@@ -19,25 +15,33 @@ bower_components/underscore-amd/docs/public/stylesheets/normalize.css
 ----------------
 bower_components/underscore-amd/docs/public/stylesheets/normalize.css
 
-bower_components/hammerjs/tests/libs/qunit.css
+bower_components/underscore-amd/test/vendor/qunit.css
 ----------------
-bower_components/hammerjs/tests/libs/qunit.css
-
-bower_components/async/deps/nodeunit.css
-----------------
-bower_components/async/deps/nodeunit.css
-
-bower_components/modernizr/test/qunit/qunit.css
-----------------
-bower_components/modernizr/test/qunit/qunit.css
+bower_components/underscore-amd/test/vendor/qunit.css
 
 bower_components/modernizr/test/caniuse_files/style.css
 ----------------
 bower_components/modernizr/test/caniuse_files/style.css
 
+bower_components/modernizr/test/qunit/qunit.css
+----------------
+bower_components/modernizr/test/qunit/qunit.css
+
+bower_components/hammerjs/tests/libs/qunit.css
+----------------
+bower_components/hammerjs/tests/libs/qunit.css
+
 bower_components/mocha/mocha.css
 ----------------
 bower_components/mocha/mocha.css
+
+bower_components/backbone-amd/docs/docco.css
+----------------
+bower_components/backbone-amd/docs/docco.css
+
+bower_components/backbone-amd/docs/public/stylesheets/normalize.css
+----------------
+bower_components/backbone-amd/docs/public/stylesheets/normalize.css
 
 bower_components/backbone-amd/test/vendor/qunit.css
 ----------------
@@ -47,13 +51,9 @@ bower_components/backbone-amd/examples/todos/todos.css
 ----------------
 bower_components/backbone-amd/examples/todos/todos.css
 
-bower_components/backbone-amd/docs/docco.css
+bower_components/async/deps/nodeunit.css
 ----------------
-bower_components/backbone-amd/docs/docco.css
-
-bower_components/backbone-amd/docs/public/stylesheets/normalize.css
-----------------
-bower_components/backbone-amd/docs/public/stylesheets/normalize.css
+bower_components/async/deps/nodeunit.css
 
 scripts/common.js
 ----------------
