@@ -834,7 +834,9 @@ define [
             pos = @world.entities.get(eid, C.Position)
             pos.x += motion.dx * dt
             pos.y += motion.dy * dt
-            pos.rotation += motion.drotation * dt
+            # Update the rotation, ensuring a 0..2*Math.PI range.
+            pos.rotation = (pos.rotation + (motion.drotation*dt)) % (Math.PI*2)
+            pos.rotation += 2*Math.PI if pos.rotation < 0
 
     class BouncerSystem extends System
         @DAMAGE_TYPE = 'Bounce'
@@ -1026,6 +1028,10 @@ define [
             pos = @world.entities.get(eid, C.Position)
             return if not pos
 
+            motion = @world.entities.get(eid, C.Motion)
+            return if not motion
+
+            # Accept either a raw x/y coord or entity ID as target
             target_pos = seeker.target
             if not _.isObject(target_pos)
                 target_pos = @world.entities.get(seeker.target, C.Position)
@@ -1040,9 +1046,7 @@ define [
             target_angle += 2*Math.PI if target_angle < 0
 
             # Pick the direction from current to target angle
-            direction =
-                if target_angle < pos.rotation then -1
-                else 1
+            direction = if target_angle < pos.rotation then -1 else 1
    
             # If the offset between the angles is more than half a circle, go
             # the other way because it'll be shorter.
@@ -1050,14 +1054,18 @@ define [
             if offset > Math.PI
                 direction = 0 - direction
 
-            # Figure out the amount of rotation for this tick. If it's more
-            # than the remaining offset, just rotate that much (or none)
-            d_angle = dt * seeker.rad_per_sec
-            d_angle = offset if d_angle > offset
+            # Work out the desired delta-rotation to steer toward target
+            target_dr = direction * Math.min(seeker.rad_per_sec, offset/dt)
 
-            # Update the rotation, ensuring a 0..2*Math.PI range.
-            pos.rotation = (pos.rotation + (direction * d_angle)) % (Math.PI*2)
-            pos.rotation += 2*Math.PI if pos.rotation < 0
+            # Calculate the delta-rotation impulse required to meet the goal,
+            # but constrain to the capability of the steering thrusters
+            impulse_dr = (target_dr - motion.drotation)
+            if Math.abs(impulse_dr) > seeker.rad_per_sec
+                impulse_dr = if impulse_dr > 0
+                    seeker.rad_per_sec
+                else if impulse_dr < 0
+                    0 - seeker.rad_per_sec
+            motion.drotation += impulse_dr
 
     class ThrusterSystem extends System
         # Simple-minded thruster system. Pushes entity in the direction of

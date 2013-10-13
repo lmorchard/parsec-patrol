@@ -27,11 +27,6 @@ open http://localhost:9000/sketches/
     * Generate variable radius points around center, connect dots
     * break into pieces using tombstones to spawn smaller ones?
 
-* Rework Position & Thruster & Seeker a bit
-    * Refactor inertia, acceleration, etc out of Thruster
-    * Refactor rotation, torque out of Seeker
-    * Then, repulsor & gravity effects can manipulate those values
-
 * "Splash" effect / waypoint sprite at click to indicate current destination
     * Multiple waypoints on single-click? Set destination on double?
 
@@ -60,9 +55,6 @@ open http://localhost:9000/sketches/
     * break into pieces using tombstones to spawn smaller ones?
 
 * Auto-pause when not visible and/or when FPS dips below 10?
-
-* Auto-pause if it looks like we're no longer in the foreground (ie. big drop
-  in FPS from rFA)
 
 * Merge world & entity manager - they're not really useful separately
 

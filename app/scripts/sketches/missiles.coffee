@@ -62,7 +62,7 @@ define [
                 "RadarPing": { "color": "#0f0" },
                 "WeaponsTarget" : { "team": "commonwealth" },
                 "BeamWeapon": {
-                    "max_beams": 1,
+                    "max_beams": 15,
                     "active_beams": 10,
                     "max_range": 1250,
                     "max_power": 4500,
