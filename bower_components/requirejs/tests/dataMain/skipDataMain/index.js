@@ -1,0 +1,1 @@
+define("index",["a"],function(e){e.modified=!0});
