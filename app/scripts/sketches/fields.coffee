@@ -15,21 +15,77 @@ define [
 
     world = new W.World(1600, 1600,
         vp = new S.ViewportSystem(canvas),
+        new S.RadarSystem(canvas, 0.28),
+        new S.PointerInputSystem(canvas),
+        new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.HealthSystem,
         new S.CollisionSystem,
-        # new S.OldCollisionSystem,
         new S.BouncerSystem,
+        new S.SeekerSystem,
+        new S.ThrusterSystem,
         new S.MotionSystem,
         new S.SpinSystem,
+        new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
-    vp.zoom = 1.0
+    vp.zoom = 1.5
+    em = world.entities
 
     world.load
-        entities: {}
+        entities:
+            hero:
+                TypeName:
+                    name: "HeroShip"
+                Sprite:
+                    shape: "hero"
+                Position: {},
+                Motion: {},
+                Collidable: {},
+                Bouncer:
+                    mass: 50000,
+                    damage: 0.007
+                Spawn:
+                    x: 0
+                    y: 0
+                    capture_camera: true
+                Thruster:
+                    dv: 250
+                    max_v: 100
+                    stop: true
+                Seeker:
+                    rad_per_sec: Math.PI
+                ClickCourse:
+                    stop_on_arrival: true
+                Health:
+                    max: 200000
+                RadarPing:
+                    color: "#0f0"
+                WeaponsTarget:
+                    team: "commonwealth"
+                BeamWeapon:
+                    max_beams: 15
+                    active_beams: 9
+                    max_range: 1250
+                    max_power: 4500
+                    charge_rate: 4500
+                    discharge_rate: 4500
+                    color: "#33f"
+                    target_team: "invaders"
+                Tombstone:
+                    load:
+                        Position: {}
+                        Explosion:
+                            ttl: 5
+                            radius: 70
+                            max_particles: 50
+                            max_particle_size: 1.5
+                            max_velocity: 300
+                            color: "#fff"
+                        Spawn:
+                            capture_camera: true
         groups:
-            main: [ ]
+            main: [ 'hero' ]
         current_scene: "main"
 
     spawn_asteroid = (x, y, width, height, dx, dy, dr, mass, health) ->
@@ -51,6 +107,8 @@ define [
             Bouncer:
                 mass: mass
                 damage: 0.007
+            RadarPing:
+                color: "#333"
             Collidable: {}
             Position: {}
             Tombstone:
@@ -72,11 +130,11 @@ define [
         center_x = 0,
         center_y = 0,
         radius = 300,
-        MAX_ASTEROIDS = 30,
-        MAX_TRIES = 3,
-        MIN_SIZE = 15,
-        MAX_SIZE = 100,
-        MAX_GRAV = 6,
+        MAX_ASTEROIDS = 50,
+        MAX_TRIES = 5,
+        MIN_SIZE = 12,
+        MAX_SIZE = 120,
+        MAX_GRAV = 8,
     ) ->
 
         v_center = new Vector2D(center_x, center_y)
@@ -115,7 +173,7 @@ define [
                     v_grav.x, v_grav.y,
                     (Math.PI * 0.25) * Math.random(),
                     4 * size,
-                    40 * size
+                    400 * size
                 )
 
     spawn_field(-260, -260, 250)
@@ -125,6 +183,14 @@ define [
     
     #world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
     #    console.log("DMG #{msg} #{JSON.stringify(data)}")
+
+    world.subscribe S.SpawnSystem.MSG_DESPAWN, (msg, data) =>
+        type_name = em.get(data.entity_id, C.TypeName)
+
+        # Reload after a few seconds, if the hero ship dies
+        if type_name?.name is "HeroShip"
+            r = () -> location.reload()
+            setTimeout r, 5000
 
     vp.draw_bounding_boxes = false
     world.measure_fps = measure_fps

@@ -384,10 +384,15 @@ define [
 
                 @draw_beams t_delta, eid, pos
 
+                sprite = @world.entities.get(eid, C.Sprite)
+
                 # Skip drawing offscreen entities
-                # FIXME: Account for partially-offscreen entities
-                if pos.x < @visible_left or pos.x > @visible_right or
-                        pos.y < @visible_top or pos.y > @visible_bottom
+                margin_w = if sprite then sprite.width / 2 else 0
+                margin_h = if sprite then sprite.height / 2 else 0
+                if pos.x < @visible_left - margin_w or
+                        pos.x > @visible_right + margin_w or
+                        pos.y < @visible_top - margin_h or
+                        pos.y > @visible_bottom + margin_h
                     continue
 
                 @ctx.save()
@@ -398,7 +403,6 @@ define [
                 
                 @ctx.translate(pos.x, pos.y)
 
-                sprite = @world.entities.get(eid, C.Sprite)
                 if sprite
                     w = sprite.width
                     h = sprite.height
