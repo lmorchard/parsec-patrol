@@ -25,6 +25,10 @@
                 <canvas id="collisions" width="400" height="300"></canvas>
             </li>
             <li>
+                <p><a href="fields.html">fields</a></p>
+                <canvas id="fields" width="400" height="300"></canvas>
+            </li>
+            <li>
                 <p><a href="seeker.html">seeker</a></p>
                 <canvas id="seeker" width="400" height="300"></canvas>
             </li>
@@ -61,9 +65,9 @@
                 });
                 require(['utils', 'sketches/sprites', 'sketches/collisions', 'sketches/seeker',
                          'sketches/click-course', 'sketches/explosions', 'sketches/beams',
-                         'sketches/radar','sketches/missiles'],
+                         'sketches/radar','sketches/missiles', 'sketches/fields'],
                     function (utils, sprites, collisions, seeker, clickcourse,
-                              explosions, beams, radar, missiles) {
+                              explosions, beams, radar, missiles, fields) {
                         sprites(document.getElementById('sprites'), false, false).start();
                         collisions(document.getElementById('collisions'), false, false).start();
                         seeker(document.getElementById('seeker'), false, false).start();
@@ -72,6 +76,7 @@
                         beams(document.getElementById('beams'), false, false).start();
                         radar(document.getElementById('radar'), false, false).start();
                         missiles(document.getElementById('missiles'), false, false).start();
+                        fields(document.getElementById('fields'), false, false).start();
                     }
                 );
             });
