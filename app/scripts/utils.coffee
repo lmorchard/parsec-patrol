@@ -10,11 +10,13 @@ define [], () ->
 
         inCollision: (x1, y1, w1, h1, x2, y2, w2, h2) ->
             left_dist = Math.abs(x1 - x2) * 2
-            top_dist = Math.abs(y1 - y2) * 2
             width_total = w1 + w2
-            height_total = h2 + h2
-
-            return (left_dist <= width_total and top_dist <= height_total)
+            if left_dist <= width_total
+                top_dist = Math.abs(y1 - y2) * 2
+                height_total = h1 + h2
+                if top_dist <= height_total
+                    return true
+            return false
 
         maximizeCanvas: (window, canvas) ->
             resize = () ->

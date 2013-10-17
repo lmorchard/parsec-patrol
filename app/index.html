@@ -33,6 +33,10 @@
                 <canvas id="collisions" width="400" height="300"></canvas>
             </li>
             <li>
+                <p><a href="sketches/fields.html">fields</a></p>
+                <canvas id="fields" width="400" height="300"></canvas>
+            </li>
+            <li>
                 <p><a href="sketches/explosions.html">explosions</a></p>
                 <canvas id="explosions" width="400" height="300"></canvas>
             </li>
@@ -58,14 +62,15 @@
             require(['scripts/common'], function (config) {
                 require(['utils', 'sketches/sprites', 'sketches/collisions', 'sketches/seeker',
                          'sketches/click-course', 'sketches/explosions', 'sketches/beams',
-                         'sketches/radar','sketches/missiles'],
+                         'sketches/radar','sketches/missiles', 'sketches/fields'],
                     function (utils, sprites, collisions, seeker, clickcourse,
-                              explosions, beams, radar, missiles) {
+                              explosions, beams, radar, missiles, fields) {
                         sketches = [
                             [sprites, 'sprites'], [collisions, 'collisions'],
                             [seeker, 'seeker'], [clickcourse, 'clickcourse'],
                             [explosions, 'explosions'], [beams, 'beams'],
-                            [radar, 'radar'], [missiles, 'missiles']
+                            [radar, 'radar'], [missiles, 'missiles'],
+                            [fields, 'fields']
                         ];
                         for (var i=0; i<sketches.length; i++) {
                             var fn = sketches[i][0],
