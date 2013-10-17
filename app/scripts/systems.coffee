@@ -757,19 +757,10 @@ define [
 
         check_collision: (b_eid, b_collidable, b_pos, b_sprite,
                           a_eid, a_collidable, a_pos, a_sprite) ->
-            already_in_collision = (
-                (b_eid of a_collidable.in_collision_with) and
-                (a_eid of b_collidable.in_collision_with)
-            )
-            if not already_in_collision
-                left_dist = Math.abs(a_pos.x - b_pos.x) * 2
-                width_total = a_sprite.width + b_sprite.width
-                if left_dist <= width_total
-                    top_dist = Math.abs(a_pos.y - b_pos.y) * 2
-                    height_total = a_sprite.height + b_sprite.height
-                    if top_dist <= height_total
-                        a_collidable.in_collision_with[b_eid] = 1 #Date.now()
-                        b_collidable.in_collision_with[a_eid] = 1 #Date.now()
+            if Math.abs(a_pos.x - b_pos.x) < (a_sprite.width + b_sprite.width) / 2
+                if Math.abs(a_pos.y - b_pos.y) < (a_sprite.height + b_sprite.height) / 2
+                    a_collidable.in_collision_with[b_eid] = 1 #Date.now()
+                    b_collidable.in_collision_with[a_eid] = 1 #Date.now()
 
     class OldCollisionSystem extends System
         constructor: () ->
