@@ -24,7 +24,6 @@ open http://localhost:9000/sketches/
 ## TODO / Ideas
 
 * Destructable asteroids 
-    * Generate variable radius points around center, connect dots
     * break into pieces using tombstones to spawn smaller ones?
 
 * Rework Position & Thruster & Seeker a bit
