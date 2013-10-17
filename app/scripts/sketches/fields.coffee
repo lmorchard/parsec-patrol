@@ -72,7 +72,7 @@ define [
         center_x = 0,
         center_y = 0,
         radius = 300,
-        MAX_ASTEROIDS = 50,
+        MAX_ASTEROIDS = 30,
         MAX_TRIES = 3,
         MIN_SIZE = 15,
         MAX_SIZE = 100,
@@ -118,10 +118,13 @@ define [
                     40 * size
                 )
 
-    spawn_field(-300, -300, 230)
-    spawn_field(300, 300, 230)
-    spawn_field(300, -300, 230)
-    spawn_field(-300, 300, 230)
+    spawn_field(-260, -260, 250)
+    spawn_field(260, 260, 250)
+    spawn_field(260, -260, 250)
+    spawn_field(-260, 260, 250)
+    
+    #world.subscribe S.HealthSystem.MSG_DAMAGE, (msg, data) =>
+    #    console.log("DMG #{msg} #{JSON.stringify(data)}")
 
     vp.draw_bounding_boxes = false
     world.measure_fps = measure_fps

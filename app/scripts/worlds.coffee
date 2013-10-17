@@ -29,6 +29,7 @@ define [
             @inputs = {}
             @entities = new Entities.EntityManager
             @systems = []
+            @msg_subscribers = {}
             @addSystem(systems...)
 
         _psPrefix: (msg=null) ->
@@ -36,13 +37,17 @@ define [
             "worlds.#{@id}#{msg}"
 
         subscribe: (msg, handler) ->
-            PubSub.subscribe(@_psPrefix(msg), handler)
+            (@msg_subscribers[msg] ?= []).push(handler)
+            #PubSub.subscribe(@_psPrefix(msg), handler)
 
         publish: (msg, data) ->
-            PubSub.publish(@_psPrefix(msg), data)
+            return if not @msg_subscribers[msg]
+            for handler in @msg_subscribers[msg]
+                handler(msg, data)
+            #PubSub.publish(@_psPrefix(msg), data)
 
         unsubscribe: (thing) ->
-            PubSub.unsubscribe(thing)
+            #PubSub.unsubscribe(thing)
 
         addSystem: (to_add...) ->
             for system in to_add
