@@ -23,6 +23,10 @@ open http://localhost:9000/sketches/
 
 ## TODO / Ideas
 
+* Hitboxes / hit-shapes independent of sprite height / width
+    * eg. for asteroids, make smaller than actual shape & tolerate some overlap
+    * use circles instead of boxes? distance calcs may be expensive, though
+
 * Destructable asteroids 
     * break into pieces using tombstones to spawn smaller ones?
 
