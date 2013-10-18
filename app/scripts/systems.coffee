@@ -205,6 +205,7 @@ define [
 
         glow: false
         draw_bounding_boxes: false
+        draw_mass: false
         draw_beam_range: false
         grid_size: 150
         grid_color: '#111'
@@ -414,6 +415,18 @@ define [
                         @ctx.strokeRect(0-wb, 0-wb, w, h)
 
                     @draw_health_bar t_delta, eid, w, h
+
+                    if @draw_mass
+                        bouncer = @world.entities.get(eid, C.Bouncer)
+                        if bouncer
+                            @ctx.fillStyle = "#fff"
+                            @ctx.strokeStyle = "#fff"
+                            font_size = 14 * @viewport_ratio
+                            @ctx.font = "normal normal #{font_size}px monospace"
+                            @ctx.textAlign = 'center'
+                            @ctx.textBaseline = 'middle'
+                            @ctx.fillText(bouncer.mass, 0, 0)
+
                     @draw_sprite t_delta, eid, w, h, pos, sprite
 
                 explosion = @world.entities.get(eid, C.Explosion)
@@ -725,7 +738,7 @@ define [
                 })
                 for b in items
                     continue if b.eid is a_eid
-                    @check_collision(
+                    @checkCollision(
                         b.eid, b.collidable, b.pos, b.sprite,
                         a_eid, a_collidable, a_pos, a_sprite)
 
@@ -759,10 +772,10 @@ define [
 
             return qt
 
-        check_collision: (b_eid, b_collidable, b_pos, b_sprite,
-                          a_eid, a_collidable, a_pos, a_sprite) ->
-            if Math.abs(a_pos.x - b_pos.x) < (a_sprite.width + b_sprite.width) / 2
-                if Math.abs(a_pos.y - b_pos.y) < (a_sprite.height + b_sprite.height) / 2
+        checkCollision: (b_eid, b_collidable, b_pos, b_sprite,
+                         a_eid, a_collidable, a_pos, a_sprite) ->
+            if Math.abs(a_pos.x - b_pos.x) * 2 < (a_sprite.width + b_sprite.width)
+                if Math.abs(a_pos.y - b_pos.y) * 2 < (a_sprite.height + b_sprite.height)
                     a_collidable.in_collision_with[b_eid] = 1 #Date.now()
                     b_collidable.in_collision_with[a_eid] = 1 #Date.now()
 
@@ -838,33 +851,48 @@ define [
 
         match_component: C.Bouncer
 
-        update_match: (dt, eid, bouncer) ->
-            pos = @world.entities.get(eid, C.Position)
-            sprite = @world.entities.get(eid, C.Sprite)
-            motion = @world.entities.get(eid, C.Motion)
-            bouncer = @world.entities.get(eid, C.Bouncer)
-            collidable = @world.entities.get(eid, C.Collidable)
+        update: (dt) ->
 
             xb = @world.width / 2
             yb = @world.height / 2
 
-            if motion
-                if pos.x > xb or pos.x < -xb
-                    motion.dx = 0 - motion.dx
-                if pos.y > yb or pos.y < -yb
-                    motion.dy = 0 - motion.dy
+            # Assemble list of unique pairs in collision, process edge bounce
+            pairs = {}
+            for a_eid, a_bouncer of @getMatches()
+                a_collidable = @world.entities.get(a_eid, C.Collidable)
+                for b_eid, ts of a_collidable.in_collision_with
+                    pair = [a_eid, b_eid]
+                    pair.sort()
+                    pairs[pair.join(':')] = pair
 
-            for c_eid, ts of collidable.in_collision_with
-                c_bouncer = @world.entities.get(c_eid, C.Bouncer)
-                continue if not c_bouncer
+                pos = @world.entities.get(a_eid, C.Position)
+                motion = @world.entities.get(a_eid, C.Motion)
+                if pos and motion
+                    if pos.x > xb or pos.x < -xb
+                        motion.dx = 0 - motion.dx
+                    if pos.y > yb or pos.y < -yb
+                        motion.dy = 0 - motion.dy
 
-                c_pos = @world.entities.get(c_eid, C.Position)
-                c_sprite = @world.entities.get(c_eid, C.Sprite)
-                c_motion = @world.entities.get(c_eid, C.Motion)
+            # Process the collision pairs
+            for key, [a_eid, b_eid] of pairs
+
+                a_bouncer = @world.entities.get(a_eid, C.Bouncer)
+                continue if not a_bouncer
+
+                b_bouncer = @world.entities.get(b_eid, C.Bouncer)
+                continue if not b_bouncer
+
+                a_pos = @world.entities.get(a_eid, C.Position)
+                a_sprite = @world.entities.get(a_eid, C.Sprite)
+                a_motion = @world.entities.get(a_eid, C.Motion)
+
+                b_pos = @world.entities.get(b_eid, C.Position)
+                b_sprite = @world.entities.get(b_eid, C.Sprite)
+                b_motion = @world.entities.get(b_eid, C.Motion)
 
                 @resolve_elastic_collision(dt,
-                    eid, pos, sprite, motion, bouncer,
-                    c_eid, c_pos, c_sprite, c_motion, c_bouncer)
+                    a_eid, a_pos, a_sprite, a_motion, a_bouncer,
+                    b_eid, b_pos, b_sprite, b_motion, b_bouncer)
 
         # See also: https://gist.github.com/kevinfjbecker/1670913
         # TODO: Optimize this. Reuse vector objects, at least.
@@ -893,10 +921,10 @@ define [
             M = m1 + m2
 
             # Minimum translation vector to push entities apart
-            mt = {
-                x: dn.x * (sprite.width + c_sprite.width - delta),
-                y: dn.y * (sprite.width + c_sprite.width - delta)
-            }
+            #mt = {
+            #    x: dn.x * (sprite.width + c_sprite.width - delta),
+            #    y: dn.y * (sprite.width + c_sprite.width - delta)
+            #}
              
             # Velocity vectors of entities before collision
             v1 = if motion
@@ -1094,7 +1122,8 @@ define [
             if thruster.use_brakes
                 # Try to enforce the max_v limit with braking thrust.
                 max_v = if thruster.stop then 0 else thruster.max_v
-                over_v = @v_inertia.magnitude() - max_v
+                curr_v = @v_inertia.magnitude()
+                over_v = curr_v - max_v
                 if over_v > 0
                     # Braking delta-v is max thruster output or remaining overage,
                     # whichever is smallest. Braking vector opposes inertia.
@@ -1103,6 +1132,8 @@ define [
                     @v_brakes.normalize()
                     @v_brakes.multiplyScalar(0-braking_dv)
                     @v_inertia.add(@v_brakes)
+                if thruster.stop and curr_v is 0
+                    thruster.active = false
 
             # Update inertia. Note that we've been careful only to make changes
             # to inertia within the delta-v of the thruster. Other influences
@@ -1122,6 +1153,7 @@ define [
             if click_course.active and (@world.inputs.pointer_button_left)
                 click_course.x = @world.inputs.pointer_world_x
                 click_course.y = @world.inputs.pointer_world_y
+                thruster?.active = true
                 thruster?.stop = false
                 seeker?.target =
                     x: click_course.x,
@@ -1133,7 +1165,7 @@ define [
             if x_offset < sprite.width/2 and y_offset < sprite.height/2
                 if click_course.stop_on_arrival
                     thruster?.stop = true
-                seeker?.target = null
+                #seeker?.target = null
 
     class MissileWeaponSystem extends System
         @DAMAGE_TYPE = 'Missile'

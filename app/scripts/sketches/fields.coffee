@@ -29,7 +29,6 @@ define [
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
-    vp.zoom = 1.5
     em = world.entities
 
     world.load
@@ -40,11 +39,11 @@ define [
                 Sprite:
                     shape: "hero"
                 Position: {},
-                Motion: {},
+                Motion: { dx:0, dy: 0 },
                 Collidable: {},
                 Bouncer:
-                    mass: 50000,
-                    damage: 0.007
+                    mass: 80000,
+                    #damage: 0.007
                 Spawn:
                     x: 0
                     y: 0
@@ -106,7 +105,7 @@ define [
                 show_bar: false
             Bouncer:
                 mass: mass
-                damage: 0.007
+                #damage: 0.007
             RadarPing:
                 color: "#333"
             Collidable: {}
@@ -130,11 +129,11 @@ define [
         center_x = 0,
         center_y = 0,
         radius = 300,
-        MAX_ASTEROIDS = 50,
-        MAX_TRIES = 5,
+        MAX_ASTEROIDS = 30,
+        MAX_TRIES = 3,
         MIN_SIZE = 12,
         MAX_SIZE = 120,
-        MAX_GRAV = 8,
+        MAX_GRAV = 25,
     ) ->
 
         v_center = new Vector2D(center_x, center_y)
@@ -172,8 +171,8 @@ define [
                     size, size,
                     v_grav.x, v_grav.y,
                     (Math.PI * 0.25) * Math.random(),
-                    4 * size,
-                    400 * size
+                    40 * size * size,
+                    40 * size * size,
                 )
 
     spawn_field(-260, -260, 250)
@@ -192,7 +191,8 @@ define [
             r = () -> location.reload()
             setTimeout r, 5000
 
-    vp.draw_bounding_boxes = false
+    vp.zoom = 2.5
+    vp.draw_bounding_boxes = true
     world.measure_fps = measure_fps
     if use_gui
         gui = new dat.GUI()
@@ -201,5 +201,8 @@ define [
         gui.add(vp, 'use_grid')
         gui.add(vp, 'use_sprite_cache')
         gui.add(vp, 'draw_bounding_boxes')
+
+        thruster = em.get('hero', C.Thruster)
+        gui.add(thruster, 'active').listen()
 
     return world
