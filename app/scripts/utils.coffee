@@ -8,6 +8,12 @@ define [], () ->
 
         now: () -> Date.now()
 
+        inCollisionCircle: (x1, y1, w1, h1, x2, y2, w2, h2) ->
+            dx = x2 - x1
+            dy = y2 - y1
+            radii = (w1 + w2) / 2
+            return ((dx*dx) + (dy*dy) < radii*radii)
+
         inCollision: (x1, y1, w1, h1, x2, y2, w2, h2) ->
             left_dist = Math.abs(x1 - x2) * 2
             width_total = w1 + w2
@@ -17,7 +23,7 @@ define [], () ->
                 if top_dist <= height_total
                     return true
             return false
-
+            
         maximizeCanvas: (window, canvas) ->
             resize = () ->
                 canvas.style.width = window.innerWidth + 'px'

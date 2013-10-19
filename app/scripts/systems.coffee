@@ -410,9 +410,15 @@ define [
 
                     if @draw_bounding_boxes
                         @ctx.strokeStyle = "#33c"
-                        wb = w / 2
-                        hb = h / 2
-                        @ctx.strokeRect(0-wb, 0-wb, w, h)
+                        hc = @world.entities.store.CollisionCircle?[eid]
+                        if not hc
+                            wb = w / 2
+                            hb = h / 2
+                            @ctx.strokeRect(0-wb, 0-wb, w, h)
+                        else
+                            @ctx.beginPath()
+                            @ctx.arc(0, 0, hc.radius, Math.PI*2, false)
+                            @ctx.stroke()
 
                     @draw_health_bar t_delta, eid, w, h
 
@@ -774,10 +780,22 @@ define [
 
         checkCollision: (b_eid, b_collidable, b_pos, b_sprite,
                          a_eid, a_collidable, a_pos, a_sprite) ->
-            if Math.abs(a_pos.x - b_pos.x) * 2 < (a_sprite.width + b_sprite.width)
-                if Math.abs(a_pos.y - b_pos.y) * 2 < (a_sprite.height + b_sprite.height)
+
+            a_hc = @world.entities.store.CollisionCircle?[a_eid]
+            b_hc = @world.entities.store.CollisionCircle?[b_eid]
+
+            if a_hc and b_hc
+                dx = b_pos.x - a_pos.x
+                dy = b_pos.y - a_pos.y
+                radii = a_hc.radius + b_hc.radius
+                if (dx*dx) + (dy*dy) < radii*radii
                     a_collidable.in_collision_with[b_eid] = 1 #Date.now()
                     b_collidable.in_collision_with[a_eid] = 1 #Date.now()
+            else
+                if Math.abs(a_pos.x - b_pos.x) * 2 < (a_sprite.width + b_sprite.width)
+                    if Math.abs(a_pos.y - b_pos.y) * 2 < (a_sprite.height + b_sprite.height)
+                        a_collidable.in_collision_with[b_eid] = 1 #Date.now()
+                        b_collidable.in_collision_with[a_eid] = 1 #Date.now()
 
     class OldCollisionSystem extends System
         constructor: () ->

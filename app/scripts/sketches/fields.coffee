@@ -43,6 +43,8 @@ define [
                 Position: {},
                 Motion: { dx:0, dy: 0 },
                 Collidable: {},
+                CollisionCircle:
+                    radius: 15
                 Bouncer:
                     mass: 80000,
                     damage: 0.0007
@@ -111,6 +113,8 @@ define [
             RadarPing:
                 color: "#333"
             Collidable: {}
+            CollisionCircle:
+                radius: (width / 2) * 0.85
             Position: {}
             Tombstone:
                 load:
@@ -132,7 +136,7 @@ define [
         center_y = 0,
         radius = 300,
         MAX_ASTEROIDS = 50,
-        MAX_TRIES = 3,
+        MAX_TRIES = 5,
         MIN_SIZE = 12,
         MAX_SIZE = 120,
         MAX_GRAV = 8,
@@ -154,10 +158,10 @@ define [
 
                 is_clear = true
                 for [x, y, w, h] in in_field
-                    if Utils.inCollision(x, y,
-                                         w, h,
-                                         v_spawn.x, v_spawn.y,
-                                         size * 1.0125, size * 1.0125)
+                    if Utils.inCollision( #Circle(
+                            x, y, w, h,
+                            v_spawn.x, v_spawn.y,
+                            size * 1.0125, size * 1.0125)
                         is_clear = false
                         break
 
@@ -201,6 +205,7 @@ define [
         gui.add(world, 'is_paused').listen()
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
         gui.add(vp, 'use_grid')
+        gui.add(vp, 'glow')
         gui.add(vp, 'use_sprite_cache')
         gui.add(vp, 'draw_bounding_boxes')
 

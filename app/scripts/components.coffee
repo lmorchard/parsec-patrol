@@ -102,6 +102,11 @@ define ['entities', 'underscore'], (Entities, _) ->
             super props
             @in_collision_with = {}
 
+    class CollisionCircle extends Component
+        @defaults:
+            type: 'CollisionCircle'
+            radius: 15
+
     class Seeker extends Component
         @defaults:
             type: 'Seeker'
@@ -239,7 +244,7 @@ define ['entities', 'underscore'], (Entities, _) ->
 
     return {
         Component, TypeName, EntityName, Position, Motion, Orbit, Spin,
-        Bouncer, Spawn, Tombstone, Collidable, Renderable, Sprite, Thruster,
-        Seeker, ClickCourse, WeaponsTarget, BeamWeapon, Health, Explosion,
-        RadarPing, MissileWeapon, Missile, VaporTrail
+        Bouncer, Spawn, Tombstone, Collidable, CollisionCircle, Renderable,
+        Sprite, Thruster, Seeker, ClickCourse, WeaponsTarget, BeamWeapon,
+        Health, Explosion, RadarPing, MissileWeapon, Missile, VaporTrail
     }
