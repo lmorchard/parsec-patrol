@@ -415,13 +415,20 @@ define [
                                 @ctx.arc(x, y, r, 0, Math.PI*2, false)
                                 @ctx.stroke()
 
+                        @ctx.beginPath()
+                        @ctx.strokeStyle = 'rgba(128, 128, 0, 0.75)'
+                        v = new Vector2D(pos.x + 800, pos.y)
+                        v.rotateAround(pos, steering.angle_a2b)
+                        @ctx.moveTo(pos.x, pos.y)
+                        @ctx.lineTo(v.x, v.y)
+                        @ctx.stroke()
+
+                        @ctx.beginPath()
                         if steering.dodging
                             @ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
                         else
                             @ctx.strokeStyle = 'rgba(0, 128, 0, 0.5)'
-
-                        @ctx.beginPath()
-                        v = new Vector2D(pos.x, pos.y - 100)
+                        v = new Vector2D(pos.x + 800, pos.y)
                         v.rotateAround(pos, steering.target_angle)
                         @ctx.moveTo(pos.x, pos.y)
                         @ctx.lineTo(v.x, v.y)
@@ -605,7 +612,7 @@ define [
             BASE_W = 100
             BASE_H = 100
 
-            @ctx.rotate(pos.rotation)
+            @ctx.rotate(pos.rotation + Math.PI/2)
             @ctx.scale(w / BASE_W, h / BASE_H)
 
             if @use_sprite_cache
@@ -977,7 +984,7 @@ define [
             pos.x = @v_orbiter.x
             pos.y = @v_orbiter.y
             if orbiter.rotate
-                pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
+                pos.rotation = @v_old.angleTo(@v_orbiter)
 
     class SteeringSystem extends System
         match_component: C.Steering
@@ -991,16 +998,14 @@ define [
             @v_dodge_unit = new Vector2D()
 
         castRay: (eid, pos, sprite, steering, side) ->
+            hw = sprite.width / 2
+            offset = side * hw * 1.25
+            steps = steering.los_range / (hw*2)
 
-            hw = sprite.width * 0.5
-            offset = side * hw
-            steps = steering.los_range / (hw * 2)
-
-            @v_ray_unit.setValues(0, 0 - (hw * 2))
+            @v_ray_unit.setValues(hw*2, 0)
             @v_ray_unit.rotate(pos.rotation)
-
-            @v_ray.setValues(pos.x + offset, pos.y)
-            @v_ray.rotateAround(pos, pos.rotation + Math.PI)
+            @v_ray.setValues(pos.x, pos.y + offset)
+            @v_ray.rotateAround(pos, pos.rotation)
 
             for idx in [0..steps]
                 items = @findHits(eid, steering, @v_ray.x, @v_ray.y, hw, hw)
@@ -1016,12 +1021,7 @@ define [
             qt = @world.entities.quadtrees[gid]
             return [] if not qt
 
-            items = qt.retrieve({
-                x: x,
-                y: y,
-                width: width,
-                height: height
-            })
+            items = qt.retrieve({x: x, y: y, width: width, height: height})
 
             in_collision = []
             for item in items
@@ -1035,21 +1035,21 @@ define [
 
             return _.sortBy(in_collision, 0)
 
-        calculateDodgeTarget: (side,
-                               a_x, a_y, a_diameter,
-                               b_x, b_y, b_diameter) ->
+        calculateDodgeTarget: (side, steering, a_x, a_y, a_diameter, b_x, b_y, b_diameter) ->
 
             # HACK: atan2 why you so crazy and fall over
-            angle_a2b = Math.atan2(b_y - a_y, b_x - a_x) + (Math.PI/2)
+            angle_a2b = Math.atan2(b_y-a_y, b_x-a_x)
+            steering.angle_a2b = angle_a2b
 
-            ac = (a_diameter*1) + (b_diameter/2)
+            ac = (a_diameter * 1) + (b_diameter/2)
             ab = Math.sqrt((b_x-a_x) * (b_x-a_x) +
                            (b_y-a_y) * (b_x-a_y))
             if ab > ac
-                angle_dodge = Math.asin(ac / ab)
-                angle_a2b +=  (side * angle_dodge)
+                angle_dodge = (side * Math.asin(ac / ab)) +  angle_a2b
+            else
+                angle_dodge = angle_a2b + Math.PI
 
-            return angle_a2b
+            return angle_dodge
 
         update_match: (dt, eid, steering) ->
 
@@ -1065,12 +1065,12 @@ define [
             steering.hit_circles = []
             steering.ray_left = @castRay(eid, pos, sprite, steering, -1)
             steering.ray_right = @castRay(eid, pos, sprite, steering, 1)
-
+            
             if steering.ray_left.length
                 item = steering.ray_left[0][1]
                 steering.dodging = true
                 steering.target_angle = target_angle = @calculateDodgeTarget(
-                    -1,
+                    -1, steering,
                     pos.x, pos.y, sprite.width,
                     item.x, item.y, item.width
                 )
@@ -1079,7 +1079,7 @@ define [
                 item = steering.ray_right[0][1]
                 steering.dodging = true
                 steering.target_angle = target_angle = @calculateDodgeTarget(
-                    1,
+                    1, steering,
                     pos.x, pos.y, sprite.width,
                     item.x, item.y, item.width
                 )
@@ -1099,7 +1099,7 @@ define [
                 @v_target.setValues(target_pos.x, target_pos.y)
 
                 # Get the target angle, ensuring a 0..2*Math.PI range.
-                target_angle = @v_steering.angleTo(@v_target) + (Math.PI*0.5)
+                target_angle = @v_steering.angleTo(@v_target)
                 target_angle += 2*Math.PI if target_angle < 0
                 steering.target_angle = target_angle
 
@@ -1157,7 +1157,7 @@ define [
             @v_target.setValues(target_pos.x, target_pos.y)
 
             # Get the target angle, ensuring a 0..2*Math.PI range.
-            target_angle = @v_seeker.angleTo(@v_target) + (Math.PI*0.5)
+            target_angle = @v_seeker.angleTo(@v_target)
             target_angle += 2*Math.PI if target_angle < 0
 
             # Pick the direction from current to target angle
@@ -1207,7 +1207,8 @@ define [
 
             if not thruster.stop
                 # Create thrust vector per rotation and add to inertia.
-                @v_thrust.setValues(0, 0-tick_dv)
+                #@v_thrust.setValues(0, 0-tick_dv)
+                @v_thrust.setValues(tick_dv, 0)
                 @v_thrust.rotate(pos.rotation)
                 @v_inertia.add(@v_thrust)
 

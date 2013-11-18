@@ -148,6 +148,8 @@ define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree
                 @updateQuadtree(gid)
 
         updateQuadtree: (gid) ->
+            return if not @store.Collidable
+
             if @quadtrees[gid]
                 qt = @quadtrees[gid]
                 qt.clear()

@@ -28,12 +28,12 @@ define [
 
             rock:
                 TypeName: { name: "Rock" }
-                Sprite: { shape: "asteroid", width: 300, height: 300 }
+                Sprite: { shape: "asteroid", width: 400, height: 400 }
                 Spawn: { x: 0, y: 0 }
                 Position: {}
                 Motion: { drotation: Math.PI / 8 }
                 Collidable: {}
-                CollisionCircle: { radius: 150 }
+                CollisionCircle: { radius: 200 }
                 Bouncer: { mass: 2000, damage: 0 }
 
             hero:
