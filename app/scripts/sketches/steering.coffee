@@ -47,7 +47,7 @@ define [
 
             enemy1:
                 Sprite: { shape: 'enemyscout', width: 30, height: 30 }
-                Spawn: { x: -450, y: -50, rotation: 0 }
+                Spawn: { x: -450, y: -150, rotation: 0 }
                 Position: {}
                 Motion: {}
                 Collidable: {},
@@ -61,7 +61,7 @@ define [
 
             enemy2:
                 Sprite: { shape: 'enemyscout', width: 30, height: 30 }
-                Spawn: { x: -450, y: 50, rotation: Math.PI }
+                Spawn: { x: -450, y: 150, rotation: Math.PI }
                 Position: { }
                 Motion: {}
                 Collidable: {},
@@ -90,8 +90,8 @@ define [
         groups:
             main: [ 'rock', 'hero',
                 'enemy1',
-                #'enemy2',
-                #'enemy3',
+                'enemy2',
+                'enemy3',
             ]
 
         current_scene: "main"

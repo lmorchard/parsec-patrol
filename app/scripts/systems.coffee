@@ -415,13 +415,14 @@ define [
                                 @ctx.arc(x, y, r, 0, Math.PI*2, false)
                                 @ctx.stroke()
 
-                        @ctx.beginPath()
-                        @ctx.strokeStyle = 'rgba(128, 128, 0, 0.75)'
-                        v = new Vector2D(pos.x + 800, pos.y)
-                        v.rotateAround(pos, steering.angle_a2b)
-                        @ctx.moveTo(pos.x, pos.y)
-                        @ctx.lineTo(v.x, v.y)
-                        @ctx.stroke()
+                        if steering.dodging
+                            @ctx.beginPath()
+                            @ctx.strokeStyle = 'rgba(128, 128, 0, 0.75)'
+                            v = new Vector2D(pos.x + 800, pos.y)
+                            v.rotateAround(pos, steering.angle_a2b)
+                            @ctx.moveTo(pos.x, pos.y)
+                            @ctx.lineTo(v.x, v.y)
+                            @ctx.stroke()
 
                         @ctx.beginPath()
                         if steering.dodging
@@ -1040,8 +1041,10 @@ define [
             # HACK: atan2 why you so crazy and fall over
             angle_a2b = Math.atan2(b_y-a_y, b_x-a_x)
             steering.angle_a2b = angle_a2b
+            return angle_a2b + Math.PI/2
+            return angle_a2b + (side*Math.PI/2)
 
-            ac = (a_diameter * 1) + (b_diameter/2)
+            ac = (a_diameter * 1.5) + (b_diameter/2)
             ab = Math.sqrt((b_x-a_x) * (b_x-a_x) +
                            (b_y-a_y) * (b_x-a_y))
             if ab > ac
