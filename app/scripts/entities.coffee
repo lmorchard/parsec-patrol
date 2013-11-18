@@ -141,13 +141,15 @@ define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree
             return @entities_by_group[group_id]
 
         update: (t_delta) ->
-            @update_quadtrees()
+            @updateQuadtrees()
 
-        update_quadtrees: () ->
+        updateQuadtrees: () ->
             for gid of @entities_by_group
-                @update_quadtree(gid)
+                @updateQuadtree(gid)
 
-        update_quadtree: (gid) ->
+        updateQuadtree: (gid) ->
+            return if not @store.Collidable
+
             if @quadtrees[gid]
                 qt = @quadtrees[gid]
                 qt.clear()
@@ -173,6 +175,7 @@ define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree
                     eid: eid,
                     x: pos.x,
                     y: pos.y,
+                    rotation: pos.rotation,
                     width: sprite.width,
                     height: sprite.height,
                     collidable: collidable,

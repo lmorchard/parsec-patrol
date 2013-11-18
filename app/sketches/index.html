@@ -33,6 +33,10 @@
                 <canvas id="seeker" width="400" height="300"></canvas>
             </li>
             <li>
+                <p><a href="steering.html">steering</a></p>
+                <canvas id="steering" width="400" height="300"></canvas>
+            </li>
+            <li>
                 <p><a href="click-course.html">click-course</a></p>
                 <canvas id="click-course" width="400" height="300"></canvas>
             </li>
@@ -65,9 +69,9 @@
                 });
                 require(['utils', 'sketches/sprites', 'sketches/collisions', 'sketches/seeker',
                          'sketches/click-course', 'sketches/explosions', 'sketches/beams',
-                         'sketches/radar','sketches/missiles', 'sketches/fields'],
+                         'sketches/radar','sketches/missiles', 'sketches/fields', 'sketches/steering'],
                     function (utils, sprites, collisions, seeker, clickcourse,
-                              explosions, beams, radar, missiles, fields) {
+                              explosions, beams, radar, missiles, fields, steering) {
                         sprites(document.getElementById('sprites'), false, false).start();
                         collisions(document.getElementById('collisions'), false, false).start();
                         seeker(document.getElementById('seeker'), false, false).start();
@@ -77,6 +81,7 @@
                         radar(document.getElementById('radar'), false, false).start();
                         missiles(document.getElementById('missiles'), false, false).start();
                         fields(document.getElementById('fields'), false, false).start();
+                        steering(document.getElementById('steering'), false, false).start();
                     }
                 );
             });
