@@ -55,6 +55,7 @@ define [
                 Thruster: { dv: 250, max_v: 120 }
                 Steering:
                     target: 'hero'
+                    los_range: 100
                     rad_per_sec: Math.PI
 
         groups:
@@ -62,9 +63,13 @@ define [
 
         current_scene: "main"
 
+    c_enemy_steering = world.entities.get('enemy', C.Steering)
+
     vp.zoom = 1.0
     vp.draw_bounding_boxes = false
+    vp.draw_steering_ray = true
     world.measure_fps = measure_fps
+
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused').listen()
@@ -73,6 +78,7 @@ define [
         gui.add(vp, 'glow')
         gui.add(vp, 'use_sprite_cache')
         gui.add(vp, 'draw_bounding_boxes')
+        gui.add(vp, 'draw_steering_ray')
 
     window.world = world
 

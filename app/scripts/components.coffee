@@ -120,6 +120,8 @@ define ['entities', 'underscore'], (Entities, _) ->
             target: null
             los_range: 100
             rad_per_sec: 0
+            ray_left: []
+            ray_right: []
 
     class ClickCourse extends Component
         @defaults:

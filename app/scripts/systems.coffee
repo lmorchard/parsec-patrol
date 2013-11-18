@@ -207,6 +207,7 @@ define [
         draw_bounding_boxes: false
         draw_mass: false
         draw_beam_range: false
+        draw_steering_ray: false
         grid_size: 150
         grid_color: '#111'
         source_size: 100
@@ -432,6 +433,7 @@ define [
                             @ctx.textAlign = 'center'
                             @ctx.textBaseline = 'middle'
                             @ctx.fillText(bouncer.mass, 0, 0)
+                    
 
                     @draw_sprite t_delta, eid, w, h, pos, sprite
 
@@ -579,6 +581,24 @@ define [
             BASE_H = 100
 
             @ctx.rotate(pos.rotation)
+
+            if @draw_steering_ray
+                steering = @world.entities.store.Steering?[eid]
+                if steering
+                    @ctx.strokeStyle = '#f00'
+                    @ctx.beginPath()
+                    @ctx.moveTo(0 - sprite.width/2, 0)
+                    @ctx.lineWidth = 1
+                    @ctx.lineTo(0 - sprite.width/2, 0 - steering.los_range)
+                    @ctx.stroke()
+
+                    @ctx.strokeStyle = '#f00'
+                    @ctx.beginPath()
+                    @ctx.moveTo(sprite.width/2, 0)
+                    @ctx.lineWidth = 1
+                    @ctx.lineTo(sprite.width/2, 0 - steering.los_range)
+                    @ctx.stroke()
+
             @ctx.scale(w / BASE_W, h / BASE_H)
 
             if @use_sprite_cache
@@ -1024,7 +1044,73 @@ define [
 
         constructor: () ->
             @v_steering = new Vector2D()
+            @v_los = new Vector2D()
             @v_target = new Vector2D()
+
+        castRay: (eid, pos, sprite, steering, side) ->
+
+            offset = (side * sprite.width) / 2
+            los_range = steering.los_range
+            los_range_sq = los_range * los_range
+
+            @v_los.setValues(pos.x + offset, pos.y - los_range)
+            @v_los.rotate(pos.rotation)
+
+            xb = pos.x
+            yb = pos.y
+            slope = (@v_los.y - yb) / (@v_los.x - xb)
+
+            idx = 0
+            while true
+                idx++
+                y1 = [idx*slope, idx]
+                yd = (y1[1]*y1[1]) + (y1[0]*y1[0])
+                x1 = [idx, idx/slope]
+                xd = (x1[1]*x1[1]) + (x1[0]*x1[0])
+                
+                break if yd > los_range_sq and xd > los_range_sq
+
+                if yd < xd
+                    if yd <= los_range_sq
+                        c = @findCollisions(eid, y1[0] + xb, y1[1] + yb, sprite.width, sprite.height)
+                        return c if c
+                    if xd <= los_range_sq
+                        c = @findCollisions(eid, x1[0] + xb, x1[1] + yb, sprite.width, sprite.height)
+                        return c if c
+                else
+                    if xd <= los_range_sq
+                        c = @findCollisions(eid, x1[0] + xb, x1[1] + yb, sprite.width, sprite.height)
+                        return c if c
+                    if yd <= los_range_sq
+                        c = @findCollisions(eid, y1[0] + xb, y1[1] + yb, sprite.width, sprite.height)
+                        return c if c
+
+
+            return null
+
+        findCollisions: (eid, x, y, width, height) ->
+            gid = @world.entities.groupForEntity(eid)
+            qt = @world.entities.quadtrees[gid]
+
+            in_collision = []
+            items = qt.retrieve({
+                x: x,
+                y: y,
+                width: width,
+                height: height
+            })
+            for item in items
+                continue if item.eid is eid
+                radii = item.width + width
+                dx = item.x - x
+                dy = item.y - y
+                if (dx*dx) + (dy*dy) < radii*radii
+                    in_collision.push(item.eid)
+
+            if in_collision.length > 0
+                return in_collision
+            else
+                return null
 
         update_match: (dt, eid, steering) ->
 
@@ -1034,31 +1120,40 @@ define [
             motion = @world.entities.get(eid, C.Motion)
             return if not motion
 
-            # Accept either a raw x/y coord or entity ID as target
-            target_pos = steering.target
-            if not _.isObject(target_pos)
-                target_pos = @world.entities.get(steering.target, C.Position)
-            return if not target_pos or (not target_pos.x and target_pos.y)
+            sprite = @world.entities.get(eid, C.Sprite)
+            steering.ray_left = @castRay(eid, pos, sprite, steering, -1)
+            steering.ray_right = @castRay(eid, pos, sprite, steering, 1)
 
-            # Set up the vectors for angle math...
-            @v_steering.setValues(pos.x, pos.y)
-            @v_target.setValues(target_pos.x, target_pos.y)
+            if steering.ray_left
+                target_dr = -1 * steering.rad_per_sec
+            else if steering.ray_right
+                target_dr = 1 * steering.rad_per_sec
+            else
+                # Accept either a raw x/y coord or entity ID as target
+                target_pos = steering.target
+                if not _.isObject(target_pos)
+                    target_pos = @world.entities.get(steering.target, C.Position)
+                return if not target_pos or (not target_pos.x and target_pos.y)
 
-            # Get the target angle, ensuring a 0..2*Math.PI range.
-            target_angle = @v_steering.angleTo(@v_target) + (Math.PI*0.5)
-            target_angle += 2*Math.PI if target_angle < 0
+                # Set up the vectors for angle math...
+                @v_steering.setValues(pos.x, pos.y)
+                @v_target.setValues(target_pos.x, target_pos.y)
 
-            # Pick the direction from current to target angle
-            direction = if target_angle < pos.rotation then -1 else 1
-   
-            # If the offset between the angles is more than half a circle, go
-            # the other way because it'll be shorter.
-            offset = Math.abs(target_angle - pos.rotation)
-            if offset > Math.PI
-                direction = 0 - direction
+                # Get the target angle, ensuring a 0..2*Math.PI range.
+                target_angle = @v_steering.angleTo(@v_target) + (Math.PI*0.5)
+                target_angle += 2*Math.PI if target_angle < 0
 
-            # Work out the desired delta-rotation to steer toward target
-            target_dr = direction * Math.min(steering.rad_per_sec, offset/dt)
+                # Pick the direction from current to target angle
+                direction = if target_angle < pos.rotation then -1 else 1
+       
+                # If the offset between the angles is more than half a circle, go
+                # the other way because it'll be shorter.
+                offset = Math.abs(target_angle - pos.rotation)
+                if offset > Math.PI
+                    direction = 0 - direction
+
+                # Work out the desired delta-rotation to steer toward target
+                target_dr = direction * Math.min(steering.rad_per_sec, offset/dt)
 
             # Calculate the delta-rotation impulse required to meet the goal,
             # but constrain to the capability of the steering thrusters
