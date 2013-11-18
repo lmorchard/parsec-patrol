@@ -1,1 +1,1 @@
-Modernizr.addTest("cssmask",Modernizr.testAllProps("mask-repeat"));
+Modernizr.addTest("cssmask",Modernizr.testAllProps("maskRepeat"));
