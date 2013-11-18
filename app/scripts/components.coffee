@@ -114,6 +114,13 @@ define ['entities', 'underscore'], (Entities, _) ->
             acquisition_delay: 0
             rad_per_sec: 0
 
+    class Steering extends Component
+        @defaults:
+            type: 'Steering'
+            target: null
+            los_range: 100
+            rad_per_sec: 0
+
     class ClickCourse extends Component
         @defaults:
             type: 'ClickCourse'
@@ -245,6 +252,7 @@ define ['entities', 'underscore'], (Entities, _) ->
     return {
         Component, TypeName, EntityName, Position, Motion, Orbit, Spin,
         Bouncer, Spawn, Tombstone, Collidable, CollisionCircle, Renderable,
-        Sprite, Thruster, Seeker, ClickCourse, WeaponsTarget, BeamWeapon,
-        Health, Explosion, RadarPing, MissileWeapon, Missile, VaporTrail
+        Sprite, Thruster, Seeker, Steering, ClickCourse, WeaponsTarget,
+        BeamWeapon, Health, Explosion, RadarPing, MissileWeapon, Missile,
+        VaporTrail
     }

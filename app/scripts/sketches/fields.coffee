@@ -212,4 +212,6 @@ define [
         thruster = em.get('hero', C.Thruster)
         gui.add(thruster, 'active').listen()
 
+    window.world = world
+
     return world

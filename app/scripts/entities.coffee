@@ -1,8 +1,8 @@
-define ['components', 'utils', 'underscore'], (C, Utils, _) ->
+define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree) ->
 
     class EntityManager
 
-        constructor: () ->
+        constructor: (@width=1000, @height=1000) ->
             @reset()
 
         reset: () ->
@@ -11,6 +11,7 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             @max_gid = 0
             @entities_by_group = {}
             @groups_by_entity = {}
+            @quadtrees = {}
 
         load: (data) ->
             @reset()
@@ -138,6 +139,46 @@ define ['components', 'utils', 'underscore'], (C, Utils, _) ->
             if not (group_id of @entities_by_group)
                 return []
             return @entities_by_group[group_id]
+
+        update: (t_delta) ->
+            @update_quadtrees()
+
+        update_quadtrees: () ->
+            for gid of @entities_by_group
+                @update_quadtree(gid)
+
+        update_quadtree: (gid) ->
+            if @quadtrees[gid]
+                qt = @quadtrees[gid]
+                qt.clear()
+            else
+                qt = @quadtrees[gid] = new QuadTree({
+                    x: 0 - @width / 2,
+                    y: 0 - @height / 2,
+                    width: @width,
+                    height: @height
+                }, false)
+
+            for eid, ignore of @entities_by_group[gid]
+                
+                spawn = @store.Spawn[eid]
+                continue if not spawn or (spawn.destroy) or (not spawn.spawned)
+                
+                sprite = @store.Sprite[eid]
+                continue if not sprite
+
+                collidable = @store.Collidable[eid]
+                pos = @store.Position[eid]
+                qt.insert({
+                    eid: eid,
+                    x: pos.x,
+                    y: pos.y,
+                    width: sprite.width,
+                    height: sprite.height,
+                    collidable: collidable,
+                    pos: pos,
+                    sprite: sprite
+                })
 
     class EntityTemplate
         @create: (entity_manager) ->

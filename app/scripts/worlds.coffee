@@ -1,8 +1,8 @@
 define [
     'utils', 'entities', 'components', 'systems', 'underscore', 'pubsub',
-    'Stats'
+    'Stats', 'QuadTree'
 ], (
-    Utils, Entities, Components, Systems, _, PubSub, Stats
+    Utils, Entities, Components, Systems, _, PubSub, Stats, QuadTree
 ) ->
     requestAnimationFrame = (window.requestAnimationFrame or
         window.webkitRequestAnimationFrame or
@@ -18,7 +18,6 @@ define [
         measure_fps: false
         tick_duration: TARGET_DURATION
         max_t_delta: TARGET_DURATION * 5
-        ticks: 0
 
         constructor: (@width=640, @height=480, systems...) ->
             @id = Utils.generateID()
@@ -27,7 +26,7 @@ define [
             @is_paused = false
             
             @inputs = {}
-            @entities = new Entities.EntityManager
+            @entities = new Entities.EntityManager(@width, @height)
             @systems = []
             @msg_subscribers = {}
             @addSystem(systems...)
@@ -61,7 +60,7 @@ define [
             return this
 
         tick: (t_delta) ->
-            @ticks++
+            @entities.update(t_delta)
             for s in @systems
                 s.update t_delta
             return @

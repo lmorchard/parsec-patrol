@@ -717,23 +717,20 @@ define [
         match_component: C.Collidable
 
         update: (t_delta) ->
-
             gid = @world.current_scene
-            if not @quadtrees[gid]
-                @quadtrees[gid] = new QuadTree({
-                    x: 0 - @world.width/2,
-                    y: 0 - @world.height/2,
-                    width: @world.width,
-                    height: @world.height
-                }, false)
+            qt = @world.entities.quadtrees[gid]
+            return if not qt
 
-            qt = @update_quadtree(t_delta, gid)
-            
             matches = @world.entities.getComponents(@match_component)
             for a_eid, a_collidable of matches
+
+                for k, v of a_collidable.in_collision_with
+                    delete a_collidable.in_collision_with[k]
+                continue if not @world.entities.groupHasEntity(gid, a_eid)
+                
                 spawn = @world.entities.store.Spawn[a_eid]
                 continue if not spawn or (spawn.destroy) or (not spawn.spawned)
-
+                
                 a_pos = @world.entities.store.Position[a_eid]
                 a_sprite = @world.entities.store.Sprite[a_eid]
                 items = qt.retrieve({
@@ -742,41 +739,12 @@ define [
                     width: a_sprite.width,
                     height: a_sprite.height
                 })
+
                 for b in items
                     continue if b.eid is a_eid
                     @checkCollision(
                         b.eid, b.collidable, b.pos, b.sprite,
                         a_eid, a_collidable, a_pos, a_sprite)
-
-        update_quadtree: (t_delta, gid) ->
-            qt = @quadtrees[gid]
-            qt.clear()
-
-            for eid, ignore of @world.entities.entitiesForGroup(gid)
-                collidable = @world.entities.store.Collidable[eid]
-                continue if not collidable
-
-                spawn = @world.entities.store.Spawn[eid]
-                continue if not spawn or (spawn.destroy) or (not spawn.spawned)
-
-                for k, v of collidable.in_collision_with
-                    delete collidable.in_collision_with[k]
-
-                pos = @world.entities.store.Position[eid]
-                sprite = @world.entities.store.Sprite[eid]
-                rec = {
-                    eid: eid,
-                    x: pos.x,
-                    y: pos.y,
-                    width: sprite.width,
-                    height: sprite.height,
-                    collidable: collidable,
-                    pos: pos,
-                    sprite: sprite,
-                }
-                qt.insert(rec)
-
-            return qt
 
         checkCollision: (b_eid, b_collidable, b_pos, b_sprite,
                          a_eid, a_collidable, a_pos, a_sprite) ->
@@ -939,10 +907,10 @@ define [
             M = m1 + m2
 
             # Minimum translation vector to push entities apart
-            #mt = {
-            #    x: dn.x * (sprite.width + c_sprite.width - delta),
-            #    y: dn.y * (sprite.width + c_sprite.width - delta)
-            #}
+            mt = {
+                x: dn.x * (sprite.width + c_sprite.width - delta),
+                y: dn.y * (sprite.width + c_sprite.width - delta)
+            }
              
             # Velocity vectors of entities before collision
             v1 = if motion
@@ -1050,6 +1018,57 @@ define [
             pos.y = @v_orbiter.y
             if orbiter.rotate
                 pos.rotation = @v_old.angleTo(@v_orbiter) + (Math.PI * 0.5)
+
+    class SteeringSystem extends System
+        match_component: C.Steering
+
+        constructor: () ->
+            @v_steering = new Vector2D()
+            @v_target = new Vector2D()
+
+        update_match: (dt, eid, steering) ->
+
+            pos = @world.entities.get(eid, C.Position)
+            return if not pos
+
+            motion = @world.entities.get(eid, C.Motion)
+            return if not motion
+
+            # Accept either a raw x/y coord or entity ID as target
+            target_pos = steering.target
+            if not _.isObject(target_pos)
+                target_pos = @world.entities.get(steering.target, C.Position)
+            return if not target_pos or (not target_pos.x and target_pos.y)
+
+            # Set up the vectors for angle math...
+            @v_steering.setValues(pos.x, pos.y)
+            @v_target.setValues(target_pos.x, target_pos.y)
+
+            # Get the target angle, ensuring a 0..2*Math.PI range.
+            target_angle = @v_steering.angleTo(@v_target) + (Math.PI*0.5)
+            target_angle += 2*Math.PI if target_angle < 0
+
+            # Pick the direction from current to target angle
+            direction = if target_angle < pos.rotation then -1 else 1
+   
+            # If the offset between the angles is more than half a circle, go
+            # the other way because it'll be shorter.
+            offset = Math.abs(target_angle - pos.rotation)
+            if offset > Math.PI
+                direction = 0 - direction
+
+            # Work out the desired delta-rotation to steer toward target
+            target_dr = direction * Math.min(steering.rad_per_sec, offset/dt)
+
+            # Calculate the delta-rotation impulse required to meet the goal,
+            # but constrain to the capability of the steering thrusters
+            impulse_dr = (target_dr - motion.drotation)
+            if Math.abs(impulse_dr) > steering.rad_per_sec
+                impulse_dr = if impulse_dr > 0
+                    steering.rad_per_sec
+                else if impulse_dr < 0
+                    0 - steering.rad_per_sec
+            motion.drotation += impulse_dr
 
     class SeekerSystem extends System
         match_component: C.Seeker
@@ -1571,7 +1590,7 @@ define [
     return {
         System, SpawnSystem, MotionSystem, BouncerSystem, SpinSystem,
         OrbiterSystem, ViewportSystem, PointerInputSystem, CollisionSystem,
-        OldCollisionSystem, SeekerSystem, ThrusterSystem, ClickCourseSystem,
-        KeyboardInputSystem, BeamWeaponSystem, HealthSystem, ExplosionSystem,
-        RadarSystem, MissileWeaponSystem, VaporTrailSystem
+        OldCollisionSystem, SeekerSystem, SteeringSystem, ThrusterSystem,
+        ClickCourseSystem, KeyboardInputSystem, BeamWeaponSystem, HealthSystem,
+        ExplosionSystem, RadarSystem, MissileWeaponSystem, VaporTrailSystem
     }
