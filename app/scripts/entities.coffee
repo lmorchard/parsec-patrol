@@ -173,6 +173,7 @@ define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree
                     eid: eid,
                     x: pos.x,
                     y: pos.y,
+                    rotation: pos.rotation,
                     width: sprite.width,
                     height: sprite.height,
                     collidable: collidable,

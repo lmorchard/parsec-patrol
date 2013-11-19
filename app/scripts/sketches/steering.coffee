@@ -34,7 +34,7 @@ define [
                 Motion: { drotation: Math.PI / 8 }
                 Collidable: {}
                 CollisionCircle: { radius: 150 }
-                # Bouncer: { mass: 2000, damage: 0 }
+                Bouncer: { mass: 2000, damage: 0 }
 
             hero:
                 TypeName: { name: "HeroShip" }
@@ -45,29 +45,60 @@ define [
                 Collidable: {},
                 CollisionCircle: { radius: 15 }
 
-            enemy:
+            enemy1:
                 Sprite: { shape: 'enemyscout', width: 30, height: 30 }
-                Spawn: { x: -450, y: 0 }
+                Spawn: { x: -450, y: -50, rotation: 0 }
                 Position: {}
                 Motion: {}
                 Collidable: {},
+                CollisionCircle: { radius: 15 }
                 Bouncer: { mass: 2000, damage: 0 }
                 Thruster: { dv: 250, max_v: 120 }
                 Steering:
                     target: 'hero'
-                    los_range: 100
+                    los_range: 150
+                    rad_per_sec: Math.PI
+
+            enemy2:
+                Sprite: { shape: 'enemyscout', width: 30, height: 30 }
+                Spawn: { x: -450, y: 50, rotation: Math.PI }
+                Position: { }
+                Motion: {}
+                Collidable: {},
+                CollisionCircle: { radius: 15 }
+                Bouncer: { mass: 2000, damage: 0 }
+                Thruster: { dv: 250, max_v: 120 }
+                Steering:
+                    target: 'hero'
+                    los_range: 150
+                    rad_per_sec: Math.PI
+
+            enemy3:
+                Sprite: { shape: 'enemyscout', width: 30, height: 30 }
+                Spawn: { x: -450, y: 0, rotation: Math.PI / 2 }
+                Position: { }
+                Motion: {}
+                Collidable: {},
+                CollisionCircle: { radius: 15 }
+                Bouncer: { mass: 2000, damage: 0 }
+                Thruster: { dv: 250, max_v: 120 }
+                Steering:
+                    target: 'hero'
+                    los_range: 150
                     rad_per_sec: Math.PI
 
         groups:
-            main: [ 'rock', 'hero', 'enemy' ]
+            main: [ 'rock', 'hero',
+                'enemy1',
+                #'enemy2',
+                #'enemy3',
+            ]
 
         current_scene: "main"
 
-    c_enemy_steering = world.entities.get('enemy', C.Steering)
-
     vp.zoom = 1.0
-    vp.draw_bounding_boxes = false
-    vp.draw_steering_ray = true
+    vp.draw_bounding_boxes = true
+    vp.draw_steering = true
     world.measure_fps = measure_fps
 
     if use_gui
@@ -78,7 +109,7 @@ define [
         gui.add(vp, 'glow')
         gui.add(vp, 'use_sprite_cache')
         gui.add(vp, 'draw_bounding_boxes')
-        gui.add(vp, 'draw_steering_ray')
+        gui.add(vp, 'draw_steering')
 
     window.world = world
 

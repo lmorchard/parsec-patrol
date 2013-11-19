@@ -207,7 +207,7 @@ define [
         draw_bounding_boxes: false
         draw_mass: false
         draw_beam_range: false
-        draw_steering_ray: false
+        draw_steering: false
         grid_size: 150
         grid_color: '#111'
         source_size: 100
@@ -294,7 +294,7 @@ define [
 
             @ctx.restore()
 
-            if @world.is_paused
+            if false and @world.is_paused
                 @draw_paused_bezel(t_delta)
             
             if @screen_ctx
@@ -403,6 +403,32 @@ define [
                 if vapor_trail
                     @draw_vapor_trail t_delta, eid, vapor_trail
                 
+                if @draw_steering
+                    steering = @world.entities.store.Steering[eid]
+                    if steering
+                        @ctx.save()
+
+                        if steering.hit_circles
+                            @ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
+                            for [x, y, r] in steering.hit_circles
+                                @ctx.beginPath()
+                                @ctx.arc(x, y, r, 0, Math.PI*2, false)
+                                @ctx.stroke()
+
+                        if steering.dodging
+                            @ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
+                        else
+                            @ctx.strokeStyle = 'rgba(0, 128, 0, 0.5)'
+
+                        @ctx.beginPath()
+                        v = new Vector2D(pos.x, pos.y - 100)
+                        v.rotateAround(pos, steering.target_angle)
+                        @ctx.moveTo(pos.x, pos.y)
+                        @ctx.lineTo(v.x, v.y)
+                        @ctx.stroke()
+
+                        @ctx.restore()
+
                 @ctx.translate(pos.x, pos.y)
 
                 if sprite
@@ -433,7 +459,6 @@ define [
                             @ctx.textAlign = 'center'
                             @ctx.textBaseline = 'middle'
                             @ctx.fillText(bouncer.mass, 0, 0)
-                    
 
                     @draw_sprite t_delta, eid, w, h, pos, sprite
 
@@ -581,24 +606,6 @@ define [
             BASE_H = 100
 
             @ctx.rotate(pos.rotation)
-
-            if @draw_steering_ray
-                steering = @world.entities.store.Steering?[eid]
-                if steering
-                    @ctx.strokeStyle = '#f00'
-                    @ctx.beginPath()
-                    @ctx.moveTo(0 - sprite.width/2, 0)
-                    @ctx.lineWidth = 1
-                    @ctx.lineTo(0 - sprite.width/2, 0 - steering.los_range)
-                    @ctx.stroke()
-
-                    @ctx.strokeStyle = '#f00'
-                    @ctx.beginPath()
-                    @ctx.moveTo(sprite.width/2, 0)
-                    @ctx.lineWidth = 1
-                    @ctx.lineTo(sprite.width/2, 0 - steering.los_range)
-                    @ctx.stroke()
-
             @ctx.scale(w / BASE_W, h / BASE_H)
 
             if @use_sprite_cache
@@ -712,24 +719,6 @@ define [
             ctx.stroke()
 
     class CollisionSystem extends System
-
-        # NOTES TO SELF: This CollisionSystem makes an attempt to optimize
-        # using QuadTrees, but could still use improvements with actual
-        # detecting shape intersections.
-        #
-        # And, it seems wasteful to reindex all the things by clearing the
-        # quadtree on every frame, but I'm not sure there's a such thing as an
-        # in-place modify with reindex here. Additionally, quadtree operations
-        # do not seem to be significant CPU wasters, even in bulk on every
-        # frame.
-        #
-        # Also, this makes some possibly fragile access directly into
-        # @world.entities.store that cuts down on a surprising amount of CPU
-        # time. 
-        #
-        # That means @world.entities.get() could use some big improvements,
-        # and/or I could just accept that direct data access to entity storage
-        # is a thing to support cautiously
         
         constructor: () ->
             @quadtrees = {}
@@ -737,34 +726,42 @@ define [
         match_component: C.Collidable
 
         update: (t_delta) ->
-            gid = @world.current_scene
-            qt = @world.entities.quadtrees[gid]
-            return if not qt
-
             matches = @world.entities.getComponents(@match_component)
             for a_eid, a_collidable of matches
+                @checkCollisions(a_eid, a_collidable)
 
-                for k, v of a_collidable.in_collision_with
-                    delete a_collidable.in_collision_with[k]
-                continue if not @world.entities.groupHasEntity(gid, a_eid)
-                
-                spawn = @world.entities.store.Spawn[a_eid]
-                continue if not spawn or (spawn.destroy) or (not spawn.spawned)
-                
-                a_pos = @world.entities.store.Position[a_eid]
-                a_sprite = @world.entities.store.Sprite[a_eid]
-                items = qt.retrieve({
-                    x: a_pos.x,
-                    y: a_pos.y,
-                    width: a_sprite.width,
-                    height: a_sprite.height
-                })
+        checkCollisions: (a_eid, a_collidable) ->
+            # Ignore unspawned or destroyed entities
+            spawn = @world.entities.store.Spawn[a_eid]
+            return if not spawn or (spawn.destroy) or (not spawn.spawned)
 
-                for b in items
-                    continue if b.eid is a_eid
-                    @checkCollision(
-                        b.eid, b.collidable, b.pos, b.sprite,
-                        a_eid, a_collidable, a_pos, a_sprite)
+            # Reset collision state for this entity
+            for k, v of a_collidable.in_collision_with
+                delete a_collidable.in_collision_with[k]
+
+            # Find the group for this entity, and the quadtree indexing
+            # positions for that group.
+            gid = @world.entities.groupForEntity(a_eid)
+            qt = @world.entities.quadtrees[gid]
+            return if not qt
+            
+            # Use the entity's position and shape to look up potential
+            # collisions from the quadtree
+            a_pos = @world.entities.store.Position[a_eid]
+            a_sprite = @world.entities.store.Sprite[a_eid]
+            items = qt.retrieve({
+                x: a_pos.x,
+                y: a_pos.y,
+                width: a_sprite.width,
+                height: a_sprite.height
+            })
+
+            # Finally, check for collisions with the quadtree results
+            for b in items
+                continue if b.eid is a_eid
+                @checkCollision(
+                    b.eid, b.collidable, b.pos, b.sprite,
+                    a_eid, a_collidable, a_pos, a_sprite)
 
         checkCollision: (b_eid, b_collidable, b_pos, b_sprite,
                          a_eid, a_collidable, a_pos, a_sprite) ->
@@ -784,63 +781,6 @@ define [
                     if Math.abs(a_pos.y - b_pos.y) * 2 < (a_sprite.height + b_sprite.height)
                         a_collidable.in_collision_with[b_eid] = 1 #Date.now()
                         b_collidable.in_collision_with[a_eid] = 1 #Date.now()
-
-    class OldCollisionSystem extends System
-        constructor: () ->
-
-        match_component: C.Collidable
-
-        update: (t_delta) ->
-            matches = @world.entities.getComponents(@match_component)
-
-            # TODO: Fix this horrible, naive collision detection
-            # No account for shape or rotation. No quadtrees, etc.
-            # Probably good-enough for now
-            # See also: http://www.mikechambers.com/blog/2011/03/21/javascript-quadtree-implementation/
-            
-            boxes = {}
-            [COLLIDABLE, LEFT, TOP, HEIGHT, WIDTH] = [0..4]
-            for eid, collidable of matches
-                [pos, sprite] = @world.entities.get(eid, C.Position, C.Sprite)
-                boxes[eid] = [collidable, pos.x, pos.y,
-                              sprite.width, sprite.height]
-
-            for [a_eid, b_eid] in @combinations(_.keys(boxes), 2)
-                a_box = boxes[a_eid]
-                b_box = boxes[b_eid]
-
-                left_dist    = Math.abs(a_box[LEFT] - b_box[LEFT]) * 2
-                top_dist     = Math.abs(a_box[TOP] - b_box[TOP]) * 2
-                width_total  = a_box[WIDTH] + b_box[WIDTH]
-                height_total = a_box[HEIGHT] + b_box[HEIGHT]
-                
-                already_in_collision = (
-                    (b_eid of a_box[COLLIDABLE].in_collision_with) and
-                    (a_eid of b_box[COLLIDABLE].in_collision_with)
-                )
-
-                if left_dist < width_total and top_dist < height_total
-                    if not already_in_collision
-                        a_box[COLLIDABLE].in_collision_with[b_eid] = Utils.now()
-                        b_box[COLLIDABLE].in_collision_with[a_eid] = Utils.now()
-
-                else if already_in_collision
-                    delete a_box[COLLIDABLE].in_collision_with[b_eid]
-                    delete b_box[COLLIDABLE].in_collision_with[a_eid]
-
-        combinations: (arr, k) ->
-            # Stolen from http://rosettacode.org/wiki/Combinations#JavaScript
-            ret = []
-            if arr.length > 0 then for i in [0..arr.length-1]
-                if k is 1
-                    ret.push([arr[i]])
-                else
-                    sub = @combinations(arr.slice(i+1, arr.length), k-1)
-                    if sub.length > 0 then for subI in [0..sub.length-1]
-                        next = sub[subI]
-                        next.unshift(arr[i])
-                        ret.push(next)
-            return ret
 
     class MotionSystem extends System
         match_component: C.Motion
@@ -1044,73 +984,72 @@ define [
 
         constructor: () ->
             @v_steering = new Vector2D()
-            @v_los = new Vector2D()
+            @v_ray = new Vector2D()
+            @v_ray_unit = new Vector2D()
             @v_target = new Vector2D()
+            @v_dodge = new Vector2D()
+            @v_dodge_unit = new Vector2D()
 
         castRay: (eid, pos, sprite, steering, side) ->
 
-            offset = (side * sprite.width) / 2
-            los_range = steering.los_range
-            los_range_sq = los_range * los_range
+            hw = sprite.width * 0.5
+            offset = side * hw
+            steps = steering.los_range / (hw * 2)
 
-            @v_los.setValues(pos.x + offset, pos.y - los_range)
-            @v_los.rotate(pos.rotation)
+            @v_ray_unit.setValues(0, 0 - (hw * 2))
+            @v_ray_unit.rotate(pos.rotation)
 
-            xb = pos.x
-            yb = pos.y
-            slope = (@v_los.y - yb) / (@v_los.x - xb)
+            @v_ray.setValues(pos.x + offset, pos.y)
+            @v_ray.rotateAround(pos, pos.rotation + Math.PI)
 
-            idx = 0
-            while true
-                idx++
-                y1 = [idx*slope, idx]
-                yd = (y1[1]*y1[1]) + (y1[0]*y1[0])
-                x1 = [idx, idx/slope]
-                xd = (x1[1]*x1[1]) + (x1[0]*x1[0])
-                
-                break if yd > los_range_sq and xd > los_range_sq
+            for idx in [0..steps]
+                items = @findHits(eid, steering, @v_ray.x, @v_ray.y, hw, hw)
+                return items if items.length > 0
+                @v_ray.add(@v_ray_unit)
 
-                if yd < xd
-                    if yd <= los_range_sq
-                        c = @findCollisions(eid, y1[0] + xb, y1[1] + yb, sprite.width, sprite.height)
-                        return c if c
-                    if xd <= los_range_sq
-                        c = @findCollisions(eid, x1[0] + xb, x1[1] + yb, sprite.width, sprite.height)
-                        return c if c
-                else
-                    if xd <= los_range_sq
-                        c = @findCollisions(eid, x1[0] + xb, x1[1] + yb, sprite.width, sprite.height)
-                        return c if c
-                    if yd <= los_range_sq
-                        c = @findCollisions(eid, y1[0] + xb, y1[1] + yb, sprite.width, sprite.height)
-                        return c if c
+            return []
 
+        findHits: (eid, steering, x, y, width, height) ->
+            steering.hit_circles.push([x, y, width])
 
-            return null
-
-        findCollisions: (eid, x, y, width, height) ->
             gid = @world.entities.groupForEntity(eid)
             qt = @world.entities.quadtrees[gid]
+            return [] if not qt
 
-            in_collision = []
             items = qt.retrieve({
                 x: x,
                 y: y,
                 width: width,
                 height: height
             })
+
+            in_collision = []
             for item in items
                 continue if item.eid is eid
-                radii = item.width + width
+                radii = (item.width/2) + (width/2)
                 dx = item.x - x
                 dy = item.y - y
-                if (dx*dx) + (dy*dy) < radii*radii
-                    in_collision.push(item.eid)
+                dist_sq = (dx*dx) + (dy*dy)
+                if dist_sq <= radii*radii
+                    in_collision.push([dist_sq, item])
 
-            if in_collision.length > 0
-                return in_collision
-            else
-                return null
+            return _.sortBy(in_collision, 0)
+
+        calculateDodgeTarget: (side,
+                               a_x, a_y, a_diameter,
+                               b_x, b_y, b_diameter) ->
+
+            # HACK: atan2 why you so crazy and fall over
+            angle_a2b = Math.atan2(b_y - a_y, b_x - a_x) + (Math.PI/2)
+
+            ac = (a_diameter*1) + (b_diameter/2)
+            ab = Math.sqrt((b_x-a_x) * (b_x-a_x) +
+                           (b_y-a_y) * (b_x-a_y))
+            if ab > ac
+                angle_dodge = Math.asin(ac / ab)
+                angle_a2b +=  (side * angle_dodge)
+
+            return angle_a2b
 
         update_match: (dt, eid, steering) ->
 
@@ -1121,19 +1060,39 @@ define [
             return if not motion
 
             sprite = @world.entities.get(eid, C.Sprite)
+            return if not sprite
+
+            steering.hit_circles = []
             steering.ray_left = @castRay(eid, pos, sprite, steering, -1)
             steering.ray_right = @castRay(eid, pos, sprite, steering, 1)
 
-            if steering.ray_left
-                target_dr = -1 * steering.rad_per_sec
-            else if steering.ray_right
-                target_dr = 1 * steering.rad_per_sec
+            if steering.ray_left.length
+                item = steering.ray_left[0][1]
+                steering.dodging = true
+                steering.target_angle = target_angle = @calculateDodgeTarget(
+                    -1,
+                    pos.x, pos.y, sprite.width,
+                    item.x, item.y, item.width
+                )
+
+            else if steering.ray_right.length
+                item = steering.ray_right[0][1]
+                steering.dodging = true
+                steering.target_angle = target_angle = @calculateDodgeTarget(
+                    1,
+                    pos.x, pos.y, sprite.width,
+                    item.x, item.y, item.width
+                )
+
             else
                 # Accept either a raw x/y coord or entity ID as target
                 target_pos = steering.target
                 if not _.isObject(target_pos)
                     target_pos = @world.entities.get(steering.target, C.Position)
-                return if not target_pos or (not target_pos.x and target_pos.y)
+                steering.dodging = false
+
+                #return if not target_pos or (not target_pos.x and target_pos.y)
+                steering.target_pos = {x: target_pos.x, y: target_pos.y}
 
                 # Set up the vectors for angle math...
                 @v_steering.setValues(pos.x, pos.y)
@@ -1142,18 +1101,19 @@ define [
                 # Get the target angle, ensuring a 0..2*Math.PI range.
                 target_angle = @v_steering.angleTo(@v_target) + (Math.PI*0.5)
                 target_angle += 2*Math.PI if target_angle < 0
+                steering.target_angle = target_angle
 
-                # Pick the direction from current to target angle
-                direction = if target_angle < pos.rotation then -1 else 1
-       
-                # If the offset between the angles is more than half a circle, go
-                # the other way because it'll be shorter.
-                offset = Math.abs(target_angle - pos.rotation)
-                if offset > Math.PI
-                    direction = 0 - direction
+            # Pick the direction from current to target angle
+            direction = if target_angle < pos.rotation then -1 else 1
+   
+            # If the offset between the angles is more than half a circle, go
+            # the other way because it'll be shorter.
+            offset = Math.abs(target_angle - pos.rotation)
+            if offset > Math.PI
+                direction = 0 - direction
 
-                # Work out the desired delta-rotation to steer toward target
-                target_dr = direction * Math.min(steering.rad_per_sec, offset/dt)
+            # Work out the desired delta-rotation to steer toward target
+            target_dr = direction * Math.min(steering.rad_per_sec, offset/dt)
 
             # Calculate the delta-rotation impulse required to meet the goal,
             # but constrain to the capability of the steering thrusters
@@ -1685,7 +1645,7 @@ define [
     return {
         System, SpawnSystem, MotionSystem, BouncerSystem, SpinSystem,
         OrbiterSystem, ViewportSystem, PointerInputSystem, CollisionSystem,
-        OldCollisionSystem, SeekerSystem, SteeringSystem, ThrusterSystem,
+        SeekerSystem, SteeringSystem, ThrusterSystem,
         ClickCourseSystem, KeyboardInputSystem, BeamWeaponSystem, HealthSystem,
         ExplosionSystem, RadarSystem, MissileWeaponSystem, VaporTrailSystem
     }
