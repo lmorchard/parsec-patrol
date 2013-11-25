@@ -999,7 +999,7 @@ define [
             @v_dodge_unit = new Vector2D()
 
         castRay: (eid, pos, sprite, steering, side) ->
-            hw = sprite.width * 0.66
+            hw = sprite.width * 0.5
             offset = side * hw * 1
             steps = steering.los_range / (hw*2)
 
@@ -1008,8 +1008,12 @@ define [
             @v_ray.setValues(pos.x, pos.y + offset)
             @v_ray.rotateAround(pos, pos.rotation)
 
+            f = 0.15
+            b = 1 - f
+            s = f / steps
             for idx in [0..steps]
-                items = @findHits(eid, steering, @v_ray.x, @v_ray.y, hw, hw)
+                hr = hw * (b + s * (steps - idx))
+                items = @findHits(eid, steering, @v_ray.x, @v_ray.y, hr, hr)
                 return items if items.length > 0
                 @v_ray.add(@v_ray_unit)
 
@@ -1042,7 +1046,7 @@ define [
             steering.angle_a2b = angle_a2b
 
             # Adjacent leg represents safe margin radius
-            ac = (a_diameter*2) + (b_diameter/2)
+            ac = (a_diameter * 1.85) + (b_diameter * 0.85)
             # Hypotenuse is distance to obstacle
             ab = Math.sqrt((b_x-a_x) * (b_x-a_x) +
                            (b_y-a_y) * (b_x-a_y))

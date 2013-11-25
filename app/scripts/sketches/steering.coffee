@@ -5,7 +5,7 @@ define [
     W, E, C, S, Utils, PubSub, $, _, dat, Vector2D
 ) -> (canvas, use_gui=true, measure_fps=true) ->
 
-    world = new W.World(1000, 1000,
+    world = new W.World(1200, 1200,
         vp = new S.ViewportSystem(canvas),
         new S.PointerInputSystem(canvas),
         new S.ClickCourseSystem,
@@ -25,80 +25,175 @@ define [
 
     world.load
         entities:
-
-            rock:
-                TypeName: { name: "Rock" }
-                Sprite: { shape: "asteroid", width: 400, height: 400 }
-                Spawn: { x: 0, y: 0 }
-                Position: {}
-                Motion: { drotation: Math.PI / 8 }
-                Collidable: {}
-                CollisionCircle: { radius: 200 }
-                Bouncer: { mass: 2000, damage: 0 }
-
             hero:
                 TypeName: { name: "HeroShip" }
-                Sprite: { shape: "hero", width: 30, height: 30 }
-                Spawn: { x: 450, y: 0 }
+                Sprite: { shape: "hero", width: 30, height: 30, stroke_style: "#3f3" }
+                Spawn: { x: 450, y: 0, rotation: Math.PI * -0.5 }
                 Position: {},
                 Motion: { dx:0, dy: 0 },
                 Collidable: {},
                 CollisionCircle: { radius: 15 }
 
-            enemy1:
-                Sprite: { shape: 'enemyscout', width: 30, height: 30 }
-                Spawn: { x: -450, y: -150, rotation: -Math.PI/2 }
+        groups:
+            main: [ 'rock', 'hero']
+
+        current_scene: "main"
+
+    spawn_enemies = () ->
+        enemy_positions = [
+            [-450, -250, Math.PI * -0.75]
+            [-450, -150, Math.PI * -0.5]
+            [-450, 0,    0]
+            [-450, 150,  Math.PI * 0.5]
+            [-450, 250,  Math.PI * 0.75]
+        ]
+        for [x, y, r] in enemy_positions
+            components = world.entities.loadComponents
+                Sprite: { shape: 'enemyscout', width: 30, height: 30, stroke_style: '#f33' }
+                Spawn: { x: x, y: y, rotation: r, ttl: 15 }
                 Position: {}
                 Motion: {}
                 Collidable: {},
                 CollisionCircle: { radius: 15 }
-                Bouncer: { mass: 2000, damage: 0 }
+                Bouncer: { mass: 1000, damage: 0 }
                 Thruster: { dv: 250, max_v: 120 }
                 Steering:
                     target: 'hero'
                     los_range: 150
                     rad_per_sec: Math.PI
+                Tombstone:
+                    load:
+                        Position: {}
+                        Explosion:
+                            ttl: 0.5
+                            radius: 40
+                            max_particles: 25
+                            max_particle_size: 1.25
+                            max_velocity: 250
+                            color: "#f33"
+            
+            eid = world.entities.create(components...)
+            world.entities.addToGroup('main', eid)
 
-            enemy2:
-                Sprite: { shape: 'enemyscout', width: 30, height: 30 }
-                Spawn: { x: -450, y: 150, rotation: Math.PI/2 }
-                Position: { }
-                Motion: {}
-                Collidable: {},
-                CollisionCircle: { radius: 15 }
-                Bouncer: { mass: 2000, damage: 0 }
-                Thruster: { dv: 250, max_v: 120 }
-                Steering:
-                    target: 'hero'
-                    los_range: 150
-                    rad_per_sec: Math.PI
+    setInterval spawn_enemies, 7 * 1000
+    spawn_enemies()
 
-            enemy3:
-                Sprite: { shape: 'enemyscout', width: 30, height: 30 }
-                Spawn: { x: -450, y: 0, rotation: 0 }
-                Position: { }
-                Motion: {}
-                Collidable: {},
-                CollisionCircle: { radius: 15 }
-                Bouncer: { mass: 2000, damage: 0 }
-                Thruster: { dv: 250, max_v: 120 }
-                Steering:
-                    target: 'hero'
-                    los_range: 150
-                    rad_per_sec: Math.PI
+    spawn_asteroid = (x, y, width, height, dx, dy, dr, mass, health) ->
+        components = world.entities.loadComponents
+            Sprite:
+                shape: "asteroid"
+                width: width
+                height: height
+            Spawn:
+                x: x
+                y: y
+                ttl: 40 * Math.random()
+            Motion:
+                dx: dx
+                dy: dy
+                drotation: dr
+            Health:
+                max: health
+                show_bar: false
+            Bouncer:
+                mass: mass
+                damage: 0.0007
+            RadarPing:
+                color: "#333"
+            Collidable: {}
+            CollisionCircle:
+                radius: (width / 2) * 0.85
+            Position: {}
+            Tombstone:
+                load:
+                    Position: {}
+                    Explosion:
+                        ttl: 0.5
+                        radius: 40
+                        max_particles: 25
+                        max_particle_size: 1.25
+                        max_velocity: 250
+                        color: "#fff"
 
-        groups:
-            main: [ 'rock', 'hero',
-                'enemy1',
-                'enemy2',
-                'enemy3',
-            ]
+        eid = world.entities.create(components...)
+        world.entities.addToGroup('main', eid)
+        return eid
 
-        current_scene: "main"
+    spawn_field = (
+        center_x = 0,
+        center_y = 0,
+        radius = 300,
+        MAX_ASTEROIDS = 50,
+        MAX_TRIES = 5,
+        MIN_SIZE = 12,
+        MAX_SIZE = 120,
+        MAX_GRAV = 8,
+    ) ->
 
-    vp.zoom = 1.0
-    vp.draw_bounding_boxes = true
-    vp.draw_steering = true
+        v_center = new Vector2D(center_x, center_y)
+
+        v_spawn = new Vector2D(0, 0)
+        v_grav = new Vector2D(0, 0)
+
+        in_field = []
+        for idx in [1..MAX_ASTEROIDS]
+            for c in [1..MAX_TRIES]
+
+                size = _.random(MIN_SIZE, MAX_SIZE)
+                v_spawn.setValues(v_center.x, v_center.y - _.random(1, radius))
+                rot = (Math.PI*4) * Math.random()
+                v_spawn.rotateAround(v_center, rot)
+
+                is_clear = true
+                for [x, y, w, h] in in_field
+                    if Utils.inCollision( #Circle(
+                            x, y, w, h,
+                            v_spawn.x, v_spawn.y,
+                            size * 1.0125, size * 1.0125)
+                        is_clear = false
+                        break
+
+                continue if not is_clear
+
+                in_field.push([v_spawn.x, v_spawn.y, size, size])
+
+                v_grav.setValues(0, Math.random() * MAX_GRAV)
+                v_grav.rotate(rot)
+
+                eid = spawn_asteroid(
+                    v_spawn.x, v_spawn.y,
+                    size, size,
+                    v_grav.x, v_grav.y,
+                    (Math.PI * 0.25) * Math.random(),
+                    4 * size * size,
+                    4 * size * size,
+                )
+
+    spawn_fields = () ->
+        spawn_field(-180, -180, 100)
+        spawn_field(-180, 180, 100)
+        spawn_field(0, 0, 100)
+        spawn_field(180, -180, 100)
+        spawn_field(180, 180, 100)
+    spawn_fields()
+    setInterval spawn_fields, 30 * 1000
+
+    if false
+        components = world.entities.loadComponents
+            TypeName: { name: "Rock" }
+            Sprite: { shape: "asteroid", width: 400, height: 400 }
+            Spawn: { x: 0, y: 0 }
+            Position: {}
+            Motion: { drotation: Math.PI / 8 }
+            Collidable: {}
+            CollisionCircle: { radius: 200 }
+            Bouncer: { mass: 2000, damage: 0 }
+        eid = world.entities.create(components...)
+        world.entities.addToGroup('main', eid)
+
+    vp.zoom = 0.75
+    vp.draw_bounding_boxes = false #true
+    vp.draw_steering = false #true
     world.measure_fps = measure_fps
 
     if use_gui
