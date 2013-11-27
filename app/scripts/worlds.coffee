@@ -84,7 +84,8 @@ define [
             return if @is_running
             @is_running = true
 
-            @t_last = 0
+            @t_draw_last = 0
+            @t_game_last = 0
             @accumulator = 0
 
             @tick_duration_sec = @tick_duration / 1000
@@ -94,14 +95,21 @@ define [
                 @stats.setMode(0)
                 document.body.appendChild(@stats.domElement)
 
-            run_loop = (ts) =>
+            run_draw_loop = (ts) =>
                 @stats.begin() if @measure_fps
-
-                t_delta = Math.min(ts - @t_last, @max_t_delta)
-                @t_last = ts
-
+                t_delta = Math.min(ts - @t_draw_last, @max_t_delta)
+                @t_draw_last = ts
                 @draw t_delta
+                @stats.end() if @measure_fps
+                if @is_running
+                    requestAnimationFrame run_draw_loop
 
+            requestAnimationFrame run_draw_loop
+
+            @t_game_last = Date.now()
+            run_game_loop = () =>
+                t_delta = Math.min(Date.now() - @t_game_last, @max_t_delta)
+                @t_game_last = Date.now()
                 if not @is_paused
                     # Fixed-step game logic loop
                     # see: http://gafferongames.com/game-physics/fix-your-timestep/
@@ -109,13 +117,10 @@ define [
                     while @accumulator > @tick_duration
                         @tick @tick_duration_sec
                         @accumulator -= @tick_duration
-
-                @stats.end() if @measure_fps
-
                 if @is_running
-                    requestAnimationFrame run_loop
+                    setTimeout run_game_loop, @tick_duration
 
-            requestAnimationFrame run_loop
+            setTimeout run_game_loop, @tick_duration
 
             return @
 
