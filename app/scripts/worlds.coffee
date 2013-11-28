@@ -106,6 +106,7 @@ define [
 
             requestAnimationFrame run_draw_loop
 
+            # See also: http://www.chandlerprall.com/2012/06/requestanimationframe-is-not-your-logics-friend/
             @t_game_last = Date.now()
             run_game_loop = () =>
                 t_delta = Math.min(Date.now() - @t_game_last, @max_t_delta)
