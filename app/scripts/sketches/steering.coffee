@@ -27,7 +27,7 @@ define [
         entities:
             hero:
                 TypeName: { name: "HeroShip" }
-                Sprite: { shape: "hero", width: 30, height: 30, stroke_style: "#3f3" }
+                Sprite: { shape: "hero", width: 75, height: 75, stroke_style: "#3f3" }
                 Spawn: { x: 450, y: 0, rotation: Math.PI * -0.5 }
                 Position: {},
                 Motion: { dx:0, dy: 0 },
@@ -40,6 +40,7 @@ define [
         current_scene: "main"
 
     spawn_enemies = () ->
+        return if world.is_paused
         enemy_positions = [
             [-450, -250, Math.PI * -0.75]
             [-450, -150, Math.PI * -0.5]
@@ -87,7 +88,7 @@ define [
             Spawn:
                 x: x
                 y: y
-                ttl: 40 * Math.random()
+                ttl: 60 * Math.random()
             Motion:
                 dx: dx
                 dy: dy
@@ -170,11 +171,12 @@ define [
                 )
 
     spawn_fields = () ->
-        spawn_field(-180, -180, 100)
-        spawn_field(-180, 180, 100)
+        return if world.is_paused
+        spawn_field(-200, -200, 100)
+        spawn_field(-200, 200, 100)
         spawn_field(0, 0, 100)
-        spawn_field(180, -180, 100)
-        spawn_field(180, 180, 100)
+        spawn_field(200, -200, 100)
+        spawn_field(200, 200, 100)
     spawn_fields()
     setInterval spawn_fields, 30 * 1000
 
