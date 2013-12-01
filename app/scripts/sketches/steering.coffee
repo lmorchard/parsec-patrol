@@ -14,10 +14,12 @@ define [
         new S.CollisionSystem,
         new S.BouncerSystem,
         new S.SeekerSystem,
+        new S.PotentialSteeringSystem,
         new S.SteeringSystem,
         new S.ThrusterSystem,
         new S.MotionSystem,
         new S.SpinSystem,
+        new S.VaporTrailSystem,
         new S.BeamWeaponSystem,
         new S.ExplosionSystem,
     )
@@ -58,10 +60,8 @@ define [
                 CollisionCircle: { radius: 15 }
                 Bouncer: { mass: 1000, damage: 0 }
                 Thruster: { dv: 250, max_v: 120 }
-                Steering:
-                    target: 'hero'
-                    los_range: 150
-                    rad_per_sec: Math.PI
+                #PotentialSteering: { target: 'hero', sensor_range: 125, rad_per_sec: Math.PI }
+                Steering: { target: 'hero', los_range: 150, rad_per_sec: Math.PI }
                 Tombstone:
                     load:
                         Position: {}

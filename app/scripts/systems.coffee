@@ -792,6 +792,136 @@ define [
             if orbiter.rotate
                 pos.rotation = @v_old.angleTo(@v_orbiter)
 
+    class PotentialSteeringSystem extends System
+        match_component: C.PotentialSteering
+
+        constructor: () ->
+            @v_self = new Vector2D()
+            @v_target = new Vector2D()
+            @v_accum = new Vector2D()
+
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
+                (msg, data...) => @drawViewportPre(data...)
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
+                (msg, data...) => @drawViewportPost(data...)
+
+        drawViewportPre: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            ps = @world.entities.store.PotentialSteering?[eid]
+            if ps and ps.vects
+                ctx.save()
+                ctx.strokeStyle = 'rgba(128, 128, 0, 0.5)'
+                for v in ps.vects
+                    ctx.beginPath()
+                    ctx.arc(v[2].x, v[2].y, 5, 0, Math.PI*2, false)
+                    ctx.moveTo(pos.x, pos.y)
+                    ctx.lineTo(v[2].x, v[2].y)
+                    ctx.stroke()
+                ctx.restore()
+
+        drawViewportPost: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            ps = @world.entities.store.PotentialSteering?[eid]
+            if ps
+                ctx.beginPath()
+                ctx.strokeStyle = 'rgba(128, 128, 0, 0.25)'
+                ctx.arc(0, 0, ps.sensor_range, 0, Math.PI*2, false)
+                ctx.stroke()
+                if ps.vects
+                    ctx.save()
+                    for v in ps.vects
+                        ctx.beginPath()
+                        ctx.strokeStyle = 'rgba(128, 0, 128, 0.25)'
+                        ctx.moveTo(0, 0)
+                        ctx.lineTo(v[0] * 100, v[1] * 100)
+                        ctx.stroke()
+                    ctx.restore()
+
+        calcLJ: (ignore_range, steering, pos, sprite, t_pos, t_sprite, A=2000, B=4000, n=2, m=3) ->
+            @v_target.setValues(@v_self.x - t_pos.x, @v_self.y - t_pos.y)
+            d = @v_target.magnitude() - (sprite.width/2) - (t_sprite.width/2)
+            d = 0.01 if d is 0 or d < 0
+            return if not ignore_range and d > steering.sensor_range
+            @v_target.normalise()
+            U = (-A/Math.pow(d,n)) + (B/Math.pow(d,m))
+            @v_target.multiplyScalar(U)
+
+            steering.vects.push([@v_target.x, @v_target.y, t_pos])
+            @v_accum.add(@v_target)
+
+        update_match: (dt, eid, steering) ->
+
+            pos = @world.entities.get(eid, C.Position)
+            return if not pos
+
+            motion = @world.entities.get(eid, C.Motion)
+            return if not motion
+
+            sprite = @world.entities.get(eid, C.Sprite)
+            return if not sprite
+            
+            @v_self.setValues(pos.x, pos.y)
+            @v_accum.setValues(0, 0)
+            steering.vects = []
+
+            t_pos = @world.entities.get(steering.target, C.Position)
+            t_sprite = @world.entities.get(steering.target, C.Sprite)
+            @calcLJ(true, steering, pos, sprite, t_pos, t_sprite,
+                    8000, 0, 1, 0)
+
+            # Avoid obstacles
+            if true
+                matches = @world.entities.getComponents(C.Position)
+                for t_eid, t_pos of matches
+                    t_sprite = @world.entities.get(t_eid, C.Sprite)
+                    return if not t_sprite
+                    continue if t_eid is steering.target
+                    continue if t_eid is eid
+                    @calcLJ(false, steering, pos, sprite, t_pos, t_sprite,
+                            0, 18000, 0, 1.95)
+
+            if false
+                gid = @world.entities.groupForEntity(eid)
+                qt = @world.entities.quadtrees[gid]
+                nearby = qt.retrieve({
+                    #x: pos.x, y: pos.y,
+                    x: pos.x - steering.sensor_range/2,
+                    y: pos.y - steering.sensor_range/2,
+                    width: steering.sensor_range,
+                    height: steering.sensor_range
+                })
+                for item in nearby
+                    continue if item.eid is steering.target
+                    continue if item.eid is eid
+                    @calcLJ(steering, pos, sprite, item.pos, item.sprite,
+                            0, 6000, 0, 2.25)
+
+            target_angle = @v_accum.angle()
+            target_angle += 2*Math.PI if target_angle < 0
+            steering.target_angle = target_angle
+
+            # Pick the direction from current to target angle
+            direction = if target_angle < pos.rotation then -1 else 1
+   
+            # If the offset between the angles is more than half a circle, go
+            # the other way because it'll be shorter.
+            offset = Math.abs(target_angle - pos.rotation)
+            if offset > Math.PI
+                direction = 0 - direction
+
+            # Work out the desired delta-rotation to steer toward target
+            target_dr = direction * Math.min(steering.rad_per_sec, offset/dt)
+
+            # Calculate the delta-rotation impulse required to meet the goal,
+            # but constrain to the capability of the steering thrusters
+            impulse_dr = (target_dr - motion.drotation)
+            if Math.abs(impulse_dr) > steering.rad_per_sec
+                impulse_dr = if impulse_dr > 0
+                    steering.rad_per_sec
+                else if impulse_dr < 0
+                    0 - steering.rad_per_sec
+            motion.drotation += impulse_dr
+
     class SteeringSystem extends System
         match_component: C.Steering
 
@@ -1616,5 +1746,6 @@ define [
         OrbiterSystem, ViewportSystem, PointerInputSystem, CollisionSystem,
         SeekerSystem, SteeringSystem, ThrusterSystem,
         ClickCourseSystem, KeyboardInputSystem, BeamWeaponSystem, HealthSystem,
-        ExplosionSystem, RadarSystem, MissileWeaponSystem, VaporTrailSystem
+        ExplosionSystem, RadarSystem, MissileWeaponSystem, VaporTrailSystem,
+        PotentialSteeringSystem
     }

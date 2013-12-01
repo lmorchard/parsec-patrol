@@ -114,6 +114,14 @@ define ['entities', 'underscore'], (Entities, _) ->
             acquisition_delay: 0
             rad_per_sec: 0
 
+    class PotentialSteering extends Component
+        @defaults:
+            type: 'PotentialSteering'
+            target: null
+            sensor_range: 100
+            rad_per_sec: Math.PI
+            vects: []
+
     class Steering extends Component
         @defaults:
             type: 'Steering'
@@ -256,5 +264,5 @@ define ['entities', 'underscore'], (Entities, _) ->
         Bouncer, Spawn, Tombstone, Collidable, CollisionCircle, Renderable,
         Sprite, Thruster, Seeker, Steering, ClickCourse, WeaponsTarget,
         BeamWeapon, Health, Explosion, RadarPing, MissileWeapon, Missile,
-        VaporTrail
+        VaporTrail, PotentialSteering
     }
