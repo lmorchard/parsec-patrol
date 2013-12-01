@@ -851,14 +851,16 @@ define [
 
             ctx.save()
 
+            # Draw sensor range indicator
             ctx.strokeStyle = 'rgba(128, 0, 0, 0.25)'
-
-            ctx.strokeRect(pos.x - ps.sensor_range,
-                           pos.y - ps.sensor_range,
-                           ps.sensor_range * 2,
-                           ps.sensor_range * 2)
-
+            ctx.moveTo(pos.x, pos.y)
+            ctx.beginPath()
+            ctx.arc(pos.x, pos.y, ps.sensor_range, 0, Math.PI*2, false)
+            ctx.stroke()
+            
+            # Draw lines to items of interest, thickness indicating magnitude
             for v in ps.vects
+                # Change color for attraction vs repulsion
                 ctx.strokeStyle = if v[3] > 0
                     'rgba(64, 64, 0, 0.125)'
                 else
@@ -876,7 +878,7 @@ define [
             @v_target.setValues(@v_self.x - t_pos.x, @v_self.y - t_pos.y)
             d = @v_target.magnitude() - (sprite.width/2) - (t_sprite.width/2)
             d = 0.01 if d is 0 or d < 0
-            return if not ignore_range and d > steering.sensor_range
+            return if not ignore_range and d > (steering.sensor_range - (sprite.width/2))
             @v_target.normalise()
             U = (-A/Math.pow(d,n)) + (B/Math.pow(d,m))
             @v_target.multiplyScalar(U)
