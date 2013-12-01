@@ -18,10 +18,10 @@ define [
         new S.BouncerSystem,
         new S.SeekerSystem,
         potential_steering_system = new S.PotentialSteeringSystem(
-            debug_potential_steering=false
+            debug_potential_steering=true
         ),
         steering_system = new S.SteeringSystem(
-            debug_steering=false
+            debug_steering=true
         ),
         new S.ThrusterSystem,
         new S.MotionSystem,
@@ -74,7 +74,7 @@ define [
                 PotentialSteering:
                     target: 'hero',
                     sensor_range: 140,
-                    rad_per_sec: Math.PI,
+                    rad_per_sec: Math.PI * 1.5,
                     attract_magnitude: 8000,
                     attract_attenuation: 1,
                     repel_magnitude: 9500,
@@ -212,7 +212,7 @@ define [
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
 
-    vp.zoom = 0.6
+    vp.zoom = 0.9
     vp.draw_bounding_boxes = true
     vp.draw_steering = true
     world.measure_fps = measure_fps

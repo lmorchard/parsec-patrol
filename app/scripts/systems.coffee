@@ -842,39 +842,34 @@ define [
         setWorld: (world) ->
             super world
             @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
-                (msg, data...) => @drawDebugPre(data...)
-            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
-                (msg, data...) => @drawDebugPost(data...)
+                (msg, data...) => @drawDebug(data...)
 
-        drawDebugPre: (t_delta, ctx, eid, pos, spawn, sprite) ->
+        drawDebug: (t_delta, ctx, eid, pos, spawn, sprite) ->
             return if not @debug_potential_steering
             ps = @world.entities.store.PotentialSteering?[eid]
             return if not ps or not ps.vects
+
             ctx.save()
-            ctx.strokeStyle = 'rgba(128, 128, 0, 0.5)'
+
+            ctx.strokeStyle = 'rgba(128, 0, 0, 0.25)'
+
+            ctx.strokeRect(pos.x - ps.sensor_range,
+                           pos.y - ps.sensor_range,
+                           ps.sensor_range * 2,
+                           ps.sensor_range * 2)
+
             for v in ps.vects
+                ctx.strokeStyle = if v[3] > 0
+                    'rgba(64, 64, 0, 0.125)'
+                else
+                    'rgba(0, 64, 64, 0.125)'
                 ctx.beginPath()
-                ctx.arc(v[2].x, v[2].y, 5, 0, Math.PI*2, false)
                 ctx.moveTo(pos.x, pos.y)
+                ctx.lineWidth = Math.min(Math.abs(v[3]), sprite.width)
                 ctx.lineTo(v[2].x, v[2].y)
                 ctx.stroke()
-            ctx.restore()
 
-        drawDebugPost: (t_delta, ctx, eid, pos, spawn, sprite) ->
-            return if not @debug_potential_steering
-            ps = @world.entities.store.PotentialSteering?[eid]
-            return if not ps
-            ctx.strokeStyle = 'rgba(128, 128, 0, 0.25)'
-            ctx.strokeRect(0 - ps.sensor_range, 0 - ps.sensor_range, ps.sensor_range * 2, ps.sensor_range * 2)
-            if false and ps.vects
-                ctx.save()
-                for v in ps.vects
-                    ctx.beginPath()
-                    ctx.strokeStyle = 'rgba(128, 0, 0, 0.25)'
-                    ctx.moveTo(0, 0)
-                    ctx.lineTo(v[0] * 100, v[1] * 100)
-                    ctx.stroke()
-                ctx.restore()
+            ctx.restore()
 
         calcLennardJones: (ignore_range, steering, pos, sprite, t_pos, t_sprite,
                            A=2000, B=4000, n=2, m=3) ->
@@ -885,7 +880,7 @@ define [
             @v_target.normalise()
             U = (-A/Math.pow(d,n)) + (B/Math.pow(d,m))
             @v_target.multiplyScalar(U)
-            steering.vects.push([@v_target.x, @v_target.y, t_pos])
+            steering.vects.push([@v_target.x, @v_target.y, t_pos, U])
             @v_accum.add(@v_target)
 
         updateMatch: (dt, eid, steering) ->
