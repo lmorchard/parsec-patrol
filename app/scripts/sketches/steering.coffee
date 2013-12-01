@@ -32,7 +32,7 @@ define [
                 Position: {},
                 Motion: { dx:0, dy: 0 },
                 Collidable: {},
-                CollisionCircle: { radius: 15 }
+                CollisionCircle: { radius: 37.5 }
 
         groups:
             main: [ 'rock', 'hero']
@@ -76,7 +76,7 @@ define [
             eid = world.entities.create(components...)
             world.entities.addToGroup('main', eid)
 
-    setInterval spawn_enemies, 7 * 1000
+    setInterval spawn_enemies, 15 * 1000
     spawn_enemies()
 
     spawn_asteroid = (x, y, width, height, dx, dy, dr, mass, health) ->
@@ -170,15 +170,16 @@ define [
                     4 * size * size,
                 )
 
-    spawn_fields = () ->
-        return if world.is_paused
-        spawn_field(-200, -200, 100)
-        spawn_field(-200, 200, 100)
-        spawn_field(0, 0, 100)
-        spawn_field(200, -200, 100)
-        spawn_field(200, 200, 100)
-    spawn_fields()
-    setInterval spawn_fields, 30 * 1000
+    if true
+        spawn_fields = () ->
+            return if world.is_paused
+            spawn_field(-225, -225, 100)
+            spawn_field(-225, 225, 100)
+            spawn_field(0, 0, 100)
+            spawn_field(225, -225, 100)
+            spawn_field(225, 225, 100)
+        spawn_fields()
+        setInterval spawn_fields, 30 * 1000
 
     if false
         components = world.entities.loadComponents
@@ -193,10 +194,12 @@ define [
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
 
-    vp.zoom = 0.75
-    vp.draw_bounding_boxes = false #true
-    vp.draw_steering = false #true
+    vp.zoom = 1.0
+    vp.draw_bounding_boxes = true
+    vp.draw_steering = true
     world.measure_fps = measure_fps
+
+    window.entities = world.entities
 
     if use_gui
         gui = new dat.GUI()
@@ -204,9 +207,6 @@ define [
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
         gui.add(vp, 'use_grid')
         gui.add(vp, 'glow')
-        gui.add(vp, 'use_sprite_cache')
-        gui.add(vp, 'draw_bounding_boxes')
-        gui.add(vp, 'draw_steering')
 
     window.world = world
 

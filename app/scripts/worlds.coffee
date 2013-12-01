@@ -39,10 +39,10 @@ define [
             (@msg_subscribers[msg] ?= []).push(handler)
             #PubSub.subscribe(@_psPrefix(msg), handler)
 
-        publish: (msg, data) ->
+        publish: (msg, data...) ->
             return if not @msg_subscribers[msg]
             for handler in @msg_subscribers[msg]
-                handler(msg, data)
+                handler(msg, data...)
             #PubSub.publish(@_psPrefix(msg), data)
 
         unsubscribe: (thing) ->

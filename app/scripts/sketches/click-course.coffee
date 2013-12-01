@@ -96,8 +96,6 @@ define [
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused')
-        gui.add(vp, 'use_sprite_cache')
-        gui.add(vp, 'draw_bounding_boxes')
 
     world.measure_fps = measure_fps
 

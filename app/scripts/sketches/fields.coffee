@@ -206,8 +206,6 @@ define [
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
         gui.add(vp, 'use_grid')
         gui.add(vp, 'glow')
-        gui.add(vp, 'use_sprite_cache')
-        gui.add(vp, 'draw_bounding_boxes')
 
         thruster = em.get('hero', C.Thruster)
         gui.add(thruster, 'active').listen()

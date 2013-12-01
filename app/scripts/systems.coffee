@@ -202,55 +202,26 @@ define [
 
     class ViewportSystem extends System
         @MSG_CAPTURE_CAMERA = 'viewport.capture_camera'
+        @MSG_DRAW_SCENE_PRE_TRANSLATE = 'viewport.draw_scene_pre_translate'
+        @MSG_DRAW_SCENE_POST_TRANSLATE = 'viewport.draw_scene_post_translate'
 
         glow: false
-        draw_bounding_boxes: false
         draw_mass: false
-        draw_beam_range: false
-        draw_steering: false
         grid_size: 150
         grid_color: '#111'
         source_size: 100
-        use_sprite_cache: false
         use_grid: true
         prev_zoom: 0
         zoom: 1
         camera_x: 0
         camera_y: 0
 
-        sprite_names: [
-            'star', 'hero', 'enemyscout', 'enemycruiser', 'torpedo', 'default'
-        ]
-
         constructor: (@canvas) ->
-
-            if true
-                @buffer_canvas = document.createElement('canvas')
-                @ctx = @buffer_canvas.getContext('2d')
-                @screen_ctx = @canvas.getContext('2d')
-            else
-                @buffer_canvas = null
-                @screen_ctx = null
-                @ctx = @canvas.getContext('2d')
-
+            @ctx = @canvas.getContext('2d')
             @viewport_width = 0
             @viewport_height = 0
             @viewport_ratio = 1.0
-
             @follow_entity = null
-
-            @sprite_cache = {}
-            for name in @sprite_names
-                canvas_size = @source_size + 10
-                canvas = document.createElement('canvas')
-                canvas.width = canvas_size
-                canvas.height = canvas_size
-                @sprite_cache[name] = canvas
-                ctx = canvas.getContext("2d")
-                ctx.translate(canvas_size / 2, canvas_size / 2)
-                ctx.lineWidth = 3
-                ctx.strokeStyle = "#fff"
-                @['draw_sprite_' + name](ctx)
 
         setWorld: (world) ->
             super world
@@ -294,11 +265,8 @@ define [
 
             @ctx.restore()
 
-            if false and @world.is_paused
+            if @world.is_paused
                 @draw_paused_bezel(t_delta)
-            
-            if @screen_ctx
-                @screen_ctx.drawImage(@buffer_canvas, 0, 0)
         
         updateViewportMetrics: (width, height) ->
             width = @canvas.width
@@ -309,9 +277,6 @@ define [
                 @prev_zoom = @zoom
                 @viewport_width = width
                 @viewport_height = height
-                if @buffer_canvas
-                    @buffer_canvas.width = width
-                    @buffer_canvas.height = height
 
                 @viewport_ratio = if @viewport_width > @viewport_height
                     @viewport_width / @world.width
@@ -384,8 +349,6 @@ define [
                 pos = @world.entities.get(eid, C.Position)
                 continue if not pos
 
-                @draw_beams t_delta, eid, pos
-
                 sprite = @world.entities.get(eid, C.Sprite)
 
                 # Skip drawing offscreen entities
@@ -398,230 +361,29 @@ define [
                     continue
 
                 @ctx.save()
-
-                vapor_trail = @world.entities.get(eid, C.VaporTrail)
-                if vapor_trail
-                    @draw_vapor_trail t_delta, eid, vapor_trail
                 
-                if @draw_steering
-                    steering = @world.entities.store.Steering[eid]
-                    if steering
-                        @ctx.save()
-
-                        if steering.hit_circles
-                            @ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
-                            for [x, y, r] in steering.hit_circles
-                                @ctx.beginPath()
-                                @ctx.arc(x, y, r, 0, Math.PI*2, false)
-                                @ctx.stroke()
-
-                        if steering.dodging
-                            @ctx.beginPath()
-                            @ctx.strokeStyle = 'rgba(128, 128, 0, 0.75)'
-                            v = new Vector2D(pos.x + 800, pos.y)
-                            v.rotateAround(pos, steering.angle_a2b)
-                            @ctx.moveTo(pos.x, pos.y)
-                            @ctx.lineTo(v.x, v.y)
-                            @ctx.stroke()
-
-                        @ctx.beginPath()
-                        if steering.dodging
-                            @ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
-                        else
-                            @ctx.strokeStyle = 'rgba(0, 128, 0, 0.5)'
-                        v = new Vector2D(pos.x + 800, pos.y)
-                        v.rotateAround(pos, steering.target_angle)
-                        @ctx.moveTo(pos.x, pos.y)
-                        @ctx.lineTo(v.x, v.y)
-                        @ctx.stroke()
-
-                        @ctx.restore()
-
+                @world.publish @constructor.MSG_DRAW_SCENE_PRE_TRANSLATE,
+                    t_delta, @ctx, eid, pos, spawn, sprite
+                
                 @ctx.translate(pos.x, pos.y)
 
-                if sprite
-                    w = sprite.width
-                    h = sprite.height
+                @world.publish @constructor.MSG_DRAW_SCENE_POST_TRANSLATE,
+                    t_delta, @ctx, eid, pos, spawn, sprite
 
-                    if @draw_bounding_boxes
-                        @ctx.strokeStyle = "#33c"
-                        hc = @world.entities.store.CollisionCircle?[eid]
-                        if not hc
-                            wb = w / 2
-                            hb = h / 2
-                            @ctx.strokeRect(0-wb, 0-wb, w, h)
-                        else
-                            @ctx.beginPath()
-                            @ctx.arc(0, 0, hc.radius, Math.PI*2, false)
-                            @ctx.stroke()
-
-                    @draw_health_bar t_delta, eid, w, h
-
-                    if @draw_mass
-                        bouncer = @world.entities.get(eid, C.Bouncer)
-                        if bouncer
-                            @ctx.fillStyle = "#fff"
-                            @ctx.strokeStyle = "#fff"
-                            font_size = 14 * @viewport_ratio
-                            @ctx.font = "normal normal #{font_size}px monospace"
-                            @ctx.textAlign = 'center'
-                            @ctx.textBaseline = 'middle'
-                            @ctx.fillText(bouncer.mass, 0, 0)
-
-                    @draw_sprite t_delta, eid, w, h, pos, sprite
-
-                explosion = @world.entities.get(eid, C.Explosion)
-                if explosion
-                    @draw_explosion t_delta, eid, explosion
+                @draw_sprite t_delta, eid, pos, sprite
                 
                 @ctx.restore()
 
-        draw_vapor_trail: (t_delta, eid, vapor_trail) ->
-            @ctx.save()
-            alpha_unit = 1.0 / vapor_trail.particles.length
-            @ctx.globalAlpha = 1.0
-            skip_ct = vapor_trail.skip
-            for p in vapor_trail.particles
-                continue if (skip_ct--) > 0
-                @ctx.globalAlpha -= alpha_unit
-                @ctx.fillStyle = vapor_trail.color
-                @ctx.fillRect(p.x, p.y,
-                              vapor_trail.width, vapor_trail.width)
-            @ctx.restore()
+        draw_sprite: (t_delta, eid, pos, sprite) ->
+            return if not sprite
 
-        draw_explosion: (t_delta, eid, explosion) ->
-
-            @ctx.save()
-
-            @ctx.strokeStyle = explosion.color
-            @ctx.fillStyle = explosion.color
-            if @glow
-                @ctx.shadowColor = explosion.color
-                @ctx.shadowBlur = 4
-
-            # Explosion fades out overall as it nears expiration
-            duration_alpha = 1 - (explosion.age / explosion.ttl)
-
-            for p in explosion.particles
-                continue if p.free
-
-                # Particles fade out as they reach the radius
-                @ctx.globalAlpha = (1 - (p.r / p.mr)) * duration_alpha
-                s = p.s
-
-                @ctx.beginPath()
-                @ctx.moveTo(0, 0)
-                @ctx.lineWidth = s
-                @ctx.lineTo(p.x, p.y)
-                @ctx.stroke()
-            
-            @ctx.restore()
-
-        draw_health_bar: (t_delta, eid, w, h) ->
-            health = @world.entities.get(eid, C.Health)
-            return if not health or not health.show_bar
-
-            perc = (health.current / health.max)
-            
-            top = 0 - (h/2) - 5
-            left = 0 - (w/2)
-           
-            @ctx.save()
-            
-            @ctx.lineWidth = 2
-            @ctx.strokeStyle = "#333"
-            if @glow
-                @ctx.shadowColor = "#333"
-                @ctx.shadowBlur = 4
-            @ctx.beginPath()
-            @ctx.moveTo(left, top)
-            @ctx.lineTo(left + w, top)
-            @ctx.stroke()
-
-            if perc > 0
-                @ctx.strokeStyle = "#3e3"
-                if @glow
-                    @ctx.shadowColor = "#3e3"
-                @ctx.beginPath()
-                @ctx.moveTo(left, top)
-                @ctx.lineTo(left + (w * perc), top)
-                @ctx.stroke()
-            
-            @ctx.restore()
-
-        draw_beams: (t_delta, eid, pos) ->
-            beam_weapon = @world.entities.get(eid, C.BeamWeapon)
-            return if not beam_weapon
-
-            origin_x = beam_weapon.x
-            origin_y = beam_weapon.y
-                        
-            v_origin = new Vector2D(origin_x, origin_y)
-            v_turret = new Vector2D(origin_x, beam_weapon.y - 6)
-            v_turret.rotateAround(v_origin, pos.rotation)
-            turret_rad = (Math.PI*2) / beam_weapon.active_beams
-
-            perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
-
-            if @draw_beam_range
-                perc_active = beam_weapon.active_beams / beam_weapon.max_beams
-                range = beam_weapon.max_range / beam_weapon.active_beams
-                @ctx.save()
-                @ctx.globalAlpha = 0.05
-                @ctx.strokeStyle = beam_weapon.color
-                @ctx.beginPath()
-                @ctx.arc(origin_x, origin_y, range, 0, Math.PI*2, false)
-                @ctx.stroke()
-                @ctx.restore()
-
-            for idx in [0..beam_weapon.active_beams-1]
-                beam = beam_weapon.beams[idx]
-                continue if not beam
-
-                @ctx.save()
-
-                v_turret.rotateAround(v_origin, turret_rad)
-
-                # TODO: Drawing these turret dots seems amazingly expensive
-                if false
-                    @ctx.fillStyle = beam_weapon.color
-                    @ctx.beginPath()
-                    @ctx.arc(v_turret.x, v_turret.y, 1.0, 0, Math.PI*2, true)
-                    @ctx.fill()
-                
-                if beam?.target and not beam?.charging
-                    fudge = 1.25
-                    target_x = beam.x + (Math.random() * fudge) - (fudge/2)
-                    target_y = beam.y + (Math.random() * fudge) - (fudge/2)
-
-                    max_width = 2
-                    @ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active))
-
-                    @ctx.strokeStyle = beam_weapon.color
-                    if @glow
-                        @ctx.shadowBlur = 4
-                        @ctx.shadowColor = beam_weapon.color
-                    @ctx.beginPath()
-                    @ctx.moveTo(v_turret.x, v_turret.y)
-                    @ctx.lineTo(target_x, target_y)
-                    @ctx.stroke()
-
-                @ctx.restore()
-
-        draw_sprite: (t_delta, eid, w, h, pos, sprite) ->
-
+            w = sprite.width
+            h = sprite.height
             BASE_W = 100
             BASE_H = 100
 
             @ctx.rotate(pos.rotation + Math.PI/2)
             @ctx.scale(w / BASE_W, h / BASE_H)
-
-            if @use_sprite_cache
-                @ctx.drawImage(
-                    @sprite_cache[sprite.shape] || @sprite_cache['default'],
-                    5, 5, @source_size, @source_size,
-                    -50, -50, 100, 100)
-                return
 
             @ctx.fillStyle = "#000"
             @ctx.strokeStyle = sprite.stroke_style
@@ -728,8 +490,30 @@ define [
 
     class CollisionSystem extends System
         
-        constructor: () ->
+        constructor: (@debug_bounding_box=false) ->
             @quadtrees = {}
+
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
+                (msg, data...) => @drawDebugEntity(data...)
+
+        drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            return if not @debug_bounding_box
+            return if not sprite
+
+            w = sprite.width
+            h = sprite.height
+            ctx.strokeStyle = "#33c"
+            hc = @world.entities.store.CollisionCircle?[eid]
+            if not hc
+                wb = w / 2
+                hb = h / 2
+                ctx.strokeRect(0-wb, 0-wb, w, h)
+            else
+                ctx.beginPath()
+                ctx.arc(0, 0, hc.radius, Math.PI*2, false)
+                ctx.stroke()
 
         match_component: C.Collidable
 
@@ -774,6 +558,8 @@ define [
         checkCollision: (b_eid, b_collidable, b_pos, b_sprite,
                          a_eid, a_collidable, a_pos, a_sprite) ->
 
+            return if not a_collidable or not b_collidable
+
             a_hc = @world.entities.store.CollisionCircle?[a_eid]
             b_hc = @world.entities.store.CollisionCircle?[b_eid]
 
@@ -802,8 +588,27 @@ define [
 
     class BouncerSystem extends System
         @DAMAGE_TYPE = 'Bounce'
+        
+        constructor: (@debug_mass=false) ->
 
         match_component: C.Bouncer
+
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
+                (msg, data...) => @drawDebugMass(data...)
+
+        drawDebugMass: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            return if not @debug_mass
+            bouncer = @world.entities.get(eid, C.Bouncer)
+            if bouncer
+                ctx.fillStyle = "#fff"
+                ctx.strokeStyle = "#fff"
+                font_size = 14 * @viewport_ratio
+                ctx.font = "normal normal #{font_size}px monospace"
+                ctx.textAlign = 'center'
+                ctx.textBaseline = 'middle'
+                ctx.fillText(bouncer.mass, 0, 0)
 
         update: (dt) ->
 
@@ -998,6 +803,23 @@ define [
             @v_dodge = new Vector2D()
             @v_dodge_unit = new Vector2D()
 
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
+                (msg, data...) => @drawDebugEntity(data...)
+
+        drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            steering = @world.entities.store.Steering?[eid]
+            if steering
+                ctx.save()
+                if steering.hit_circles
+                    ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
+                    for [x, y, r] in steering.hit_circles
+                        ctx.beginPath()
+                        ctx.arc(x, y, r, 0, Math.PI*2, false)
+                        ctx.stroke()
+                ctx.restore()
+
         castRay: (eid, pos, sprite, steering, side) ->
             hw = sprite.width * 0.5
             offset = side * hw * 1
@@ -1008,7 +830,7 @@ define [
             @v_ray.setValues(pos.x, pos.y + offset)
             @v_ray.rotateAround(pos, pos.rotation)
 
-            f = 0.15
+            f = 0.1
             b = 1 - f
             s = f / steps
             for idx in [0..steps]
@@ -1026,7 +848,12 @@ define [
             qt = @world.entities.quadtrees[gid]
             return [] if not qt
 
-            items = qt.retrieve({x: x, y: y, width: width, height: height})
+            items = qt.retrieve({
+                x: x - (width/2),
+                y: y - (height/2),
+                width: width,
+                height: height
+            })
 
             hits = []
             for item in items
@@ -1440,6 +1267,52 @@ define [
         constructor: () ->
             @stats = {}
 
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
+                (msg, data...) => @drawBeams(data...)
+
+        drawBeams: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            beam_weapon = @world.entities.get(eid, C.BeamWeapon)
+            return if not beam_weapon
+
+            origin_x = beam_weapon.x
+            origin_y = beam_weapon.y
+                        
+            v_origin = new Vector2D(origin_x, origin_y)
+            v_turret = new Vector2D(origin_x, beam_weapon.y - 6)
+            v_turret.rotateAround(v_origin, pos.rotation)
+            turret_rad = (Math.PI*2) / beam_weapon.active_beams
+
+            perc_active = (beam_weapon.active_beams / beam_weapon.max_beams)
+
+            for idx in [0..beam_weapon.active_beams-1]
+                beam = beam_weapon.beams[idx]
+                continue if not beam
+
+                ctx.save()
+
+                v_turret.rotateAround(v_origin, turret_rad)
+                
+                if beam?.target and not beam?.charging
+                    fudge = 1.25
+                    target_x = beam.x + (Math.random() * fudge) - (fudge/2)
+                    target_y = beam.y + (Math.random() * fudge) - (fudge/2)
+
+                    max_width = 2
+                    ctx.lineWidth = (max_width - (max_width * 0.75 * perc_active))
+
+                    ctx.strokeStyle = beam_weapon.color
+                    if @glow
+                        ctx.shadowBlur = 4
+                        ctx.shadowColor = beam_weapon.color
+                    ctx.beginPath()
+                    ctx.moveTo(v_turret.x, v_turret.y)
+                    ctx.lineTo(target_x, target_y)
+                    ctx.stroke()
+
+                ctx.restore()
+
         update_match: (t_delta, eid, weap) ->
 
             pos = @world.entities.get(eid, C.Position)
@@ -1577,6 +1450,11 @@ define [
 
         match_component: C.Health
 
+        update_match: (t_delta, eid, health) ->
+            if health.current < 0
+                @world.publish SpawnSystem.MSG_DESPAWN,
+                    entity_id: eid
+
         setWorld: (world) ->
             super world
 
@@ -1590,10 +1468,40 @@ define [
                 return if not health
                 health.health += data.amount
 
-        update_match: (t_delta, eid, health) ->
-            if health.current < 0
-                @world.publish SpawnSystem.MSG_DESPAWN,
-                    entity_id: eid
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
+                (msg, data...) => @drawHealthBar(data...)
+
+        drawHealthBar: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            return if not sprite
+
+            w = sprite.width
+            h = sprite.height
+
+            health = @world.entities.get(eid, C.Health)
+            return if not health or not health.show_bar
+
+            perc = (health.current / health.max)
+            
+            top = 0 - (h/2) - 5
+            left = 0 - (w/2)
+           
+            ctx.save()
+            
+            ctx.lineWidth = 2
+            ctx.strokeStyle = "#333"
+            ctx.beginPath()
+            ctx.moveTo(left, top)
+            ctx.lineTo(left + w, top)
+            ctx.stroke()
+
+            if perc > 0
+                ctx.strokeStyle = "#3e3"
+                ctx.beginPath()
+                ctx.moveTo(left, top)
+                ctx.lineTo(left + (w * perc), top)
+                ctx.stroke()
+            
+            ctx.restore()
 
     class VaporTrailSystem extends System
         match_component: C.VaporTrail
@@ -1605,12 +1513,38 @@ define [
             particle.y = pos.y
             vapor_trail.particles.unshift(particle)
 
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
+                (msg, data...) => @drawViewport(data...)
+
+        drawViewport: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            vapor_trail = @world.entities.get(eid, C.VaporTrail)
+            return if not vapor_trail
+
+            ctx.save()
+            alpha_unit = 1.0 / vapor_trail.particles.length
+            ctx.globalAlpha = 1.0
+            skip_ct = vapor_trail.skip
+            for p in vapor_trail.particles
+                continue if (skip_ct--) > 0
+                ctx.globalAlpha -= alpha_unit
+                ctx.fillStyle = vapor_trail.color
+                ctx.fillRect(p.x, p.y,
+                             vapor_trail.width, vapor_trail.width)
+            ctx.restore()
+
     class ExplosionSystem extends System
         match_component: C.Explosion
 
         constructor: () ->
             @v_center = new Vector2D(0, 0)
             @v_scratch = new Vector2D(0, 0)
+
+        setWorld: (world) ->
+            super world
+            @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
+                (msg, data...) => @drawExplosion(data...)
 
         update_match: (t_delta, eid, explosion) ->
 
@@ -1650,6 +1584,32 @@ define [
                     explosion.age = explosion.ttl
                     @world.publish SpawnSystem.MSG_DESPAWN,
                         entity_id: eid
+
+        drawExplosion: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            explosion = @world.entities.get(eid, C.Explosion)
+            return if not explosion
+
+            # Explosion fades out overall as it nears expiration
+            duration_alpha = 1 - (explosion.age / explosion.ttl)
+
+            ctx.save()
+            ctx.strokeStyle = explosion.color
+            ctx.fillStyle = explosion.color
+
+            for p in explosion.particles
+                continue if p.free
+
+                # Particles fade out as they reach the radius
+                ctx.globalAlpha = (1 - (p.r / p.mr)) * duration_alpha
+                s = p.s
+
+                ctx.beginPath()
+                ctx.moveTo(0, 0)
+                ctx.lineWidth = s
+                ctx.lineTo(p.x, p.y)
+                ctx.stroke()
+            
+            ctx.restore()
 
     return {
         System, SpawnSystem, MotionSystem, BouncerSystem, SpinSystem,

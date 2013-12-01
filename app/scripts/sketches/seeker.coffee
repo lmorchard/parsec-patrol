@@ -72,8 +72,6 @@ define [
         gui = new dat.GUI()
         gui.add(world, 'is_paused')
         gui.add(vp, 'glow')
-        gui.add(vp, 'use_sprite_cache')
-        gui.add(vp, 'draw_bounding_boxes')
 
         for idx in [0..MAX_SEEKERS-1]
             fld = gui.addFolder("Seeker #{idx}")

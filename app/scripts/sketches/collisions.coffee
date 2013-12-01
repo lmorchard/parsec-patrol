@@ -129,8 +129,6 @@ define [
         gui.add(world, 'is_paused').listen()
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
         gui.add(vp, 'use_grid')
-        gui.add(vp, 'use_sprite_cache')
-        gui.add(vp, 'draw_bounding_boxes')
         gui.add(options, 'max_entities', 1, 500).step(1)
         gui.add(stats, 'entities_ct').listen()
 
