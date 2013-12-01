@@ -212,7 +212,7 @@ define [
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
 
-    vp.zoom = 0.9
+    vp.zoom = 0.85
     vp.draw_bounding_boxes = true
     vp.draw_steering = true
     world.measure_fps = measure_fps
