@@ -11,11 +11,18 @@ define [
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.HealthSystem,
-        collision_system = new S.CollisionSystem(debug_bounding_boxes=true, debug_quadtrees=true),
+        collision_system = new S.CollisionSystem(
+            debug_bounding_boxes=false,
+            debug_quadtrees=false
+        ),
         new S.BouncerSystem,
         new S.SeekerSystem,
-        potential_steering_system = new S.PotentialSteeringSystem(debug_potential_steering=true),
-        steering_system = new S.SteeringSystem(debug_steering=true),
+        potential_steering_system = new S.PotentialSteeringSystem(
+            debug_potential_steering=false
+        ),
+        steering_system = new S.SteeringSystem(
+            debug_steering=false
+        ),
         new S.ThrusterSystem,
         new S.MotionSystem,
         new S.SpinSystem,
@@ -57,13 +64,21 @@ define [
                     x: x
                     y: y
                     rotation: r
+                    ttl: 15
                 Position: {}
                 Motion: {}
                 Collidable: {},
                 CollisionCircle: { radius: 15 }
                 Bouncer: { mass: 1000, damage: 0 }
                 Thruster: { dv: 250, max_v: 120 }
-                PotentialSteering: { target: 'hero', sensor_range: 125, rad_per_sec: Math.PI }
+                PotentialSteering:
+                    target: 'hero',
+                    sensor_range: 140,
+                    rad_per_sec: Math.PI,
+                    attract_magnitude: 8000,
+                    attract_attenuation: 1,
+                    repel_magnitude: 9500,
+                    repel_attenuation: 1.80
                 #Steering: { target: 'hero', los_range: 150, rad_per_sec: Math.PI }
                 Tombstone:
                     load:
@@ -79,7 +94,7 @@ define [
             eid = world.entities.create(components...)
             world.entities.addToGroup('main', eid)
 
-    #setInterval spawn_enemies, 15 * 1000
+    setInterval spawn_enemies, 15 * 1000
     spawn_enemies()
 
     spawn_asteroid = (x, y, width, height, dx, dy, dr, mass, health) ->
@@ -91,7 +106,7 @@ define [
             Spawn:
                 x: x
                 y: y
-                #ttl: 60 * Math.random()
+                ttl: 60 * Math.random()
             Motion:
                 dx: dx
                 dy: dy
@@ -182,7 +197,7 @@ define [
             spawn_field(225, -225, 100)
             spawn_field(225, 225, 100)
         spawn_fields()
-        #setInterval spawn_fields, 30 * 1000
+        setInterval spawn_fields, 30 * 1000
 
     if false
         components = world.entities.loadComponents
@@ -197,7 +212,7 @@ define [
         eid = world.entities.create(components...)
         world.entities.addToGroup('main', eid)
 
-    vp.zoom = 1.0
+    vp.zoom = 0.6
     vp.draw_bounding_boxes = true
     vp.draw_steering = true
     world.measure_fps = measure_fps

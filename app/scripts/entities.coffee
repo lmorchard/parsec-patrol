@@ -1,4 +1,4 @@
-define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree) ->
+define ['components', 'utils', 'underscore', 'QuadTree2'], (C, Utils, _, QuadTree) ->
 
     class EntityManager
 

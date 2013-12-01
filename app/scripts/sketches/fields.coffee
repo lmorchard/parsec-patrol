@@ -20,7 +20,7 @@ define [
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.HealthSystem,
-        new S.CollisionSystem,
+        collision_system = new S.CollisionSystem(debug_bounding_boxes=true, debug_quadtrees=true),
         new S.BouncerSystem,
         new S.SeekerSystem,
         new S.ThrusterSystem,
@@ -204,6 +204,8 @@ define [
         gui = new dat.GUI()
         gui.add(world, 'is_paused').listen()
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
+        gui.add(collision_system, 'debug_bounding_boxes').listen()
+        gui.add(collision_system, 'debug_quadtrees').listen()
 
         thruster = em.get('hero', C.Thruster)
         gui.add(thruster, 'active').listen()

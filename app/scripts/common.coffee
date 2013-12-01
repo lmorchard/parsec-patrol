@@ -13,6 +13,7 @@ requirejs.config
         'THREEx.KeyboardState': '../bower_components/threex.keyboardstate/threex.keyboardstate'
         dat: 'vendor/dat.gui'
         QuadTree: 'vendor/QuadTree'
+        QuadTree2: 'vendor/quadtree2'
     shim:
         async:
             exports: 'async'

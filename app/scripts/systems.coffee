@@ -511,20 +511,32 @@ define [
             return if not qt
 
             ctx.save()
-            drawNode = (root) ->
-
-                ctx.strokeStyle = "#660"
-                for item in root.children
-                    ctx.strokeRect(item.x, item.y, item.width, item.height)
-
-                ctx.strokeStyle = "#404"
-                b = root._bounds
-                ctx.strokeRect(b.x, b.y, b.width, b.height)
-
-                for node in root.nodes
-                    drawNode(node)
-
-            drawNode(qt.root)
+            if not qt.v2
+                drawNode = (root) ->
+                    ###
+                    ctx.strokeStyle = "#660"
+                    for item in root.getChildren() #children
+                        ctx.strokeRect(item.x, item.y, item.width, item.height)
+                    ctx.strokeStyle = "#404"
+                    ###
+                    b = root._bounds
+                    ctx.strokeRect(b.x, b.y, b.width, b.height)
+                    for node in root.nodes
+                        drawNode(node)
+                drawNode(qt.root)
+            else
+                drawNode = (root) ->
+                    ###
+                    ctx.strokeStyle = "#660"
+                    for item in root.objects
+                        ctx.strokeRect(item.x, item.y, item.width, item.height)
+                    ###
+                    ctx.strokeStyle = "#404"
+                    b = root.bounds
+                    ctx.strokeRect(b.x, b.y, b.width, b.height)
+                    for node in root.nodes
+                        drawNode(node)
+                drawNode(qt)
             ctx.restore()
 
         drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
@@ -837,34 +849,32 @@ define [
         drawDebugPre: (t_delta, ctx, eid, pos, spawn, sprite) ->
             return if not @debug_potential_steering
             ps = @world.entities.store.PotentialSteering?[eid]
-            if ps and ps.vects
-                ctx.save()
-                ctx.strokeStyle = 'rgba(128, 128, 0, 0.5)'
-                for v in ps.vects
-                    ctx.beginPath()
-                    ctx.arc(v[2].x, v[2].y, 5, 0, Math.PI*2, false)
-                    ctx.moveTo(pos.x, pos.y)
-                    ctx.lineTo(v[2].x, v[2].y)
-                    ctx.stroke()
-                ctx.restore()
+            return if not ps or not ps.vects
+            ctx.save()
+            ctx.strokeStyle = 'rgba(128, 128, 0, 0.5)'
+            for v in ps.vects
+                ctx.beginPath()
+                ctx.arc(v[2].x, v[2].y, 5, 0, Math.PI*2, false)
+                ctx.moveTo(pos.x, pos.y)
+                ctx.lineTo(v[2].x, v[2].y)
+                ctx.stroke()
+            ctx.restore()
 
         drawDebugPost: (t_delta, ctx, eid, pos, spawn, sprite) ->
             return if not @debug_potential_steering
             ps = @world.entities.store.PotentialSteering?[eid]
-            if ps
-                ctx.beginPath()
-                ctx.strokeStyle = 'rgba(128, 128, 0, 0.25)'
-                ctx.arc(0, 0, ps.sensor_range, 0, Math.PI*2, false)
-                ctx.stroke()
-                if ps.vects
-                    ctx.save()
-                    for v in ps.vects
-                        ctx.beginPath()
-                        ctx.strokeStyle = 'rgba(128, 0, 128, 0.25)'
-                        ctx.moveTo(0, 0)
-                        ctx.lineTo(v[0] * 100, v[1] * 100)
-                        ctx.stroke()
-                    ctx.restore()
+            return if not ps
+            ctx.strokeStyle = 'rgba(128, 128, 0, 0.25)'
+            ctx.strokeRect(0 - ps.sensor_range, 0 - ps.sensor_range, ps.sensor_range * 2, ps.sensor_range * 2)
+            if false and ps.vects
+                ctx.save()
+                for v in ps.vects
+                    ctx.beginPath()
+                    ctx.strokeStyle = 'rgba(128, 0, 0, 0.25)'
+                    ctx.moveTo(0, 0)
+                    ctx.lineTo(v[0] * 100, v[1] * 100)
+                    ctx.stroke()
+                ctx.restore()
 
         calcLennardJones: (ignore_range, steering, pos, sprite, t_pos, t_sprite,
                            A=2000, B=4000, n=2, m=3) ->
@@ -896,35 +906,25 @@ define [
             t_pos = @world.entities.get(steering.target, C.Position)
             t_sprite = @world.entities.get(steering.target, C.Sprite)
             @calcLennardJones(true, steering, pos, sprite, t_pos, t_sprite,
-                              8000, 0, 1, 0)
+                              steering.attract_magnitude, 0,
+                              steering.attract_attenuation, 0)
 
             # Avoid obstacles
-            if false
-                matches = @world.entities.getComponents(C.Position)
-                for t_eid, t_pos of matches
-                    t_sprite = @world.entities.get(t_eid, C.Sprite)
-                    return if not t_sprite
-                    continue if t_eid is steering.target
-                    continue if t_eid is eid
-                    @calcLennardJones(false, steering, pos, sprite, t_pos,
-                                      t_sprite, 0, 8000, 0, 2.15)
-
-            if true
-                gid = @world.entities.groupForEntity(eid)
-                qt = @world.entities.quadtrees[gid]
-                nearby = qt.retrieve({
-                    x: pos.x,
-                    y: pos.y,
-                    #x: pos.x - steering.sensor_range/2,
-                    #y: pos.y - steering.sensor_range/2,
-                    width: steering.sensor_range,
-                    height: steering.sensor_range
-                })
-                for item in nearby
-                    continue if item.eid is steering.target
-                    continue if item.eid is eid
-                    @calcLennardJones(false, steering, pos, sprite, item.pos,
-                                      item.sprite, 0, 8000, 0, 2.15)
+            gid = @world.entities.groupForEntity(eid)
+            qt = @world.entities.quadtrees[gid]
+            nearby = qt.retrieve({
+                x: pos.x - steering.sensor_range,
+                y: pos.y - steering.sensor_range,
+                width: steering.sensor_range * 2,
+                height: steering.sensor_range * 2
+            })
+            for item in nearby
+                continue if item.eid is steering.target
+                continue if item.eid is eid
+                @calcLennardJones(false, steering, pos, sprite, item.pos,
+                                  item.sprite,
+                                  0, steering.repel_magnitude,
+                                  0, steering.repel_attenuation)
 
             target_angle = @v_accum.angle()
             target_angle += 2*Math.PI if target_angle < 0
