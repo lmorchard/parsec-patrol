@@ -11,11 +11,11 @@ define [
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.HealthSystem,
-        new S.CollisionSystem,
+        collision_system = new S.CollisionSystem(debug_bounding_boxes=false),
         new S.BouncerSystem,
         new S.SeekerSystem,
         new S.PotentialSteeringSystem,
-        new S.SteeringSystem,
+        steering_system = new S.SteeringSystem(debug_steering=true),
         new S.ThrusterSystem,
         new S.MotionSystem,
         new S.SpinSystem,
@@ -60,8 +60,8 @@ define [
                 CollisionCircle: { radius: 15 }
                 Bouncer: { mass: 1000, damage: 0 }
                 Thruster: { dv: 250, max_v: 120 }
-                #PotentialSteering: { target: 'hero', sensor_range: 125, rad_per_sec: Math.PI }
-                Steering: { target: 'hero', los_range: 150, rad_per_sec: Math.PI }
+                PotentialSteering: { target: 'hero', sensor_range: 125, rad_per_sec: Math.PI }
+                #Steering: { target: 'hero', los_range: 150, rad_per_sec: Math.PI }
                 Tombstone:
                     load:
                         Position: {}
@@ -205,8 +205,8 @@ define [
         gui = new dat.GUI()
         gui.add(world, 'is_paused').listen()
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
-        gui.add(vp, 'use_grid')
-        gui.add(vp, 'glow')
+        gui.add(steering_system, 'debug_steering').listen()
+        gui.add(collision_system, 'debug_bounding_boxes').listen()
 
     window.world = world
 

@@ -19,9 +19,9 @@ define [
         update: (t_delta) ->
             matches = @getMatches()
             for entity_id, component of matches
-                @update_match(t_delta, entity_id, component)
+                @updateMatch(t_delta, entity_id, component)
 
-        update_match: (t_delta, entity_id, match) ->
+        updateMatch: (t_delta, entity_id, match) ->
 
         draw: (t_delta) ->
 
@@ -88,7 +88,7 @@ define [
                 if spawn
                     spawn.destroy = true
 
-        update_match: (t_delta, eid, spawn) ->
+        updateMatch: (t_delta, eid, spawn) ->
             return if not @world
 
             pos = @world.entities.get(eid, C.Position)
@@ -210,7 +210,6 @@ define [
         grid_size: 150
         grid_color: '#111'
         source_size: 100
-        use_grid: true
         prev_zoom: 0
         zoom: 1
         camera_x: 0
@@ -316,8 +315,6 @@ define [
             @ctx.strokeText('Paused', left+(width/2), top+(height/2), width)
 
         draw_backdrop: (t_delta) ->
-            return if not @use_grid
-
             @ctx.strokeStyle = @grid_color
             @ctx.lineWidth = 1
 
@@ -490,7 +487,9 @@ define [
 
     class CollisionSystem extends System
         
-        constructor: (@debug_bounding_box=false) ->
+        match_component: C.Collidable
+
+        constructor: (@debug_bounding_boxes=false) ->
             @quadtrees = {}
 
         setWorld: (world) ->
@@ -499,7 +498,7 @@ define [
                 (msg, data...) => @drawDebugEntity(data...)
 
         drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
-            return if not @debug_bounding_box
+            return if not @debug_bounding_boxes
             return if not sprite
 
             w = sprite.width
@@ -514,8 +513,6 @@ define [
                 ctx.beginPath()
                 ctx.arc(0, 0, hc.radius, Math.PI*2, false)
                 ctx.stroke()
-
-        match_component: C.Collidable
 
         update: (t_delta) ->
             matches = @world.entities.getComponents(@match_component)
@@ -578,7 +575,7 @@ define [
 
     class MotionSystem extends System
         match_component: C.Motion
-        update_match: (dt, eid, motion) ->
+        updateMatch: (dt, eid, motion) ->
             pos = @world.entities.get(eid, C.Position)
             pos.x += motion.dx * dt
             pos.y += motion.dy * dt
@@ -588,10 +585,10 @@ define [
 
     class BouncerSystem extends System
         @DAMAGE_TYPE = 'Bounce'
-        
-        constructor: (@debug_mass=false) ->
 
         match_component: C.Bouncer
+        
+        constructor: (@debug_mass=false) ->
 
         setWorld: (world) ->
             super world
@@ -763,7 +760,7 @@ define [
     class SpinSystem extends System
         match_component: C.Spin
 
-        update_match: (dt, eid, spin) ->
+        updateMatch: (dt, eid, spin) ->
             motion = @world.entities.get(eid, C.Motion)
             motion.drotation =  spin.rad_per_sec
             
@@ -776,7 +773,7 @@ define [
             @v_orbiter = new Vector2D()
             @v_old = new Vector2D()
 
-        update_match: (dt, eid, orbiter) ->
+        updateMatch: (dt, eid, orbiter) ->
             pos = @world.entities.get(eid, C.Position)
             o_pos = @world.entities.get(orbiter.orbited_id, C.Position)
 
@@ -849,7 +846,7 @@ define [
             steering.vects.push([@v_target.x, @v_target.y, t_pos])
             @v_accum.add(@v_target)
 
-        update_match: (dt, eid, steering) ->
+        updateMatch: (dt, eid, steering) ->
 
             pos = @world.entities.get(eid, C.Position)
             return if not pos
@@ -925,7 +922,7 @@ define [
     class SteeringSystem extends System
         match_component: C.Steering
 
-        constructor: () ->
+        constructor: (@debug_steering=false) ->
             @v_steering = new Vector2D()
             @v_ray = new Vector2D()
             @v_ray_unit = new Vector2D()
@@ -936,19 +933,20 @@ define [
         setWorld: (world) ->
             super world
             @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
-                (msg, data...) => @drawDebugEntity(data...)
+                (msg, data...) => @drawDebug(data...)
 
-        drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
+        drawDebug: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            return if not @debug_steering
             steering = @world.entities.store.Steering?[eid]
-            if steering
-                ctx.save()
-                if steering.hit_circles
-                    ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
-                    for [x, y, r] in steering.hit_circles
-                        ctx.beginPath()
-                        ctx.arc(x, y, r, 0, Math.PI*2, false)
-                        ctx.stroke()
-                ctx.restore()
+            return if not steering
+            ctx.save()
+            if steering.hit_circles
+                ctx.strokeStyle = 'rgba(128, 0, 0, 0.5)'
+                for [x, y, r] in steering.hit_circles
+                    ctx.beginPath()
+                    ctx.arc(x, y, r, 0, Math.PI*2, false)
+                    ctx.stroke()
+            ctx.restore()
 
         castRay: (eid, pos, sprite, steering, side) ->
             hw = sprite.width * 0.5
@@ -1016,7 +1014,7 @@ define [
                 Math.PI * 0.66
             return angle_a2b + angle_goal
 
-        update_match: (dt, eid, steering) ->
+        updateMatch: (dt, eid, steering) ->
 
             pos = @world.entities.get(eid, C.Position)
             return if not pos
@@ -1097,7 +1095,7 @@ define [
             @v_seeker = new Vector2D()
             @v_target = new Vector2D()
 
-        update_match: (dt, eid, seeker) ->
+        updateMatch: (dt, eid, seeker) ->
 
             # Process a delay before the seeker "acquires" the target and
             # starts steering. Makes missiles look interesting.
@@ -1158,7 +1156,7 @@ define [
             @v_thrust = new Vector2D()
             @v_brakes = new Vector2D()
 
-        update_match: (dt, eid, thruster) ->
+        updateMatch: (dt, eid, thruster) ->
             return if not thruster.active
 
             pos = @world.entities.get(eid, C.Position)
@@ -1201,7 +1199,7 @@ define [
 
     class ClickCourseSystem extends System
         match_component: C.ClickCourse
-        update_match: (t_delta, eid, click_course) ->
+        updateMatch: (t_delta, eid, click_course) ->
             pos = @world.entities.get(eid, C.Position)
             sprite = @world.entities.get(eid, C.Sprite)
             seeker = @world.entities.get(eid, C.Seeker)
@@ -1235,7 +1233,7 @@ define [
             @v_pos = new Vector2D(0, 0)
             @v_unit = new Vector2D(0, 0)
 
-        update_match: (t_delta, eid, weapon) ->
+        updateMatch: (t_delta, eid, weapon) ->
             pos = @world.entities.get(eid, C.Position)
             sprite = @world.entities.get(eid, C.Sprite)
 
@@ -1244,11 +1242,11 @@ define [
             weapon.rotation = pos.rotation
             weapon.length = 50 #sprite.height
 
-            @load_turrets(t_delta, weapon, eid)
-            @target_turrets(t_delta, weapon, eid)
-            @fire_turrets(t_delta, weapon, eid, pos)
+            @loadTurrets(t_delta, weapon, eid)
+            @targetTurrets(t_delta, weapon, eid)
+            @fireTurrets(t_delta, weapon, eid, pos)
 
-        load_turrets: (t_delta, weapon, eid) ->
+        loadTurrets: (t_delta, weapon, eid) ->
             for idx in [0..weapon.active_turrets-1]
                 turret = weapon.turrets[idx]
                 if turret.loading > 0
@@ -1257,7 +1255,7 @@ define [
                     turret.loading = 0
                     turret.target = null
 
-        target_turrets: (t_delta, weapon, eid) ->
+        targetTurrets: (t_delta, weapon, eid) ->
 
             # Get turrets ready for targeting
             to_target = []
@@ -1298,7 +1296,7 @@ define [
                         break if not turret
                         turret.target = t_eid
 
-        fire_turrets: (t_delta, weapon, eid, pos) ->
+        fireTurrets: (t_delta, weapon, eid, pos) ->
 
             # TODO: This turret layout algorithm is horribly inefficient and
             # needs a lot of work. Trying to simulate a a strip of launchers
@@ -1443,7 +1441,7 @@ define [
 
                 ctx.restore()
 
-        update_match: (t_delta, eid, weap) ->
+        updateMatch: (t_delta, eid, weap) ->
 
             pos = @world.entities.get(eid, C.Position)
             weap.x = pos.x
@@ -1455,19 +1453,19 @@ define [
             return if weap.active_beams is 0
 
             # Calculate current beam weapon parameters
-            stats = @calculate_stats(weap)
+            stats = @calcStats(weap)
             for k, v of stats
                 weap.current_stats[k] = v
 
             # Charge beams, target any that have become available.
-            to_target = @charge_beams(t_delta, stats, weap)
+            to_target = @chargeBeams(t_delta, stats, weap)
             if to_target.length > 0
                 @target_beams(t_delta, stats, weap, eid, to_target)
 
             # Discharge beams, apply damage to targets
-            @discharge_beams(t_delta, stats, weap, eid)
+            @dischargeBeams(t_delta, stats, weap, eid)
 
-        calculate_stats: (weap) ->
+        calcStats: (weap) ->
             # Scale beam parameters so that more beams are faster, yet have the
             # same base total DPS on a single target.
             key = "#{weap.active_beams}:#{weap.max_power}"
@@ -1497,7 +1495,7 @@ define [
             return @stats[key]
         
         # Perform beam charging. Immediately after charging, a beam can target.
-        charge_beams: (t_delta, stats, weap) ->
+        chargeBeams: (t_delta, stats, weap) ->
             to_target = []
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
@@ -1542,7 +1540,7 @@ define [
                         break if not beam
                         beam.target = t_eid
 
-        discharge_beams: (t_delta, stats, weap, eid) ->
+        dischargeBeams: (t_delta, stats, weap, eid) ->
             # Process discharge and damage for all active beams
             for idx in [0..weap.active_beams-1]
                 beam = weap.beams[idx]
@@ -1580,7 +1578,7 @@ define [
 
         match_component: C.Health
 
-        update_match: (t_delta, eid, health) ->
+        updateMatch: (t_delta, eid, health) ->
             if health.current < 0
                 @world.publish SpawnSystem.MSG_DESPAWN,
                     entity_id: eid
@@ -1636,7 +1634,7 @@ define [
     class VaporTrailSystem extends System
         match_component: C.VaporTrail
 
-        update_match: (t_delta, eid, vapor_trail) ->
+        updateMatch: (t_delta, eid, vapor_trail) ->
             pos = @world.entities.get(eid, C.Position)
             particle = vapor_trail.particles.pop()
             particle.x = pos.x
@@ -1676,8 +1674,7 @@ define [
             @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
                 (msg, data...) => @drawExplosion(data...)
 
-        update_match: (t_delta, eid, explosion) ->
-
+        updateMatch: (t_delta, eid, explosion) ->
             for p in explosion.particles
 
                 if not explosion.stop and p.free
