@@ -71,7 +71,6 @@ define [
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused')
-        gui.add(vp, 'glow')
 
         for idx in [0..MAX_SEEKERS-1]
             fld = gui.addFolder("Seeker #{idx}")

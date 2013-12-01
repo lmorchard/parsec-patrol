@@ -204,6 +204,8 @@ define [
         @MSG_CAPTURE_CAMERA = 'viewport.capture_camera'
         @MSG_DRAW_SCENE_PRE_TRANSLATE = 'viewport.draw_scene_pre_translate'
         @MSG_DRAW_SCENE_POST_TRANSLATE = 'viewport.draw_scene_post_translate'
+        @MSG_PRE_DRAW_SCENE = 'viewport.pre_draw_scene'
+        @MSG_POST_DRAW_SCENE = 'viewport.post_draw_scene'
 
         glow: false
         draw_mass: false
@@ -260,7 +262,10 @@ define [
             @ctx.translate(0-@camera_x, 0-@camera_y)
 
             @draw_backdrop(t_delta)
+
+            @world.publish @constructor.MSG_PRE_DRAW_SCENE, t_delta, @ctx
             @draw_scene(t_delta)
+            @world.publish @constructor.MSG_POST_DRAW_SCENE, t_delta, @ctx
 
             @ctx.restore()
 
@@ -489,13 +494,38 @@ define [
         
         match_component: C.Collidable
 
-        constructor: (@debug_bounding_boxes=false) ->
-            @quadtrees = {}
+        constructor: (@debug_bounding_boxes=false, @debug_quadtrees=false) ->
 
         setWorld: (world) ->
             super world
+            @world.subscribe ViewportSystem.MSG_PRE_DRAW_SCENE,
+                (msg, data...) => @drawDebugQuadtree(data...)
             @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
                 (msg, data...) => @drawDebugEntity(data...)
+
+        drawDebugQuadtree: (t_delta, ctx) ->
+            return if not @debug_quadtrees
+
+            gid = @world.current_scene
+            qt = @world.entities.quadtrees[gid]
+            return if not qt
+
+            ctx.save()
+            drawNode = (root) ->
+
+                ctx.strokeStyle = "#660"
+                for item in root.children
+                    ctx.strokeRect(item.x, item.y, item.width, item.height)
+
+                ctx.strokeStyle = "#404"
+                b = root._bounds
+                ctx.strokeRect(b.x, b.y, b.width, b.height)
+
+                for node in root.nodes
+                    drawNode(node)
+
+            drawNode(qt.root)
+            ctx.restore()
 
         drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
             return if not @debug_bounding_boxes
@@ -792,7 +822,7 @@ define [
     class PotentialSteeringSystem extends System
         match_component: C.PotentialSteering
 
-        constructor: () ->
+        constructor: (@debug_potential_steering=false) ->
             @v_self = new Vector2D()
             @v_target = new Vector2D()
             @v_accum = new Vector2D()
@@ -800,11 +830,12 @@ define [
         setWorld: (world) ->
             super world
             @world.subscribe ViewportSystem.MSG_DRAW_SCENE_PRE_TRANSLATE,
-                (msg, data...) => @drawViewportPre(data...)
+                (msg, data...) => @drawDebugPre(data...)
             @world.subscribe ViewportSystem.MSG_DRAW_SCENE_POST_TRANSLATE,
-                (msg, data...) => @drawViewportPost(data...)
+                (msg, data...) => @drawDebugPost(data...)
 
-        drawViewportPre: (t_delta, ctx, eid, pos, spawn, sprite) ->
+        drawDebugPre: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            return if not @debug_potential_steering
             ps = @world.entities.store.PotentialSteering?[eid]
             if ps and ps.vects
                 ctx.save()
@@ -817,7 +848,8 @@ define [
                     ctx.stroke()
                 ctx.restore()
 
-        drawViewportPost: (t_delta, ctx, eid, pos, spawn, sprite) ->
+        drawDebugPost: (t_delta, ctx, eid, pos, spawn, sprite) ->
+            return if not @debug_potential_steering
             ps = @world.entities.store.PotentialSteering?[eid]
             if ps
                 ctx.beginPath()
@@ -834,7 +866,8 @@ define [
                         ctx.stroke()
                     ctx.restore()
 
-        calcLJ: (ignore_range, steering, pos, sprite, t_pos, t_sprite, A=2000, B=4000, n=2, m=3) ->
+        calcLennardJones: (ignore_range, steering, pos, sprite, t_pos, t_sprite,
+                           A=2000, B=4000, n=2, m=3) ->
             @v_target.setValues(@v_self.x - t_pos.x, @v_self.y - t_pos.y)
             d = @v_target.magnitude() - (sprite.width/2) - (t_sprite.width/2)
             d = 0.01 if d is 0 or d < 0
@@ -842,7 +875,6 @@ define [
             @v_target.normalise()
             U = (-A/Math.pow(d,n)) + (B/Math.pow(d,m))
             @v_target.multiplyScalar(U)
-
             steering.vects.push([@v_target.x, @v_target.y, t_pos])
             @v_accum.add(@v_target)
 
@@ -863,35 +895,36 @@ define [
 
             t_pos = @world.entities.get(steering.target, C.Position)
             t_sprite = @world.entities.get(steering.target, C.Sprite)
-            @calcLJ(true, steering, pos, sprite, t_pos, t_sprite,
-                    8000, 0, 1, 0)
+            @calcLennardJones(true, steering, pos, sprite, t_pos, t_sprite,
+                              8000, 0, 1, 0)
 
             # Avoid obstacles
-            if true
+            if false
                 matches = @world.entities.getComponents(C.Position)
                 for t_eid, t_pos of matches
                     t_sprite = @world.entities.get(t_eid, C.Sprite)
                     return if not t_sprite
                     continue if t_eid is steering.target
                     continue if t_eid is eid
-                    @calcLJ(false, steering, pos, sprite, t_pos, t_sprite,
-                            0, 18000, 0, 1.95)
+                    @calcLennardJones(false, steering, pos, sprite, t_pos,
+                                      t_sprite, 0, 8000, 0, 2.15)
 
-            if false
+            if true
                 gid = @world.entities.groupForEntity(eid)
                 qt = @world.entities.quadtrees[gid]
                 nearby = qt.retrieve({
-                    #x: pos.x, y: pos.y,
-                    x: pos.x - steering.sensor_range/2,
-                    y: pos.y - steering.sensor_range/2,
+                    x: pos.x,
+                    y: pos.y,
+                    #x: pos.x - steering.sensor_range/2,
+                    #y: pos.y - steering.sensor_range/2,
                     width: steering.sensor_range,
                     height: steering.sensor_range
                 })
                 for item in nearby
                     continue if item.eid is steering.target
                     continue if item.eid is eid
-                    @calcLJ(steering, pos, sprite, item.pos, item.sprite,
-                            0, 6000, 0, 2.25)
+                    @calcLennardJones(false, steering, pos, sprite, item.pos,
+                                      item.sprite, 0, 8000, 0, 2.15)
 
             target_angle = @v_accum.angle()
             target_angle += 2*Math.PI if target_angle < 0

@@ -51,7 +51,6 @@ define [
     if use_gui
         gui = new dat.GUI()
         gui.add(world, 'is_paused')
-        gui.add(vp, 'glow')
         gui.add(vp, 'zoom', 0.125, 4).step(0.0125)
 
     world.measure_fps = measure_fps

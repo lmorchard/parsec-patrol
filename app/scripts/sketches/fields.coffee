@@ -204,8 +204,6 @@ define [
         gui = new dat.GUI()
         gui.add(world, 'is_paused').listen()
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
-        gui.add(vp, 'use_grid')
-        gui.add(vp, 'glow')
 
         thruster = em.get('hero', C.Thruster)
         gui.add(thruster, 'active').listen()

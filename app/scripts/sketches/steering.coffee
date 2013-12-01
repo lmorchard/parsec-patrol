@@ -11,10 +11,10 @@ define [
         new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.HealthSystem,
-        collision_system = new S.CollisionSystem(debug_bounding_boxes=false),
+        collision_system = new S.CollisionSystem(debug_bounding_boxes=true, debug_quadtrees=true),
         new S.BouncerSystem,
         new S.SeekerSystem,
-        new S.PotentialSteeringSystem,
+        potential_steering_system = new S.PotentialSteeringSystem(debug_potential_steering=true),
         steering_system = new S.SteeringSystem(debug_steering=true),
         new S.ThrusterSystem,
         new S.MotionSystem,
@@ -53,7 +53,10 @@ define [
         for [x, y, r] in enemy_positions
             components = world.entities.loadComponents
                 Sprite: { shape: 'enemyscout', width: 30, height: 30, stroke_style: '#f33' }
-                Spawn: { x: x, y: y, rotation: r, ttl: 15 }
+                Spawn:
+                    x: x
+                    y: y
+                    rotation: r
                 Position: {}
                 Motion: {}
                 Collidable: {},
@@ -76,7 +79,7 @@ define [
             eid = world.entities.create(components...)
             world.entities.addToGroup('main', eid)
 
-    setInterval spawn_enemies, 15 * 1000
+    #setInterval spawn_enemies, 15 * 1000
     spawn_enemies()
 
     spawn_asteroid = (x, y, width, height, dx, dy, dr, mass, health) ->
@@ -88,7 +91,7 @@ define [
             Spawn:
                 x: x
                 y: y
-                ttl: 60 * Math.random()
+                #ttl: 60 * Math.random()
             Motion:
                 dx: dx
                 dy: dy
@@ -179,7 +182,7 @@ define [
             spawn_field(225, -225, 100)
             spawn_field(225, 225, 100)
         spawn_fields()
-        setInterval spawn_fields, 30 * 1000
+        #setInterval spawn_fields, 30 * 1000
 
     if false
         components = world.entities.loadComponents
@@ -207,6 +210,8 @@ define [
         gui.add(vp, 'zoom', 0.125, 3).step(0.125)
         gui.add(steering_system, 'debug_steering').listen()
         gui.add(collision_system, 'debug_bounding_boxes').listen()
+        gui.add(collision_system, 'debug_quadtrees').listen()
+        gui.add(potential_steering_system, 'debug_potential_steering').listen()
 
     window.world = world
 

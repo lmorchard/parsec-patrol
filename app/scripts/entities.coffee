@@ -171,10 +171,12 @@ define ['components', 'utils', 'underscore', 'QuadTree'], (C, Utils, _, QuadTree
 
                 collidable = @store.Collidable[eid]
                 pos = @store.Position[eid]
+                continue if not pos
+
                 qt.insert({
                     eid: eid,
-                    x: pos.x,
-                    y: pos.y,
+                    x: pos.x - (sprite.width/2),
+                    y: pos.y - (sprite.height/2),
                     rotation: pos.rotation,
                     width: sprite.width,
                     height: sprite.height,
