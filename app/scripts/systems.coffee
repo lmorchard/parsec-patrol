@@ -470,18 +470,19 @@ define [
 
         draw_sprite_asteroid: (ctx, sprite, t_delta) ->
             if not sprite.points
-                NUM_POINTS = 8 + Math.floor(8 * Math.random())
+                NUM_POINTS = 7 + Math.floor(8 * Math.random())
                 MAX_RADIUS = 50
                 MIN_RADIUS = 35
                 ROTATION = (Math.PI*2) / NUM_POINTS
 
-                v_center = new Vector2D(0, 0)
-                v_point = new Vector2D(0, 0)
                 sprite.points = []
                 for idx in [1..NUM_POINTS]
-                    v_point.setValues(_.random(MIN_RADIUS, MAX_RADIUS), 0)
-                    v_point.rotateAround(v_center, idx * ROTATION)
-                    sprite.points.push([v_point.x, v_point.y])
+                    rot = idx * ROTATION
+                    dist = _.random(MIN_RADIUS, MAX_RADIUS)
+                    sprite.points.push([
+                        dist * Math.cos(rot),
+                        dist * Math.sin(rot)
+                    ])
 
             ctx.beginPath()
             ctx.moveTo(sprite.points[0][0], sprite.points[0][1])
@@ -511,14 +512,9 @@ define [
             return if not qt
 
             ctx.save()
+            ctx.strokeStyle = "#404"
             if not qt.v2
                 drawNode = (root) ->
-                    ###
-                    ctx.strokeStyle = "#660"
-                    for item in root.getChildren() #children
-                        ctx.strokeRect(item.x, item.y, item.width, item.height)
-                    ctx.strokeStyle = "#404"
-                    ###
                     b = root._bounds
                     ctx.strokeRect(b.x, b.y, b.width, b.height)
                     for node in root.nodes
@@ -526,12 +522,6 @@ define [
                 drawNode(qt.root)
             else
                 drawNode = (root) ->
-                    ###
-                    ctx.strokeStyle = "#660"
-                    for item in root.objects
-                        ctx.strokeRect(item.x, item.y, item.width, item.height)
-                    ###
-                    ctx.strokeStyle = "#404"
                     b = root.bounds
                     ctx.strokeRect(b.x, b.y, b.width, b.height)
                     for node in root.nodes
@@ -688,13 +678,13 @@ define [
                 b_sprite = @world.entities.get(b_eid, C.Sprite)
                 b_motion = @world.entities.get(b_eid, C.Motion)
 
-                @resolve_elastic_collision(dt,
+                @resolveElasticCollision(dt,
                     a_eid, a_pos, a_sprite, a_motion, a_bouncer,
                     b_eid, b_pos, b_sprite, b_motion, b_bouncer)
 
         # See also: https://gist.github.com/kevinfjbecker/1670913
         # TODO: Optimize this. Reuse vector objects, at least.
-        resolve_elastic_collision: (dt,
+        resolveElasticCollision: (dt,
                 eid, pos, sprite, motion, bouncer,
                 c_eid, c_pos, c_sprite, c_motion, c_bouncer) ->
             
@@ -757,7 +747,7 @@ define [
                     v1t.y + dn.y * ((m1 - m2) / M * v1n.magnitude() + 2 * m2 / M * v2n.magnitude())
                 )
 
-                @process_damage(eid, c_eid, v_motion, bouncer, m1)
+                @processDamage(eid, c_eid, v_motion, bouncer, m1)
                 
                 motion.dx = v_motion.x
                 motion.dy = v_motion.y
@@ -769,12 +759,12 @@ define [
                     v2t.y - dn.y * ((m2 - m1) / M * v2n.magnitude() + 2 * m1 / M * v1n.magnitude())
                 )
 
-                @process_damage(eid, c_eid, v_c_motion, c_bouncer, m2)
+                @processDamage(eid, c_eid, v_c_motion, c_bouncer, m2)
 
                 c_motion.dx = v_c_motion.x
                 c_motion.dy = v_c_motion.y
 
-        process_damage: (eid, c_eid, v_motion, bouncer, m1) ->
+        processDamage: (eid, c_eid, v_motion, bouncer, m1) ->
             return if not bouncer.damage
 
             if bouncer.target_team
@@ -902,9 +892,11 @@ define [
 
             t_pos = @world.entities.get(steering.target, C.Position)
             t_sprite = @world.entities.get(steering.target, C.Sprite)
-            @calcLennardJones(true, steering, pos, sprite, t_pos, t_sprite,
-                              steering.attract_magnitude, 0,
-                              steering.attract_attenuation, 0)
+            @calcLennardJones(
+                true, steering, pos, sprite, t_pos, t_sprite,
+                steering.attract_magnitude, 0,
+                steering.attract_attenuation, 0
+            )
 
             # Avoid obstacles
             gid = @world.entities.groupForEntity(eid)
@@ -918,10 +910,12 @@ define [
             for item in nearby
                 continue if item.eid is steering.target
                 continue if item.eid is eid
-                @calcLennardJones(false, steering, pos, sprite, item.pos,
-                                  item.sprite,
-                                  0, steering.repel_magnitude,
-                                  0, steering.repel_attenuation)
+                @calcLennardJones(
+                    false, steering, pos, sprite, item.pos,
+                    item.sprite,
+                    0, steering.repel_magnitude,
+                    0, steering.repel_attenuation
+                )
 
             target_angle = @v_accum.angle()
             target_angle += 2*Math.PI if target_angle < 0
@@ -1490,7 +1484,7 @@ define [
             # Charge beams, target any that have become available.
             to_target = @chargeBeams(t_delta, stats, weap)
             if to_target.length > 0
-                @target_beams(t_delta, stats, weap, eid, to_target)
+                @targetBeams(t_delta, stats, weap, eid, to_target)
 
             # Discharge beams, apply damage to targets
             @dischargeBeams(t_delta, stats, weap, eid)
@@ -1541,7 +1535,7 @@ define [
 
             return to_target
 
-        target_beams: (t_delta, stats, weap, eid, to_target) ->
+        targetBeams: (t_delta, stats, weap, eid, to_target) ->
             # Find valid targets within beam range
             targets = @world.entities.getComponents(C.WeaponsTarget)
             by_range = []

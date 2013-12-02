@@ -73,13 +73,18 @@ define [
                 Thruster: { dv: 250, max_v: 120 }
                 PotentialSteering:
                     target: 'hero',
-                    sensor_range: 140,
+                    sensor_range: 150,
                     rad_per_sec: Math.PI * 1.5,
-                    attract_magnitude: 8000,
-                    attract_attenuation: 1,
+                    attract_magnitude: 28,
+                    attract_attenuation: 0,
                     repel_magnitude: 9500,
-                    repel_attenuation: 1.80
-                #Steering: { target: 'hero', los_range: 150, rad_per_sec: Math.PI }
+                    repel_attenuation: 1.7
+                ###
+                Steering:
+                    target: 'hero'
+                    los_range: 150
+                    rad_per_sec: Math.PI
+                ###
                 Tombstone:
                     load:
                         Position: {}
@@ -144,7 +149,7 @@ define [
         radius = 300,
         MAX_ASTEROIDS = 50,
         MAX_TRIES = 5,
-        MIN_SIZE = 12,
+        MIN_SIZE = 20,
         MAX_SIZE = 120,
         MAX_GRAV = 8,
     ) ->
