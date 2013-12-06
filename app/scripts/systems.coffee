@@ -515,18 +515,20 @@ define [
             ctx.strokeStyle = "#404"
             if not qt.v2
                 drawNode = (root) ->
+                    return if not root
                     b = root._bounds
                     ctx.strokeRect(b.x, b.y, b.width, b.height)
                     for node in root.nodes
                         drawNode(node)
-                drawNode(qt.root)
+                drawNode(qt.root) if qt and qt.root
             else
                 drawNode = (root) ->
+                    return if not root
                     b = root.bounds
                     ctx.strokeRect(b.x, b.y, b.width, b.height)
                     for node in root.nodes
                         drawNode(node)
-                drawNode(qt)
+                drawNode(qt) if qt
             ctx.restore()
 
         drawDebugEntity: (t_delta, ctx, eid, pos, spawn, sprite) ->
@@ -842,7 +844,7 @@ define [
             ctx.save()
 
             # Draw sensor range indicator
-            ctx.strokeStyle = 'rgba(128, 0, 0, 0.25)'
+            ctx.strokeStyle = 'rgba(128, 0, 0, 0.75)'
             ctx.moveTo(pos.x, pos.y)
             ctx.beginPath()
             ctx.arc(pos.x, pos.y, ps.sensor_range, 0, Math.PI*2, false)
@@ -852,9 +854,9 @@ define [
             for v in ps.vects
                 # Change color for attraction vs repulsion
                 ctx.strokeStyle = if v[3] > 0
-                    'rgba(64, 64, 0, 0.125)'
+                    'rgba(64, 64, 0, 0.75)'
                 else
-                    'rgba(0, 64, 64, 0.125)'
+                    'rgba(0, 64, 64, 0.75)'
                 ctx.beginPath()
                 ctx.moveTo(pos.x, pos.y)
                 ctx.lineWidth = Math.min(Math.abs(v[3]), sprite.width)
@@ -866,9 +868,10 @@ define [
         calcLennardJones: (ignore_range, steering, pos, sprite, t_pos, t_sprite,
                            A=2000, B=4000, n=2, m=3) ->
             @v_target.setValues(@v_self.x - t_pos.x, @v_self.y - t_pos.y)
-            d = @v_target.magnitude() - (sprite.width/2) - (t_sprite.width/2)
+            edge_range = (sprite.width * 0.5) + (t_sprite.width * 0.5)
+            d = @v_target.magnitude() - edge_range
             d = 0.01 if d is 0 or d < 0
-            return if not ignore_range and d > (steering.sensor_range - (sprite.width/2))
+            return if not ignore_range and d > steering.sensor_range
             @v_target.normalise()
             U = (-A/Math.pow(d,n)) + (B/Math.pow(d,m))
             @v_target.multiplyScalar(U)
@@ -894,8 +897,8 @@ define [
             t_sprite = @world.entities.get(steering.target, C.Sprite)
             @calcLennardJones(
                 true, steering, pos, sprite, t_pos, t_sprite,
-                steering.attract_magnitude, 0,
-                steering.attract_attenuation, 0
+                steering.target_attract[0], 0,
+                steering.target_attract[1], 0
             )
 
             # Avoid obstacles
@@ -910,12 +913,21 @@ define [
             for item in nearby
                 continue if item.eid is steering.target
                 continue if item.eid is eid
-                @calcLennardJones(
-                    false, steering, pos, sprite, item.pos,
-                    item.sprite,
-                    0, steering.repel_magnitude,
-                    0, steering.repel_attenuation
-                )
+                i_typename = @world.entities.store.TypeName[item.eid]
+                if i_typename and i_typename.name is steering.friendly
+                    @calcLennardJones(
+                        false, steering, pos, sprite, item.pos,
+                        item.sprite,
+                        steering.friendly_attract[0], steering.friendly_repel[0],
+                        steering.friendly_attract[1], steering.friendly_repel[1]
+                    )
+                else
+                    @calcLennardJones(
+                        false, steering, pos, sprite, item.pos,
+                        item.sprite,
+                        0, steering.obstacle_repel[0],
+                        0, steering.obstacle_repel[1]
+                    )
 
             target_angle = @v_accum.angle()
             target_angle += 2*Math.PI if target_angle < 0

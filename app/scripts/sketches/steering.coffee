@@ -59,7 +59,13 @@ define [
         ]
         for [x, y, r] in enemy_positions
             components = world.entities.loadComponents
-                Sprite: { shape: 'enemyscout', width: 30, height: 30, stroke_style: '#f33' }
+                TypeName:
+                    name: 'enemyscout'
+                Sprite:
+                    shape: 'enemyscout',
+                    width: 30,
+                    height: 30,
+                    stroke_style: '#f33'
                 Spawn:
                     x: x
                     y: y
@@ -72,13 +78,15 @@ define [
                 Bouncer: { mass: 1000, damage: 0 }
                 Thruster: { dv: 250, max_v: 120 }
                 PotentialSteering:
-                    target: 'hero',
-                    sensor_range: 150,
-                    rad_per_sec: Math.PI * 1.5,
-                    attract_magnitude: 28,
-                    attract_attenuation: 0,
-                    repel_magnitude: 9500,
-                    repel_attenuation: 1.7
+                    target: 'hero'
+                    friendly: 'enemyscout'
+                    sensor_range: 175
+                    rad_per_sec: Math.PI * 1.5
+                    target_attract: [10, 0]
+                    obstacle_repel: [2000, 1.5]
+                    friendly_attract: [2, 0.00001]
+                    #friendly_attract: [0, 0]
+                    friendly_repel: [2000, 1.5]
                 ###
                 Steering:
                     target: 'hero'
@@ -208,7 +216,7 @@ define [
         components = world.entities.loadComponents
             TypeName: { name: "Rock" }
             Sprite: { shape: "asteroid", width: 400, height: 400 }
-            Spawn: { x: 0, y: 0 }
+            Spawn: { x: 50, y: -50 }
             Position: {}
             Motion: { drotation: Math.PI / 8 }
             Collidable: {}
