@@ -22,6 +22,8 @@ define [
         camera_x: 0
         camera_y: 0
 
+        textures: {}
+
         constructor: (@document) ->
             @canvas = @document.createElement('canvas')
             #document.body.appendChild(@canvas)
@@ -37,9 +39,25 @@ define [
             @stage = new PIXI.Stage(0x111111)
             @renderer = PIXI.autoDetectRenderer(600, 600)
             document.body.appendChild(@renderer.view)
-         
-            @texture = PIXI.Texture.fromImage("../images/bunny.png")
-            @bunny = new PIXI.Sprite(@texture)
+
+            makeCanvas = () ->
+                canvas = document.createElement('canvas');
+                canvas.width = 100
+                canvas.height = 100
+                return canvas
+
+            canvas = makeCanvas()
+            ctx = canvas.getContext('2d')
+            ctx.save()
+            ctx.strokeStyle = '#fff'
+            ctx.translate(50, 50)
+            shape = 'hero'
+            shape_fn = @['draw_sprite_' + shape] || @draw_sprite_default
+            shape_fn.call(@, ctx)
+            ctx.restore()
+            texture = PIXI.Texture.fromCanvas(canvas)
+
+            @bunny = new PIXI.Sprite(texture)
          
             @bunny.anchor.x = 0.5
             @bunny.anchor.y = 0.5
