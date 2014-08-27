@@ -260,7 +260,7 @@ module.exports = function (grunt) {
                     src: [
                         '*.{ico,png,txt}',
                         '.htaccess',
-                        'images/{,*/}*.{webp,gif}',
+                        'images/{,*/}*.{webp,png,gif}',
                         'styles/fonts/*'
                     ]
                 }, {
@@ -278,6 +278,13 @@ module.exports = function (grunt) {
                 cwd: '<%= yeoman.app %>',
                 dest: '.tmp/',
                 src: '{,*/}*.{html,json}'
+            },
+            images: {
+                expand: true,
+                dot: true,
+                cwd: '<%= yeoman.app %>/images',
+                dest: '.tmp/images/',
+                src: '{,*/}*.png'
             },
             scripts: {
                 expand: true,
@@ -298,6 +305,7 @@ module.exports = function (grunt) {
         concurrent: {
             server: [
                 'copy:html',
+                'copy:images',
                 'copy:scripts',
                 'coffee',
                 'copy:styles',
@@ -305,6 +313,7 @@ module.exports = function (grunt) {
             ],
             test: [
                 'copy:html',
+                'copy:images',
                 'copy:scripts',
                 'coffee',
                 'copy:styles',
@@ -312,6 +321,7 @@ module.exports = function (grunt) {
             ],
             dist: [
                 'copy:html',
+                'copy:images',
                 'copy:scripts',
                 'coffee',
                 'copy:styles',

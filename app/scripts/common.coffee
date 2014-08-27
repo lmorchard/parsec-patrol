@@ -8,7 +8,7 @@ requirejs.config
         backbone: '../bower_components/backbone-amd/backbone'
         pubsub: '../bower_components/pubsub-js/src/pubsub'
         async: '../bower_components/async/lib/async'
-        Hammer: '../bower_components/hammerjs/dist/hammer'
+        Hammer: '../bower_components/hammerjs/hammer'
         Stats: '../bower_components/stats.js/src/Stats'
         'THREEx.KeyboardState': '../bower_components/threex.keyboardstate/threex.keyboardstate'
         dat: 'vendor/dat.gui'

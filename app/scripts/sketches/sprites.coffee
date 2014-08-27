@@ -1,12 +1,12 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'pubsub', 'jquery',
-    'underscore', 'dat', 'Vector2D'
+    'underscore', 'dat', 'Vector2D', 'systems/PixiViewportSystem'
 ], (
-    W, E, C, S, PubSub, $, _, dat, Vector2D
+    W, E, C, S, PubSub, $, _, dat, Vector2D, PixiViewportSystem
 ) -> (canvas, use_gui=true, measure_fps=true) ->
 
     world = new W.World(640, 480,
-        vp = new S.ViewportSystem(canvas),
+        vp = new PixiViewportSystem.PixiViewportSystem(document),
         new S.SpawnSystem,
         new S.OrbiterSystem,
     )

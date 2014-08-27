@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "mocha": "~1.9.0",
-    "chai": "~1.6.0"
+    "chai": "~1.6.0",
+    "pixi.js": "~1.6.1"
   }
 }
