@@ -44,7 +44,7 @@ define [
                 y: v_spawn.y
             Orbit:
                 orbited_id: 'sun'
-                rad_per_sec: Math.PI / 10
+                rad_per_sec: Math.PI / 5
         eid = world.entities.create components...
         world.entities.addToGroup 'main', eid
     

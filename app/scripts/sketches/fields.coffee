@@ -1,8 +1,8 @@
 define [
     'worlds', 'entities', 'components', 'systems', 'utils', 'pubsub', 'jquery',
-    'underscore', 'dat', 'Vector2D'
+    'underscore', 'dat', 'Vector2D', 'systems/PixiViewportSystem'
 ], (
-    W, E, C, S, Utils, PubSub, $, _, dat, Vector2D
+    W, E, C, S, Utils, PubSub, $, _, dat, Vector2D, PixiViewportSystem
 ) -> (canvas, use_gui=true, measure_fps=true) ->
 
     options = {
@@ -14,10 +14,11 @@ define [
     }
 
     world = new W.World(1600, 1600,
-        vp = new S.ViewportSystem(canvas),
-        new S.RadarSystem(canvas, 0.28),
-        new S.PointerInputSystem(canvas),
-        new S.ClickCourseSystem,
+        vp = new PixiViewportSystem.PixiViewportSystem(document),
+        #vp = new S.ViewportSystem(canvas),
+        #new S.RadarSystem(canvas, 0.28),
+        #new S.PointerInputSystem(canvas),
+        #new S.ClickCourseSystem,
         new S.SpawnSystem,
         new S.HealthSystem,
         collision_system = new S.CollisionSystem(debug_bounding_boxes=true, debug_quadtrees=true),
