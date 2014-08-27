@@ -26,35 +26,6 @@ define [
 
         sprites: {}
 
-        getSpriteTexture: (shape) ->
-            canvas = document.createElement('canvas')
-            canvas.width = 110
-            canvas.height = 110
-            ctx = canvas.getContext('2d')
-            ctx.save()
-            ctx.strokeStyle = '#fff'
-            ctx.translate(55, 55)
-            shape_fn = @['draw_sprite_' + shape] || @draw_sprite_default
-            shape_fn.call(@, ctx)
-            ctx.restore()
-            return PIXI.Texture.fromCanvas(canvas)
-
-        getSpriteTexture2: (shape) ->
-            if !@textures[shape]
-                canvas = document.createElement('canvas')
-                canvas.width = 110
-                canvas.height = 110
-                ctx = canvas.getContext('2d')
-                ctx.save()
-                ctx.strokeStyle = '#fff'
-                ctx.translate(55, 55)
-                shape_fn = @['draw_sprite_' + shape] || @draw_sprite_default
-                shape_fn.call(@, ctx)
-                ctx.restore()
-                @textures[shape] = PIXI.Texture.fromCanvas(canvas)
-
-            return @textures[shape]
-
         constructor: (@document) ->
             @canvas = @document.createElement('canvas')
             #document.body.appendChild(@canvas)
@@ -72,14 +43,14 @@ define [
 
             @stage = new PIXI.Stage(0x111111)
 
-            @zoom = 1.0
+            @zoom = 0.75
             @container = new PIXI.DisplayObjectContainer()
             @container.position.x = @renderer.width/2
             @container.position.y = @renderer.height/2
             @container.scale.x = @zoom
             @container.scale.y = -@zoom
             @stage.addChild(@container)
- 
+
         setWorld: (world) ->
             super world
             @world.subscribe @constructor.MSG_CAPTURE_CAMERA, (msg, data) =>
@@ -88,44 +59,64 @@ define [
         draw: (t_delta) ->
             @draw_scene(t_delta)
 
+        getSpriteTexture: (sprite) ->
+
+            canvas = document.createElement('canvas')
+            canvas.width = sprite.width
+            canvas.height = sprite.height
+
+            ctx = canvas.getContext('2d')
+            ctx.translate(sprite.width / 2, sprite.height / 2)
+            ctx.scale(sprite.width / 100, sprite.height / 100)
+            ctx.lineWidth = 1.25 * (100 / sprite.width)
+            ctx.strokeStyle = '#fff'
+
+            shape_fn = @['draw_sprite_' + sprite.shape] || @draw_sprite_default
+            shape_fn.call(@, ctx)
+
+            return PIXI.Texture.fromCanvas(canvas)
+
         draw_scene: (t_delta) ->
             seen_eids = {}
 
             scene = @world.entities.entitiesForGroup(@world.current_scene)
             for eid, ignore of scene
-                seen_eids[eid] = true
 
                 spawn = @world.entities.get(eid, C.Spawn)
                 continue if not spawn?.spawned
+                continue if spawn?.destroy
 
                 pos = @world.entities.get(eid, C.Position)
                 continue if not pos
 
                 sprite = @world.entities.get(eid, C.Sprite)
+                continue if not sprite
+
+                seen_eids[eid] = true
 
                 if @sprites[eid]
                     psprite = @sprites[eid]
                 else
-                    texture = @getSpriteTexture(sprite.shape)
+                    texture = @getSpriteTexture(sprite)
                     @sprites[eid] = psprite = new PIXI.Sprite(texture)
                     psprite.anchor.x = 0.5
                     psprite.anchor.y = 0.5
                     @container.addChild(psprite)
-                
+
                 psprite.width = sprite.width
                 psprite.height = sprite.height
                 psprite.position.x = pos.x
                 psprite.position.y = pos.y
 
-            for eid, psprite of @sprites
-                if !seen_eids[eid]
-                    @container.removeChild(psprite)
+            #for eid, psprite of @sprites
+            #    if !seen_eids[eid]
+            #        @container.removeChild(psprite)
 
             @renderer.render(@stage)
 
         draw_sprite_default: (ctx) ->
             ctx.strokeRect(-50, -50, 100, 100)
-            
+
         draw_sprite_star: (ctx) ->
             ctx.fillStyle = "#ccc"
             ctx.beginPath()
