@@ -8,49 +8,50 @@ var stylus = require('gulp-stylus');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var deploy = require('gulp-gh-pages');
+var to5ify = require("6to5ify");
 
-var PATH = {
-  src: './src',
-  main: 'app.js',
-  stylus: 'app.styl',
-  srcFiles: './src/**/*',
-  dist: './dist',
-  distFileJS: 'app.js',
-  distFileCSS: 'app.css'
-};
-
-gulp.task('build', ['browserify', 'stylus', 'compress', 'markup']);
+gulp.task('build', ['browserify', 'browserify-tests', 'stylus', 'compress', 'markup']);
 
 gulp.task('browserify', function () {
   browserify({debug: false})
-    .add(PATH.src + '/' + PATH.main)
+    .add('./src/app.js')
+    .transform(to5ify)
     .bundle()
-    .pipe(source(PATH.distFileJS))
-    .pipe(gulp.dest(PATH.dist))
+    .pipe(source('app.js'))
+    .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
 
+gulp.task('browserify-tests', function () {
+  browserify({debug: false})
+    .add('./test/app.js')
+    .transform(to5ify)
+    .bundle()
+    .pipe(source('app.js'))
+    .pipe(gulp.dest('./dist-test'));
+});
+
 gulp.task('stylus', function () {
-  gulp.src(path.join(PATH.src, PATH.stylus))
+  gulp.src('./src/app.styl')
     .pipe(stylus())
-    .pipe(concat(PATH.distFileCSS))
-    .pipe(gulp.dest(PATH.dist))
+    .pipe(concat('app.css'))
+    .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
 
 gulp.task('compress', function () {
-  gulp.src(path.join(PATH.dist, PATH.distFileJS))
+  gulp.src('./dist/app.js')
     .pipe(uglify())
     .pipe(rename(function (file) {
       file.basename += '-min';
     }))
-    .pipe(gulp.dest(PATH.dist))
+    .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
 
 gulp.task('markup', function () {
-  gulp.src(path.join(PATH.src, '/**/*.html'))
-    .pipe(gulp.dest(PATH.dist))
+  gulp.src('./src/**/*.html')
+    .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
 
@@ -63,11 +64,12 @@ gulp.task('connect', function() {
 });
 
 gulp.task('watch', function () {
-  gulp.watch(PATH.srcFiles, ['build']);
+  gulp.watch('./src/**/*', ['build']);
+  gulp.watch('./test/**/*', ['build']);
 });
 
 gulp.task('deploy', function () {
-  gulp.src(PATH.dist + '/**/*')
+  gulp.src('./dist/**/*')
     .pipe(deploy({}));
 });
 

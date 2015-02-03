@@ -6,6 +6,9 @@ describe('app', function () {
 
   it('should pass the first test', function (done) {
     console.log("yay yay");
+    ['a','b','c'].forEach(x => {
+      console.log('TEST poof narp ploo ' + x);
+    });
     done();
   });
 

@@ -4,8 +4,9 @@ module.exports = function(config){
 
     files : [
       'dist/app.js',
-      'test/play.js',
-      {pattern: 'dist/*', watched: true, included: false, served: true}
+      'dist-test/app.js',
+      {pattern: 'dist/*', watched: true, included: false, served: true},
+      {pattern: 'dist-test/*', watched: true, included: false, served: true}
     ],
 
     autoWatch : true,
