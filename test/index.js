@@ -1,5 +1,6 @@
 [
-  require('./test-app'),
   require('./test-components'),
-  require('./test-entities')
-].map((test) => test(chai.expect));
+  require('./test-entities'),
+  require('./test-systems'),
+  require('./test-world')
+].map(test => test(chai.expect));

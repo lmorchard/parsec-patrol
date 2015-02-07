@@ -4,6 +4,14 @@ module.exports = function (expect) {
 
   describe('components', function () {
 
+    describe('getManager', function () {
+
+      it('should fetch "Position" manager by name', function () {
+        expect(C.getManager('Position')).to.equal(C.Position);
+      });
+
+    });
+
     describe('Position', function () {
 
       it('should be named "Position"', function () {

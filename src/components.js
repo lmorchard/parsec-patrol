@@ -1,11 +1,11 @@
 import _ from 'lodash';
 
+export function getManager(componentName) {
+  // TODO: Turn this into a proper registry
+  return module.exports[componentName];
+}
+
 export class Component {
-  constructor(attrs) {
-    console.log(this);
-    console.log(this.prototype);
-    return this.prototype.create(attrs);
-  }
   static defaults() {
     return {};
   }

@@ -1,3 +1,5 @@
+import * as Components from "./components";
+
 export class EntityManager {
 
   constructor() {
@@ -7,31 +9,54 @@ export class EntityManager {
   reset() {
     this.store = {};
     this.lastEntityId = 0;
-    this.groups = {};
-    this.lastGroupId = 0;
   }
 
   generateEntityId() {
     return ++(this.lastEntityId);
   }
 
-  generateGroupId() {
-    return ++(this.lastGroupId);
+  insert(componentsData) {
+    var entityId = this.generateEntityId();
+    for (var componentName in componentsData) {
+      var componentAttrs = componentsData[componentName];
+      this.addComponent(entityId, componentName, componentAttrs);
+    }
+    return entityId;
   }
 
-  insert(...args) {
-    var eid = this.generateEntityId();
-    for (var idx = 0; idx < args.length; idx += 2) {
-      var type = args[idx];
-      var attrs = args[idx + 1];
-      var c = type.create(attrs);
-      var name = c.type.name;
-      if (!this.store[name]) {
-        this.store[name] = {};
-      }
-      this.store[name][eid] = c;
+  destroy(entityId) {
+    for (var componentName in this.store) {
+      this.removeComponent(entityId, componentName);
     }
-    return eid;
+  }
+
+  addComponent(entityId, componentName, componentAttrs) {
+    var componentManager = Components.getManager(componentName);
+    var component = componentManager.create(componentAttrs);
+    if (!this.store[componentName]) {
+      this.store[componentName] = {};
+    }
+    this.store[componentName][entityId] = component;
+  }
+
+  removeComponent(entityId, componentName) {
+    if (entityId in this.store[componentName]) {
+      delete this.store[componentName][entityId];
+    }
+  }
+
+  hasComponent(entityId, componentName) {
+    return (componentName in this.store) &&
+           (entityId in this.store[componentName]);
+  }
+
+  getComponent(entityId, componentName) {
+    return this.store[componentName][entityId];
+  }
+
+  getComponents(componentName) {
+    if (!this.store[componentName]) { return {}; }
+    return this.store[componentName];
   }
 
 }
