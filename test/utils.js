@@ -3,6 +3,12 @@ import * as S from "../src/systems"
 import * as C from "../src/components"
 import * as E from "../src/entities"
 
+export function timeout(duration = 0) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, duration);
+  });
+}
+
 export class TestCounterComponent extends C.Component {
   static defaults() {
     return { counter: 0, timeElapsed: 0 };

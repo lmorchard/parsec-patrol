@@ -37,72 +37,86 @@ module.exports = function (expect) {
 
     it('should execute the tick loop periodically while running', function (done) {
       this.world.start();
-
-      setTimeout(() => {
+      U.timeout(1000).then(() => {
         this.world.stop();
-
         // HACK: Due to performance quirks, we won't get exactly 60 and 1000
-        var c = this.world.entityManager
-          .getComponent(this.entity, 'TestCounterComponent');
+        var c = this.world.entityManager.getComponent(this.entity, 'TestCounterComponent');
         expect(c.counter).to.be.at.least(50);
         expect(c.timeElapsed).to.be.at.least(900);
-
-        done();
-      }, 1000);
+      }).then(done).catch(err => done(err));
     });
 
     it('should stop executing the tick loop when stopped', function (done) {
-      var c = this.world.entityManager
-        .getComponent(this.entity, 'TestCounterComponent');
+      var c = this.world.entityManager.getComponent(this.entity, 'TestCounterComponent');
+      var counterBefore;
+
       this.world.start();
-      setTimeout(() => {
+      U.timeout(250).then(() => {
         this.world.stop();
-        setTimeout(() => {
-          var counterBefore = c.counter;
-          setTimeout(() => {
-            expect(c.counter).to.equal(counterBefore);
-            done();
-          }, 100);
-        }, 100);
-      }, 250);
+        return U.timeout(100);
+      }).then(() => {
+        counterBefore = c.counter;
+        return U.timeout(100);
+      }).then(() => {
+        expect(c.counter).to.equal(counterBefore);
+      }).then(done).catch(err => done(err));
     });
 
     it('should properly pause and resume the tick loop', function (done) {
       var c = this.world.entityManager
         .getComponent(this.entity, 'TestCounterComponent');
+      var counterBefore;
+
       this.world.start();
-      setTimeout(() => {
+      U.timeout(250).then(() => {
         this.world.pause();
-        setTimeout(() => {
-          var counterBefore = c.counter;
-          setTimeout(() => {
-            expect(c.counter).to.equal(counterBefore);
-            setTimeout(() => {
-              this.world.resume();
-              setTimeout(() => {
-                expect(c.counter).to.not.equal(counterBefore);
-                this.world.stop();
-                done();
-              }, 100);
-            }, 100);
-          }, 100);
-        }, 100);
-      }, 250);
+        return U.timeout(100);
+      }).then(() => {
+        counterBefore = c.counter;
+        return U.timeout(100);
+      }).then(() => {
+        expect(c.counter).to.equal(counterBefore);
+        return U.timeout(100);
+      }).then(() => {
+        this.world.resume();
+        return U.timeout(100);
+      }).then(() => {
+        expect(c.counter).to.not.equal(counterBefore);
+        return U.timeout(100);
+      }).then(done).catch(err => done(err));
     });
 
     it('should execute the draw loop periodically while running', function (done) {
       this.world.start();
-
-      setTimeout(() => {
+      U.timeout(1000).then(() => {
         this.world.stop();
-
         // HACK: Due to performance quirks, we won't get exactly 60 and 1000
         var s = this.world.systems[0];
         expect(s.drawCounter).to.be.at.least(50);
         expect(s.drawTimeElapsed).to.be.at.least(900);
+      }).then(done).catch(err => done(err));
+    });
 
-        done();
-      }, 1000);
+    it('should properly pause and resume the draw loop', function (done) {
+      var s = this.world.systems[0];
+      var counterBefore;
+      this.world.start();
+      U.timeout(250).then(() => {
+        this.world.pause();
+        return U.timeout(100);
+      }).then(() => {
+        counterBefore = s.drawCounter;
+        return U.timeout(100);
+      }).then(() => {
+        expect(s.drawCounter).to.equal(counterBefore);
+        return U.timeout(100);
+      }).then(() => {
+        this.world.resume();
+        return U.timeout(100);
+      }).then(() => {
+        expect(s.drawCounter).to.not.equal(counterBefore);
+        return U.timeout(100);
+      }).then(done).catch(err => done(err));
     });
 
   });

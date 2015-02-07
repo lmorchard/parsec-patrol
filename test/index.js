@@ -1,3 +1,4 @@
+require("6to5/polyfill");
 [
   require('./test-components'),
   require('./test-entities'),

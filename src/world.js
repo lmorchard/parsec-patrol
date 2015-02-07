@@ -1,4 +1,4 @@
-import * as System from './systems';
+import * as System from "./systems";
 import * as Entities from "./entities"
 
 const TARGET_FPS = 60;
@@ -105,7 +105,9 @@ export class World {
     if (!this.lastDrawTime) { this.lastDrawTime = timestamp; }
     var timeDelta = timestamp - this.lastDrawTime;
     this.lastDrawTime = timestamp;
-    this.draw(timeDelta);
+    if (!this.isPaused) {
+      this.draw(timeDelta);
+    }
     if (this.isRunning) {
       requestAnimationFrame((timestamp) => this.drawLoop(timestamp));
     }
