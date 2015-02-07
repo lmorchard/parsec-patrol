@@ -24,10 +24,10 @@ gulp.task('browserify', function () {
 
 gulp.task('browserify-tests', function () {
   browserify({debug: false})
-    .add('./test/app.js')
+    .add('./test/index.js')
     .transform(to5ify)
     .bundle()
-    .pipe(source('app.js'))
+    .pipe(source('index.js'))
     .pipe(gulp.dest('./dist-test'));
 });
 

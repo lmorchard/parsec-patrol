@@ -3,8 +3,7 @@ module.exports = function(config){
     basePath: '.',
 
     files : [
-      'dist/app.js',
-      'dist-test/app.js',
+      'dist-test/index.js',
       {pattern: 'dist/*', watched: true, included: false, served: true},
       {pattern: 'dist-test/*', watched: true, included: false, served: true}
     ],
