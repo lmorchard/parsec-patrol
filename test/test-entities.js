@@ -30,6 +30,17 @@ module.exports = function (expect) {
         }
       });
 
+      it('should accept multiple entities', function () {
+        var entityIds = this.entities.insert(
+          { Name: { name: "test2" } },
+          { Name: { name: "test3" } },
+          { Name: { name: "test4" } }
+        );
+        expect(_.isArray(entityIds)).to.be.true;
+        expect(entityIds.length).to.equal(3);
+        expect(entityIds[2]).to.equal(this.entities.lastEntityId);
+      });
+
     });
 
     describe('.destroy()', function () {

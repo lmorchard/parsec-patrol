@@ -58,10 +58,11 @@ export class World {
       this.systems[systemName].initialize();
     }
 
+    // Game logic separated from display rendering
+    // See also: http://www.chandlerprall.com/2012/06/requestanimationframe-is-not-your-logics-friend/
     this.lastTickTime = Date.now();
-    this.tickLoop();
-
     this.lastDrawTime = 0;
+    setTimeout(() => this.tickLoop(), this.tickDuration);
     requestAnimationFrame((timestamp) => this.drawLoop(timestamp));
 
     return this;
@@ -92,6 +93,8 @@ export class World {
     this.lastTickTime = timeNow;
 
     if (!this.isPaused) {
+      // Fixed-step game logic loop
+      // see: http://gafferongames.com/game-physics/fix-your-timestep/
       this.tickAccumulator += timeDelta;
       while (this.tickAccumulator > this.tickDuration) {
         this.tick(this.tickDuration);

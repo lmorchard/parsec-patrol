@@ -3,19 +3,16 @@ var browserify = require('browserify');
 var connect = require('gulp-connect');
 var gulp = require('gulp');
 var path = require('path');
-var rename = require('gulp-rename');
 var source = require('vinyl-source-stream');
 var stylus = require('gulp-stylus');
-var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var deploy = require('gulp-gh-pages');
 var to5ify = require("6to5ify");
 var karma = require('karma');
 var transform = require('vinyl-transform');
-var through = require('through');
-var glob = require('glob');
+var tap = require('gulp-tap');
 
-gulp.task('build', ['browserify', 'browserify-tests', 'stylus', 'markup']);
+gulp.task('build', ['stylus', 'markup', 'browserify-sketches', 'browserify-app', 'browserify-tests']);
 
 var browserified = function () {
   return transform(function(filename) {
@@ -25,11 +22,18 @@ var browserified = function () {
   });
 };
 
-gulp.task('browserify', function () {
-  return gulp.src(['./src/app.js', './src/sketches/**/*.js'])
+gulp.task('browserify-app', function () {
+  return gulp.src('./src/app.js')
     .pipe(browserified())
-    //.pipe(uglify())
-    .pipe(gulp.dest('./dist'));
+    .pipe(gulp.dest('./dist'))
+    .pipe(connect.reload());
+});
+
+gulp.task('browserify-sketches', function () {
+  return gulp.src('./src/sketches/**/*.js')
+    .pipe(browserified())
+    .pipe(gulp.dest('./dist/sketches'))
+    .pipe(connect.reload());
 });
 
 gulp.task('browserify-tests', function () {
@@ -69,13 +73,13 @@ gulp.task('deploy', function () {
     .pipe(deploy({}));
 });
 
-gulp.task('server', ['build', 'connect', 'watch']);
-
 gulp.task('test', ['build'], function (done) {
   karma.server.start({
     configFile: __dirname + '/karma.conf.js',
     singleRun: true
   }, done);
 });
+
+gulp.task('server', ['build', 'connect', 'watch']);
 
 gulp.task('default', ['server']);

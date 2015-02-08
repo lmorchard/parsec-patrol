@@ -15,13 +15,17 @@ export class EntityManager {
     return ++(this.lastEntityId);
   }
 
-  insert(componentsData) {
-    var entityId = this.generateEntityId();
-    for (var componentName in componentsData) {
-      var componentAttrs = componentsData[componentName];
-      this.addComponent(entityId, componentName, componentAttrs);
+  insert(...items) {
+    var out = [];
+    for (var idx=0, item; item=items[idx]; idx++) {
+      var entityId = this.generateEntityId();
+      for (var componentName in item) {
+        var componentAttrs = item[componentName];
+        this.addComponent(entityId, componentName, componentAttrs);
+      }
+      out.push(entityId);
     }
-    return entityId;
+    return out.length > 1 ? out : out[0];
   }
 
   destroy(entityId) {
@@ -57,6 +61,10 @@ export class EntityManager {
   getComponents(componentName) {
     if (!this.store[componentName]) { return {}; }
     return this.store[componentName];
+  }
+
+  get(entityId, componentName) {
+    return this.store[componentName][entityId];
   }
 
 }

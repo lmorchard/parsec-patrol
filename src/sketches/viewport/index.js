@@ -4,10 +4,12 @@ import * as Components from "../../components"
 import * as Entities from "../../entities"
 
 import "../../plugins/position"
+import "../../plugins/orbiter"
 import "../../plugins/motion"
 import "../../plugins/health"
 import "../../plugins/canvasViewport"
 import "../../plugins/drawStats"
+import "../../plugins/datGui"
 
 var world = new World.World({
   systems: {
@@ -15,35 +17,43 @@ var world = new World.World({
       container: '#game',
       canvas: '#viewport'
     },
-    DrawStats: { },
-    Motion: { }
+    DatGui: {},
+    DrawStats: {},
+    Motion: {},
+    Orbiter: {}
   }
 });
 
+var move = 0.07;
 var rot = (Math.PI / 2) / 1000;
 
 world.entities.insert({
+  Name: { name: 'sun'},
+  Position: {}
+}, {
   Name: { name: 'alpha'},
-  Position: {},
-  Motion: { dx: 0.1, dy: 0.1, drotation: rot}
-});
-
-world.entities.insert({
+  Position: { x: 250, y: 250 },
+  Orbiter: { name: 'sun' }
+}, {
   Name: { name: 'beta'},
-  Position: {},
-  Motion: { dx: -0.1, dy: -0.1, drotation: -rot}
-});
-
-world.entities.insert({
+  Position: { x: -250, y: -250 },
+  Orbiter: { name: 'sun' }
+}, {
+  Name: { name: 'theta'},
+  Position: { x: -250, y: 250 },
+  Orbiter: { name: 'sun' }
+}, {
+  Name: { name: 'whatever'},
+  Position: { x: 250, y: -250 },
+  Orbiter: { name: 'sun' }
+}, {
   Name: { name: 'delta'},
   Position: {},
-  Motion: { dx: 0.1, dy: -0.1, drotation: rot}
-});
-
-world.entities.insert({
+  Motion: { dx: move, dy: -move, drotation: -rot}
+}, {
   Name: { name: 'gamma'},
   Position: {},
-  Motion: { dx: -0.1, dy: 0.1, drotation: -rot}
+  Motion: { dx: -move, dy: move, drotation: -rot}
 });
 
 world.start();

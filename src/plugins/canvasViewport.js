@@ -9,15 +9,16 @@ export class CanvasViewport extends Systems.System {
     this.canvas = document.querySelector(this.options.canvas);
     this.ctx = this.canvas.getContext('2d');
 
-    window.addEventListener('resize', function () {
-    }, false);
+    window.addEventListener('resize',
+        () => { this.updateMetrics() }, false);
 
-    window.addEventListener('orientationchange', function () {
-    }, false);
+    window.addEventListener('orientationchange',
+        () => { this.updateMetrics() }, false);
+
+    this.updateMetrics();
   }
 
   draw(timeDelta) {
-    this.updateMetrics();
 
     var width = this.canvas.width;
     var height = this.canvas.height;
@@ -47,7 +48,7 @@ export class CanvasViewport extends Systems.System {
     var height = this.canvas.height;
     var ctx = this.ctx;
     ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-    ctx.fillRect(0, 0, width, height)
+    ctx.fillRect(-width/2, -height/2, width, height)
   }
 
   drawGrid() {
@@ -88,7 +89,6 @@ export class CanvasViewport extends Systems.System {
 
       ctx.restore();
     }
-
   }
 
   drawSprite(ctx, timeDelta, entityId, position) {
