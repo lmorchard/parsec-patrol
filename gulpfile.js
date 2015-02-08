@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var browserify = require('browserify');
 var connect = require('gulp-connect');
 var gulp = require('gulp');
@@ -10,49 +11,36 @@ var uglify = require('gulp-uglify');
 var deploy = require('gulp-gh-pages');
 var to5ify = require("6to5ify");
 var karma = require('karma');
+var transform = require('vinyl-transform');
+var through = require('through');
+var glob = require('glob');
 
-gulp.task('build', ['browserify', 'browserify-tests', 'stylus', 'compress', 'markup']);
+gulp.task('build', ['browserify', 'browserify-tests', 'stylus', 'markup']);
+
+var browserified = function () {
+  return transform(function(filename) {
+    return browserify(filename)
+      .transform(to5ify)
+      .bundle();
+  });
+};
 
 gulp.task('browserify', function () {
-  browserify({debug: false})
-    .add('./src/sketches/viewport/index.js')
-    .transform(to5ify)
-    .bundle()
-    .pipe(source('sketches/viewport/index.js'))
-    .pipe(gulp.dest('./dist'))
-    .pipe(connect.reload());
-
-  return browserify({debug: false})
-    .add('./src/app.js')
-    .transform(to5ify)
-    .bundle()
-    .pipe(source('app.js'))
-    .pipe(gulp.dest('./dist'))
-    .pipe(connect.reload());
+  return gulp.src(['./src/app.js', './src/sketches/**/*.js'])
+    .pipe(browserified())
+    //.pipe(uglify())
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('browserify-tests', function () {
-  return browserify({debug: false})
-    .add('./test/index.js')
-    .transform(to5ify)
-    .bundle()
-    .pipe(source('index.js'))
+  return gulp.src(['./test/index.js', './test/**/test-*.js'])
+    .pipe(browserified())
     .pipe(gulp.dest('./dist-test'));
 });
 
 gulp.task('stylus', function () {
   return gulp.src('./src/**/*.styl')
     .pipe(stylus())
-    .pipe(gulp.dest('./dist'))
-    .pipe(connect.reload());
-});
-
-gulp.task('compress', function () {
-  return gulp.src('./dist/app.js')
-    .pipe(uglify())
-    .pipe(rename(function (file) {
-      file.basename += '-min';
-    }))
     .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
