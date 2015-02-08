@@ -15,7 +15,7 @@ export class System {
   initialize() { }
 
   getMatchingComponents() {
-    return this.world.entityManager.getComponents(this.matchComponent());
+    return this.world.entities.getComponents(this.matchComponent());
   }
 
   update(timeDelta) {
@@ -37,7 +37,7 @@ export class MotionSystem extends System {
     return Components.Motion.name;
   }
   updateComponent(timeDelta, entityId, motion) {
-    var pos = this.world.entityManager.get(entityId, Components.Position.name);
+    var pos = this.world.entities.getComponent(entityId, Components.Position.name);
     pos.x += motion.dx * timeDelta
     pos.y += motion.dy * timeDelta
 

@@ -14,7 +14,8 @@ module.exports = function(config){
 
     frameworks: ['mocha', 'chai'],
 
-    browsers : ['Firefox', 'Chrome'],
+    browsers : ['Firefox'],
+    // browsers : ['Firefox', 'Chrome'],
 
     reporters: ['spec'],
 

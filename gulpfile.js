@@ -9,6 +9,9 @@ var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var deploy = require('gulp-gh-pages');
 var to5ify = require("6to5ify");
+var karma = require('karma').server;
+
+gulp.task('default', ['server', 'testWatch']);
 
 gulp.task('build', ['browserify', 'browserify-tests', 'stylus', 'compress', 'markup']);
 
@@ -73,4 +76,17 @@ gulp.task('deploy', function () {
     .pipe(deploy({}));
 });
 
-gulp.task('server', ['build','connect','watch']);
+gulp.task('server', ['build', 'connect', 'watch']);
+
+gulp.task('test', ['build'], function (done) {
+  karma.start({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, done);
+});
+
+gulp.task('testWatch', function (done) {
+  karma.start({
+    configFile: __dirname + '/karma.conf.js'
+  }, done);
+});

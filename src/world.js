@@ -19,7 +19,7 @@ export class World {
     this.isRunning = false;
     this.isPaused = false;
 
-    this.entityManager = new Entities.EntityManager();
+    this.entities = new Entities.EntityManager();
 
     this.systems = [];
     for (var system, idx=0; system = systemsToAdd[idx]; idx++) {
@@ -34,11 +34,13 @@ export class World {
     this.lastDrawTime = 0;
   }
 
+  /* TODO
   load(data) {
   }
 
   save() {
   }
+  */
 
   addSystem(system) {
     system.setWorld(this);
@@ -105,9 +107,11 @@ export class World {
     if (!this.lastDrawTime) { this.lastDrawTime = timestamp; }
     var timeDelta = timestamp - this.lastDrawTime;
     this.lastDrawTime = timestamp;
+
     if (!this.isPaused) {
       this.draw(timeDelta);
     }
+
     if (this.isRunning) {
       requestAnimationFrame((timestamp) => this.drawLoop(timestamp));
     }
