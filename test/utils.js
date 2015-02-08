@@ -14,13 +14,16 @@ export class TestCounterComponent extends C.Component {
     return { counter: 0, timeElapsed: 0 };
   }
 }
-// TODO: Need a component registry
-C.TestCounterComponent = TestCounterComponent;
+C.register('TestCounterComponent', TestCounterComponent);
 
 export class TestCounterSystem extends S.System {
   constructor() {
+    this.initialized = false;
     this.drawCounter = 0;
     this.drawTimeElapsed = 0;
+  }
+  initialize() {
+    this.initialized = true;
   }
   matchComponent() {
     return TestCounterComponent.name;
@@ -34,3 +37,4 @@ export class TestCounterSystem extends S.System {
     this.drawTimeElapsed += timeDelta;
   }
 }
+S.register('TestCounterSystem', TestCounterSystem);

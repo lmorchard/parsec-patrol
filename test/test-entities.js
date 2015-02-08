@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import * as E from "../src/entities"
 import * as C from "../src/components"
+import * as U from "./utils"
 
 module.exports = function (expect) {
 

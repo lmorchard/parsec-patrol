@@ -9,14 +9,20 @@ var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var deploy = require('gulp-gh-pages');
 var to5ify = require("6to5ify");
-var karma = require('karma').server;
-
-gulp.task('default', ['server', 'testWatch']);
+var karma = require('karma');
 
 gulp.task('build', ['browserify', 'browserify-tests', 'stylus', 'compress', 'markup']);
 
 gulp.task('browserify', function () {
   browserify({debug: false})
+    .add('./src/sketches/viewport/index.js')
+    .transform(to5ify)
+    .bundle()
+    .pipe(source('sketches/viewport/index.js'))
+    .pipe(gulp.dest('./dist'))
+    .pipe(connect.reload());
+
+  return browserify({debug: false})
     .add('./src/app.js')
     .transform(to5ify)
     .bundle()
@@ -26,7 +32,7 @@ gulp.task('browserify', function () {
 });
 
 gulp.task('browserify-tests', function () {
-  browserify({debug: false})
+  return browserify({debug: false})
     .add('./test/index.js')
     .transform(to5ify)
     .bundle()
@@ -35,15 +41,14 @@ gulp.task('browserify-tests', function () {
 });
 
 gulp.task('stylus', function () {
-  gulp.src('./src/app.styl')
+  return gulp.src('./src/**/*.styl')
     .pipe(stylus())
-    .pipe(concat('app.css'))
     .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
 
 gulp.task('compress', function () {
-  gulp.src('./dist/app.js')
+  return gulp.src('./dist/app.js')
     .pipe(uglify())
     .pipe(rename(function (file) {
       file.basename += '-min';
@@ -53,7 +58,7 @@ gulp.task('compress', function () {
 });
 
 gulp.task('markup', function () {
-  gulp.src('./src/**/*.html')
+  return gulp.src('./src/**/*.html')
     .pipe(gulp.dest('./dist'))
     .pipe(connect.reload());
 });
@@ -79,14 +84,10 @@ gulp.task('deploy', function () {
 gulp.task('server', ['build', 'connect', 'watch']);
 
 gulp.task('test', ['build'], function (done) {
-  karma.start({
+  karma.server.start({
     configFile: __dirname + '/karma.conf.js',
     singleRun: true
   }, done);
 });
 
-gulp.task('testWatch', function (done) {
-  karma.start({
-    configFile: __dirname + '/karma.conf.js'
-  }, done);
-});
+gulp.task('default', ['server']);

@@ -10,8 +10,11 @@ module.exports = function (expect) {
     describe('System', function () {
 
       before(function () {
-        this.system = new U.TestCounterSystem();
-        this.world = new W.World(this.system);
+        this.world = new W.World();
+        this.world.addSystems({
+          TestCounterSystem: {}
+        });
+        this.system = this.world.getSystem('TestCounterSystem');
         this.entity = this.world.entities.insert({
           Name: { name: "test1" },
           TestCounterComponent: {}
@@ -43,40 +46,6 @@ module.exports = function (expect) {
           var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
           expect(c.counter).to.equal(numUpdates);
           expect(c.timeElapsed).to.equal(numUpdates * tickDelta);
-        });
-
-      });
-
-    });
-
-    describe('MotionSystem', function () {
-      var [numUpdates, tickDelta] = [3, 16];
-      var maxRotation = Math.PI / 2;
-      var [dx, dy] = [10, 20];
-
-      before(function () {
-        this.system = new S.MotionSystem();
-        this.world = new W.World(this.system);
-        this.entity = this.world.entities.insert({
-          Name: { name: "test1" },
-          Position: {},
-          Motion: {
-            dx: dx, dy: dy,
-            drotation: maxRotation / tickDelta / numUpdates
-          }
-        });
-      });
-
-      describe('.update()', function () {
-
-        it('play', function () {
-          for (var i=0; i < numUpdates; i++) {
-            this.system.update(tickDelta);
-          }
-          var c = this.world.entities.getComponent(this.entity, 'Position');
-          expect(c.x).to.equal(dx * tickDelta * numUpdates);
-          expect(c.y).to.equal(dy * tickDelta * numUpdates);
-          expect(c.rotation).to.equal(maxRotation);
         });
 
       });

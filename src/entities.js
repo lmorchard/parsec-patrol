@@ -31,7 +31,7 @@ export class EntityManager {
   }
 
   addComponent(entityId, componentName, componentAttrs) {
-    var componentManager = Components.getManager(componentName);
+    var componentManager = Components.get(componentName);
     var component = componentManager.create(componentAttrs);
     if (!this.store[componentName]) {
       this.store[componentName] = {};

@@ -10,17 +10,16 @@ module.exports = function (expect) {
     this.timeout(5000);
 
     beforeEach(function () {
-      this.system = new U.TestCounterSystem();
-      this.world = new W.World(this.system);
+      this.world = new W.World();
+      this.world.addSystems({
+        TestCounterSystem: {}
+      });
+      this.system = this.world.getSystem('TestCounterSystem');
       this.entity = this.world.entities.insert({
         Name: { name: "test1" },
         TestCounterComponent: {}
       });
     });
-
-    /* TODO
-     * load/save methods
-     */
 
     it('should not be running at first', function () {
       expect(this.world.isRunning).to.be.false;
@@ -30,12 +29,15 @@ module.exports = function (expect) {
       expect(this.world.isPaused).to.be.false;
     });
 
-    it('should accept systems on construction', function () {
-      expect(this.world.systems.length).to.equal(1);
+    it('should have an entity manager', function () {
+      expect(this.world.entities).to.not.be.null;
     });
 
-    it('should have an entities', function () {
-      expect(this.world.entities).to.not.be.null;
+    it('should have systems that are initialized after start', function () {
+      expect(this.system.initialized).to.be.false;
+      this.world.start();
+      expect(this.system.initialized).to.be.true;
+      this.world.stop();
     });
 
     it('should execute the tick loop periodically while running', function (done) {
@@ -68,7 +70,6 @@ module.exports = function (expect) {
     it('should properly pause and resume the tick loop', function (done) {
       var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
       var counterBefore;
-
       this.world.start();
       U.timeout(250).then(() => {
         this.world.pause();

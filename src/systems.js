@@ -1,9 +1,20 @@
 import * as Entities from "./entities";
 import * as Components from "./components";
 
+var systemRegistry = {};
+
+export function register(systemName, system) {
+  systemRegistry[systemName] = system;
+}
+
+export function get(systemName) {
+  return systemRegistry[systemName];
+}
+
 export class System {
 
-  constructor() {
+  constructor(options) {
+    this.options = options || {};
   }
 
   setWorld(world) {
@@ -28,24 +39,10 @@ export class System {
 
   updateComponent(timeDelta, entityId, component) { }
 
+  drawStart(timeDelta) { }
+
   draw(timeDelta) { }
 
-}
+  drawEnd(timeDelta) { }
 
-export class MotionSystem extends System {
-  matchComponent() {
-    return Components.Motion.name;
-  }
-  updateComponent(timeDelta, entityId, motion) {
-    var pos = this.world.entities.getComponent(entityId, Components.Position.name);
-    pos.x += motion.dx * timeDelta
-    pos.y += motion.dy * timeDelta
-
-    // Update the rotation, ensuring a 0..2*Math.PI range.
-    var PI2 = Math.PI * 2;
-    pos.rotation = (pos.rotation + (motion.drotation * timeDelta)) % PI2;
-    if (pos.rotation < 0) {
-      pos.rotation += PI2;
-    }
-  }
 }
