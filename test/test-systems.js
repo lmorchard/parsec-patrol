@@ -28,7 +28,7 @@ module.exports = function (expect) {
       describe('.getMatchingComponents()', function () {
 
         it('should find relevant components', function () {
-          var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
+          var c = this.world.entities.get('TestCounterComponent', this.entity);
           var matches = this.system.getMatchingComponents();
           expect(matches[this.entity]).to.equal(c);
         });
@@ -43,7 +43,7 @@ module.exports = function (expect) {
             this.system.update(tickDelta);
           }
 
-          var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
+          var c = this.world.entities.get('TestCounterComponent', this.entity);
           expect(c.counter).to.equal(numUpdates);
           expect(c.timeElapsed).to.equal(numUpdates * tickDelta);
         });

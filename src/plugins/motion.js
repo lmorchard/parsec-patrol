@@ -16,7 +16,7 @@ export class MotionSystem extends Systems.System {
     return 'Motion';
   }
   updateComponent(timeDelta, entityId, motion) {
-    var pos = this.world.entities.getComponent(entityId, 'Position');
+    var pos = this.world.entities.get('Position', entityId);
     pos.x += motion.dx * timeDelta
     pos.y += motion.dy * timeDelta
 

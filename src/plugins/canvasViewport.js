@@ -76,7 +76,7 @@ export class CanvasViewport extends Systems.System {
 
   drawScene(timeDelta) {
     var ctx = this.ctx;
-    var positions = this.world.entities.getComponents('Position');
+    var positions = this.world.entities.get('Position');
 
     for (var entityId in positions) {
       var position = positions[entityId];

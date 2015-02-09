@@ -34,18 +34,17 @@ export class OrbiterSystem extends Systems.System {
 
     // Look up the orbited entity ID, if only name given.
     if (orbiter.name && !orbiter.entityId) {
-      var names = this.world.entities.getComponents('Name');
+      var names = this.world.entities.get('Name');
       for (var nid in names) {
         var nameComponent = names[nid];
         if (nameComponent.name == orbiter.name) {
           orbiter.entityId = nid;
-          console.log(orbiter.name + ' == ' + nid);
         }
       }
     }
 
-    var pos = this.world.entities.get(entityId, 'Position');
-    var oPos = this.world.entities.get(orbiter.entityId, 'Position');
+    var pos = this.world.entities.get('Position', entityId);
+    var oPos = this.world.entities.get('Position', orbiter.entityId);
 
     this.vOrbited.setValues(oPos.x, oPos.y);
     this.vOrbiter.setValues(pos.x, pos.y);

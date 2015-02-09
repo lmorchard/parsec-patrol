@@ -54,17 +54,14 @@ export class EntityManager {
            (entityId in this.store[componentName]);
   }
 
-  getComponent(entityId, componentName) {
-    return this.store[componentName][entityId];
-  }
-
-  getComponents(componentName) {
-    if (!this.store[componentName]) { return {}; }
-    return this.store[componentName];
-  }
-
-  get(entityId, componentName) {
-    return this.store[componentName][entityId];
+  get(componentName, entityId) {
+    if (!this.store[componentName]) {
+      return {};
+    } else if (!entityId) {
+      return this.store[componentName];
+    } else {
+      return this.store[componentName][entityId];
+    }
   }
 
 }

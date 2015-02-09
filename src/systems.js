@@ -26,7 +26,7 @@ export class System {
   initialize() { }
 
   getMatchingComponents() {
-    return this.world.entities.getComponents(this.matchComponent());
+    return this.world.entities.get(this.matchComponent());
   }
 
   update(timeDelta) {

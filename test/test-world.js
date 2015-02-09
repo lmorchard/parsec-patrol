@@ -19,6 +19,7 @@ module.exports = function (expect) {
         Name: { name: "test1" },
         TestCounterComponent: {}
       });
+      this.component = this.world.entities.get('TestCounterComponent', this.entity);
     });
 
     it('should not be running at first', function () {
@@ -45,14 +46,12 @@ module.exports = function (expect) {
       U.timeout(1000).then(() => {
         this.world.stop();
         // HACK: Due to performance quirks, we won't get exactly 60 and 1000
-        var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
-        expect(c.counter).to.be.at.least(50);
-        expect(c.timeElapsed).to.be.at.least(800);
+        expect(this.component.counter).to.be.at.least(50);
+        expect(this.component.timeElapsed).to.be.at.least(800);
       }).then(done).catch(err => done(err));
     });
 
     it('should stop executing the tick loop when stopped', function (done) {
-      var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
       var counterBefore;
 
       this.world.start();
@@ -60,15 +59,15 @@ module.exports = function (expect) {
         this.world.stop();
         return U.timeout(100);
       }).then(() => {
-        counterBefore = c.counter;
+        counterBefore = this.component.counter;
         return U.timeout(100);
       }).then(() => {
-        expect(c.counter).to.equal(counterBefore);
+        expect(this.component.counter).to.equal(counterBefore);
       }).then(done).catch(err => done(err));
     });
 
     it('should properly pause and resume the tick loop', function (done) {
-      var c = this.world.entities.getComponent(this.entity, 'TestCounterComponent');
+      var c = this.world.entities.get('TestCounterComponent', this.entity);
       var counterBefore;
       this.world.start();
       U.timeout(250).then(() => {
@@ -78,13 +77,13 @@ module.exports = function (expect) {
         counterBefore = c.counter;
         return U.timeout(100);
       }).then(() => {
-        expect(c.counter).to.equal(counterBefore);
+        expect(this.component.counter).to.equal(counterBefore);
         return U.timeout(100);
       }).then(() => {
         this.world.resume();
         return U.timeout(100);
       }).then(() => {
-        expect(c.counter).to.not.equal(counterBefore);
+        expect(this.component.counter).to.not.equal(counterBefore);
         return U.timeout(100);
       }).then(done).catch(err => done(err));
     });

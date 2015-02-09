@@ -60,7 +60,7 @@ module.exports = function (expect) {
             for (var i=0; i < numUpdates; i++) {
               this.system.update(tickDelta);
             }
-            var c = this.world.entities.getComponent(this.entity, 'Position');
+            var c = this.world.entities.get('Position', this.entity);
             expect(c.x).to.equal(dx * tickDelta * numUpdates);
             expect(c.y).to.equal(dy * tickDelta * numUpdates);
             expect(c.rotation).to.equal(maxRotation);
