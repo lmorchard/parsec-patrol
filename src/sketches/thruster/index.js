@@ -1,0 +1,39 @@
+import * as World from "../../world"
+import * as Systems from "../../systems"
+import * as Components from "../../components"
+import * as Entities from "../../entities"
+
+import "../../plugins/position"
+import "../../plugins/thruster"
+import "../../plugins/orbiter"
+import "../../plugins/motion"
+import "../../plugins/health"
+import "../../plugins/canvasViewport"
+import "../../plugins/drawStats"
+import "../../plugins/datGui"
+
+var world = new World.World({
+  systems: {
+    CanvasViewport: {
+      container: '#game',
+      canvas: '#viewport'
+    },
+    DatGui: {},
+    DrawStats: {},
+    Motion: {},
+    Orbiter: {},
+    Thruster: {}
+  }
+});
+
+var move = 0.07;
+var rot = (Math.PI / 2) / 1000;
+
+world.entities.insert({
+  Name: { name: 'sun'},
+  Position: {},
+  Motion: { dx: 0, dy: 0, drotation: rot },
+  Thruster: { deltaV: 0.1 / 1000, maxV: 1 }
+});
+
+world.start();
