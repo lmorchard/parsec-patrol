@@ -1,10 +1,8 @@
-import * as Entities from "../entities"
-import * as Components from "../components";
-import * as Systems from "../systems";
+import * as Core from "../core";
 
 import Stats from "stats-js";
 
-export class DrawStats extends Systems.System {
+export class DrawStats extends Core.System {
 
   initialize() {
     this.stats = new Stats();
@@ -17,4 +15,4 @@ export class DrawStats extends Systems.System {
   drawEnd(timeDelta) { this.stats.end(); }
 
 }
-Systems.register('DrawStats', DrawStats);
+Core.registerSystem('DrawStats', DrawStats);

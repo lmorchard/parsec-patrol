@@ -1,7 +1,4 @@
-import * as World from "../../world"
-import * as Systems from "../../systems"
-import * as Components from "../../components"
-import * as Entities from "../../entities"
+import * as Core from "../../core"
 
 import "../../plugins/position"
 import "../../plugins/orbiter"
@@ -11,7 +8,7 @@ import "../../plugins/canvasViewport"
 import "../../plugins/drawStats"
 import "../../plugins/datGui"
 
-var world = new World.World({
+var world = new Core.World({
   systems: {
     CanvasViewport: {
       container: '#game',

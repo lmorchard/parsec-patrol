@@ -1,13 +1,11 @@
-import * as Entities from "../entities"
-import * as Components from "../components";
-import * as Systems from "../systems";
+import * as Core from "../core";
 
 import "./position";
 
 import _ from "lodash";
-import Vector2D from "../Vector2D";
+import Vector2D from "../lib/Vector2D";
 
-export class Orbiter extends Components.Component {
+export class Orbiter extends Core.Component {
   static defaults() {
     return {
       name: null,
@@ -18,9 +16,9 @@ export class Orbiter extends Components.Component {
     };
   }
 }
-Components.register('Orbiter', Orbiter);
+Core.registerComponent('Orbiter', Orbiter);
 
-export class OrbiterSystem extends Systems.System {
+export class OrbiterSystem extends Core.System {
 
   matchComponent() { return 'Orbiter'; }
 
@@ -61,4 +59,4 @@ export class OrbiterSystem extends Systems.System {
 
   }
 }
-Systems.register('Orbiter', OrbiterSystem);
+Core.registerSystem('Orbiter', OrbiterSystem);

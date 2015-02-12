@@ -1,24 +1,18 @@
-import * as World from "../../world"
-import * as Systems from "../../systems"
-import * as Components from "../../components"
-import * as Entities from "../../entities"
+import * as Core from "../../core"
 
 import "../../plugins/position"
 import "../../plugins/thruster"
 import "../../plugins/orbiter"
 import "../../plugins/motion"
-import "../../plugins/health"
 import "../../plugins/canvasViewport"
 import "../../plugins/drawStats"
-import "../../plugins/datGui"
 
-var world = new World.World({
+var world = new Core.World({
   systems: {
     CanvasViewport: {
       container: '#game',
       canvas: '#viewport'
     },
-    DatGui: {},
     DrawStats: {},
     Motion: {},
     Orbiter: {},
@@ -27,7 +21,7 @@ var world = new World.World({
 });
 
 var move = 0.07;
-var rot = (Math.PI / 2) / 1000;
+var rot = (Math.PI / 1) / 1000;
 
 world.entities.insert({
   Name: { name: 'sun'},

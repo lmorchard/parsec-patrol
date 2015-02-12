@@ -1,13 +1,11 @@
-import * as Entities from "../entities"
-import * as Components from "../components";
-import * as Systems from "../systems";
+import * as Core from "../core";
 
 import "./position";
 import "./motion";
 
-import Vector2D from "../Vector2D";
+import Vector2D from "../lib/Vector2D";
 
-export class Thruster extends Components.Component {
+export class Thruster extends Core.Component {
   static defaults() {
     return {
       active: true,
@@ -18,9 +16,9 @@ export class Thruster extends Components.Component {
     };
   }
 }
-Components.register('Thruster', Thruster);
+Core.registerComponent('Thruster', Thruster);
 
-export class ThrusterSystem extends Systems.System {
+export class ThrusterSystem extends Core.System {
 
   matchComponent() { return 'Thruster'; }
 
@@ -78,4 +76,4 @@ export class ThrusterSystem extends Systems.System {
   }
 
 }
-Systems.register('Thruster', ThrusterSystem);
+Core.registerSystem('Thruster', ThrusterSystem);

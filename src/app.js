@@ -1,2 +1,1 @@
-import * as Entities from "./entities";
-import * as Components from "./components";
+import * as Core from "./Core";

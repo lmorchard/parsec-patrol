@@ -1,10 +1,8 @@
-import * as Entities from "../entities"
-import * as Components from "../components";
-import * as Systems from "../systems";
+import * as Core from "../core";
 
 import dat from "dat-gui";
 
-export class DatGui extends Systems.System {
+export class DatGui extends Core.System {
 
   initialize() {
     var gui = this.gui = new dat.GUI();
@@ -21,4 +19,4 @@ export class DatGui extends Systems.System {
   }
 
 }
-Systems.register('DatGui', DatGui);
+Core.registerSystem('DatGui', DatGui);

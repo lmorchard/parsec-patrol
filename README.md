@@ -30,6 +30,8 @@ gulp server
 
 ## TODO / Ideas
 
+* Move core engine code out of src/ root?
+
 * Upgrade Browserify once [issue #1044](https://github.com/substack/node-browserify/issues/1044) is fixed
 
 * Come up with less brittle component / system registry names when necessary

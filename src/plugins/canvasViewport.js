@@ -1,8 +1,6 @@
-import * as Entities from "../entities"
-import * as Components from "../components";
-import * as Systems from "../systems";
+import * as Core from "../core";
 
-export class CanvasViewport extends Systems.System {
+export class CanvasViewport extends Core.System {
 
   initialize() {
     this.container = document.querySelector(this.options.container);
@@ -123,4 +121,4 @@ export class CanvasViewport extends Systems.System {
   }
 
 }
-Systems.register('CanvasViewport', CanvasViewport);
+Core.registerSystem('CanvasViewport', CanvasViewport);

@@ -1,17 +1,15 @@
-import * as Entities from "../entities"
-import * as Components from "../components";
-import * as Systems from "../systems";
+import * as Core from "../core";
 
 import "./position"
 
-export class Motion extends Components.Component {
+export class Motion extends Core.Component {
   static defaults() {
     return { dx: 0, dy: 0, drotation: 0 };
   }
 }
-Components.register('Motion', Motion);
+Core.registerComponent('Motion', Motion);
 
-export class MotionSystem extends Systems.System {
+export class MotionSystem extends Core.System {
   matchComponent() {
     return 'Motion';
   }
@@ -28,4 +26,4 @@ export class MotionSystem extends Systems.System {
     }
   }
 }
-Systems.register('Motion', MotionSystem);
+Core.registerSystem('Motion', MotionSystem);
