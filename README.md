@@ -1,5 +1,7 @@
 # Parsec Patrol
 
+[![Build Status](https://travis-ci.org/lmorchard/parsec-patrol.svg?branch=master)](https://travis-ci.org/lmorchard/parsec-patrol)
+
 Pew-pews in SPAAAAACE!
 
 ## Influences
