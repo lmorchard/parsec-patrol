@@ -6,7 +6,7 @@ export class DrawStats extends Core.System {
 
   initialize() {
     this.stats = new Stats();
-    this.stats.setMode(0);
+    this.stats.setMode(1);
     document.body.appendChild(this.stats.domElement);
   }
 
