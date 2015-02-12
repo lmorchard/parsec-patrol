@@ -1,1 +1,1 @@
-import * as Core from "./Core";
+import * as Core from "./core";
