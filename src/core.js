@@ -79,7 +79,8 @@ export class World {
     this.isPaused = false;
   }
 
-  tick(timeDelta) {
+  tick(timeDeltaMS) {
+    var timeDelta = timeDeltaMS / 1000;
     for (var systemName in this.systems) {
       this.systems[systemName].update(timeDelta);
     }
@@ -105,7 +106,8 @@ export class World {
     }
   }
 
-  draw(timeDelta) {
+  draw(timeDeltaMS) {
+    var timeDelta = timeDeltaMS / 1000;
     for (var systemName in this.systems) {
       this.systems[systemName].drawStart(timeDelta);
     }

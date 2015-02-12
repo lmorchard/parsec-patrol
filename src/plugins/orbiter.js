@@ -12,7 +12,7 @@ export class Orbiter extends Core.Component {
       entityId: null,
       angle: 0.0,
       rotate: true,
-      radPerSec: Math.PI / 4 / 1000
+      radPerSec: Math.PI / 4
     };
   }
 }
@@ -32,13 +32,8 @@ export class OrbiterSystem extends Core.System {
 
     // Look up the orbited entity ID, if only name given.
     if (orbiter.name && !orbiter.entityId) {
-      var names = this.world.entities.get('Name');
-      for (var nid in names) {
-        var nameComponent = names[nid];
-        if (nameComponent.name == orbiter.name) {
-          orbiter.entityId = nid;
-        }
-      }
+      orbiter.entityId = Core.getComponent('Name')
+        .findEntityByName(this.world, orbiter.name);
     }
 
     var pos = this.world.entities.get('Position', entityId);

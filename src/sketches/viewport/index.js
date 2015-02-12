@@ -8,8 +8,8 @@ import "../../plugins/health"
 import "../../plugins/canvasViewport"
 import "../../plugins/drawStats"
 
-var move = 0.07;
-var rot = (Math.PI / 2) / 1000;
+var move = 70;
+var rot = (Math.PI / 2);
 
 var world = new Core.World({
   systems: {

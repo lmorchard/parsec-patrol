@@ -22,13 +22,13 @@ var world = new Core.World({
 });
 
 var move = 0.07;
-var rot = (Math.PI / 1) / 1000;
+var rot = (Math.PI / 1);
 
 world.entities.insert({
   Name: { name: 'sun'},
   Position: {},
   Motion: { dx: 0, dy: 0, drotation: rot },
-  Thruster: { deltaV: 0.1 / 1000, maxV: 1 }
+  Thruster: { deltaV: 0.1, maxV: 1 }
 });
 
 world.start();
