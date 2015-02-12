@@ -1,12 +1,12 @@
-import * as Core from "../../core"
+import * as Core from "../../core";
 
-import "../../plugins/name"
-import "../../plugins/position"
-import "../../plugins/orbiter"
-import "../../plugins/motion"
-import "../../plugins/health"
-import "../../plugins/canvasViewport"
-import "../../plugins/drawStats"
+import "../../plugins/name";
+import "../../plugins/position";
+import "../../plugins/orbiter";
+import "../../plugins/motion";
+import "../../plugins/health";
+import "../../plugins/canvasViewport";
+import "../../plugins/drawStats";
 
 var move = 70;
 var rot = (Math.PI / 2);
