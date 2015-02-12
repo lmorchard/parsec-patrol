@@ -19,7 +19,7 @@
     "6to5-browserify": "^1.4.0",
     "6to5ify": "^4.0.0",
     "browser-sync": "^2.0.0-rc4",
-    "browserify": "^8.0.1",
+    "browserify": "8.0.1",
     "chai": "^1.10.0",
     "chai-as-promised": "^4.1.1",
     "gulp": "^3.8.10",
