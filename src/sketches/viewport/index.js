@@ -1,12 +1,15 @@
 import * as Core from "../../core"
 
+import "../../plugins/name"
 import "../../plugins/position"
 import "../../plugins/orbiter"
 import "../../plugins/motion"
 import "../../plugins/health"
 import "../../plugins/canvasViewport"
 import "../../plugins/drawStats"
-import "../../plugins/datGui"
+
+var move = 0.07;
+var rot = (Math.PI / 2) / 1000;
 
 var world = new Core.World({
   systems: {
@@ -14,15 +17,11 @@ var world = new Core.World({
       container: '#game',
       canvas: '#viewport'
     },
-    DatGui: {},
     DrawStats: {},
     Motion: {},
     Orbiter: {}
   }
 });
-
-var move = 0.07;
-var rot = (Math.PI / 2) / 1000;
 
 world.entities.insert({
   Name: { name: 'sun'},

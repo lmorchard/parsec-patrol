@@ -1,4 +1,4 @@
-import _ from 'lodash';
+require('6to5/polyfill');
 
 const TARGET_FPS = 60;
 const TARGET_DURATION = 1000 / TARGET_FPS;
@@ -206,7 +206,7 @@ export class Component {
   }
 
   static create(attrs) {
-    return _.extend(this.defaults(), attrs || {}, { manager: this })
+    return Object.assign(this.defaults(), attrs || {});
   }
 
 }

@@ -1,5 +1,6 @@
 import * as Core from "../../core"
 
+import "../../plugins/name"
 import "../../plugins/position"
 import "../../plugins/thruster"
 import "../../plugins/orbiter"

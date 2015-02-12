@@ -35,6 +35,7 @@ gulp server
 * Upgrade Browserify once [issue #1044](https://github.com/substack/node-browserify/issues/1044) is fixed
 
 * Come up with less brittle component / system registry names when necessary
+  * Use ES6 Symbols?
 
 * Hitboxes / hit-shapes independent of sprite height / width
     * eg. for asteroids, make smaller than actual shape & tolerate some overlap

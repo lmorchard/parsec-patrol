@@ -3,7 +3,6 @@ import * as Core from "../src/core"
 import "../src/plugins/name"
 import "../src/plugins/position"
 import "../src/plugins/motion"
-import "../src/plugins/health"
 
 import {expect} from "chai"
 
@@ -34,99 +33,97 @@ describe('Components', function () {
       expect(c).to.contain(attrs)
     });
 
-    it('should have a reference to the manager', function () {
-      var c = this.manager.create();
-      expect(c.manager).to.equal(this.manager);
-    });
-
   });
 
 });
 
-describe('EntityManager', function () {
+describe('Entities', function () {
 
-  beforeEach(function () {
-    this.entities = new Core.EntityManager();
-    this.entityData = {
-      Name: { name: "test1" },
-      Position: { x: 100, y: 100 },
-      Health: { max: 500 }
-    };
-    this.entity = this.entities.insert(this.entityData);
-  });
+  describe('EntityManager', function () {
 
-  describe('.insert()', function () {
-
-    it('should assign an entity id', function () {
-      expect(this.entity).to.equal(this.entities.lastEntityId);
+    beforeEach(function () {
+      this.entities = new Core.EntityManager();
+      this.entityData = {
+        Name: { name: "test1" },
+        Position: { x: 100, y: 100 },
+      };
+      this.entity = this.entities.insert(this.entityData);
     });
 
-    it('should result in components stored by entity id', function () {
-      for (var componentName in this.eidData) {
-        expect(this.entities.store).to.include.keys(componentName);
-        expect(this.entities.store[componentName]).to.include.keys(this.entity);
-      }
+    describe('.insert()', function () {
+
+      it('should assign an entity id', function () {
+        expect(this.entity).to.equal(this.entities.lastEntityId);
+      });
+
+      it('should result in components stored by entity id', function () {
+        for (var componentName in this.eidData) {
+          expect(this.entities.store).to.include.keys(componentName);
+          expect(this.entities.store[componentName]).to.include.keys(this.entity);
+        }
+      });
+
+      it('should accept multiple entities', function () {
+        var entityIds = this.entities.insert(
+          { Name: { name: "test2" } },
+          { Name: { name: "test3" } },
+          { Name: { name: "test4" } }
+        );
+        expect(Array.isArray(entityIds)).to.be.true;
+        expect(entityIds.length).to.equal(3);
+        expect(entityIds[2]).to.equal(this.entities.lastEntityId);
+      });
+
     });
 
-    it('should accept multiple entities', function () {
-      var entityIds = this.entities.insert(
-        { Name: { name: "test2" } },
-        { Name: { name: "test3" } },
-        { Name: { name: "test4" } }
-      );
-      expect(Array.isArray(entityIds)).to.be.true;
-      expect(entityIds.length).to.equal(3);
-      expect(entityIds[2]).to.equal(this.entities.lastEntityId);
+    describe('.destroy()', function () {
+
+      it('should remove the associated components', function () {
+        this.entities.destroy(this.entity);
+
+        for (var componentName in this.entities.store) {
+          var components = this.entities.store[componentName];
+          expect(components).to.not.include.keys(this.entity);
+        }
+      });
+
     });
 
-  });
+    describe('.hasComponent()', function () {
 
-  describe('.destroy()', function () {
+      it('should yield true for an existing component', function () {
+        expect(this.entities.hasComponent(this.entity, 'Position')).to.be.true;
+      });
 
-    it('should remove the associated components', function () {
-      this.entities.destroy(this.entity);
+      it('should yield false for a non-existent component', function () {
+        expect(this.entities.hasComponent(this.entity, 'Motion')).to.be.false;
+      });
 
-      for (var componentName in this.entities.store) {
-        var components = this.entities.store[componentName];
-        expect(components).to.not.include.keys(this.entity);
-      }
     });
 
-  });
+    describe('.addComponent()', function () {
 
-  describe('.hasComponent()', function () {
+      it('should add a component to an entity', function () {
+        var componentName = 'Motion';
+        var componentAttrs = { dx: 100, dy: 100 };
 
-    it('should yield true for an existing component', function () {
-      expect(this.entities.hasComponent(this.entity, 'Position')).to.be.true;
+        expect(this.entities.hasComponent(this.entity, componentName)).to.be.false;
+        this.entities.addComponent(this.entity, componentName, componentAttrs);
+        expect(this.entities.hasComponent(this.entity, componentName)).to.be.true;
+      });
+
     });
 
-    it('should yield false for a non-existent component', function () {
-      expect(this.entities.hasComponent(this.entity, 'Motion')).to.be.false;
-    });
+    describe('.removeComponent()', function () {
 
-  });
+      it('should remove a component from an entity', function () {
+        var componentName = 'Position';
 
-  describe('.addComponent()', function () {
+        expect(this.entities.hasComponent(this.entity, componentName)).to.be.true;
+        this.entities.removeComponent(this.entity, componentName);
+        expect(this.entities.hasComponent(this.entity, componentName)).to.be.false;
+      });
 
-    it('should add a component to an entity', function () {
-      var componentName = 'Motion';
-      var componentAttrs = { dx: 100, dy: 100 };
-
-      expect(this.entities.hasComponent(this.entity, componentName)).to.be.false;
-      this.entities.addComponent(this.entity, componentName, componentAttrs);
-      expect(this.entities.hasComponent(this.entity, componentName)).to.be.true;
-    });
-
-  });
-
-  describe('.removeComponent()', function () {
-
-    it('should remove a component from an entity', function () {
-      var componentName = 'Position';
-
-      expect(this.entities.hasComponent(this.entity, componentName)).to.be.true;
-      this.entities.removeComponent(this.entity, componentName);
-      expect(this.entities.hasComponent(this.entity, componentName)).to.be.false;
     });
 
   });
