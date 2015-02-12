@@ -220,7 +220,7 @@ describe('World', function () {
       this.world.stop();
       // HACK: Due to performance quirks, we won't get exactly 60 and 1000
       expect(this.component.counter).to.be.at.least(50);
-      expect(this.component.timeElapsed).to.be.at.least(800);
+      expect(this.component.timeElapsed).to.be.at.least(0.8);
     }).then(done).catch(err => done(err));
   });
 
@@ -267,7 +267,7 @@ describe('World', function () {
       this.world.stop();
       // HACK: Due to performance quirks, we won't get exactly 60 and 1000
       expect(this.system.drawCounter).to.be.at.least(50);
-      expect(this.system.drawTimeElapsed).to.be.at.least(900);
+      expect(this.system.drawTimeElapsed).to.be.at.least(0.8);
     }).then(done).catch(err => done(err));
   });
 
