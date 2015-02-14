@@ -26,6 +26,8 @@ export class World {
       this.addSystems(options.systems);
     }
 
+    this.subscribers = {};
+
     this.tickDuration = TARGET_DURATION;
     this.maxTickDelta = TARGET_DURATION * 5;
     this.tickAccumulator = 0;
@@ -35,6 +37,28 @@ export class World {
 
     this.boundTickLoop = () => this.tickLoop();
     this.boundDrawLoop = (timestamp) => this.drawLoop(timestamp);
+  }
+
+
+  // TODO: Use a better pubsub library here. But, pubsub-js seemed to perform
+  // badly in a game loop.
+
+  subscribe(msg, handler) {
+    if (!this.subscribers[msg]) {
+      this.subscribers[msg] = [];
+    }
+    this.subscribers[msg].push(handler);
+  }
+
+  unsubscribe(msg, handler) {
+    // TODO
+  }
+
+  publish(msg, ...data) {
+    if (!this.subscribers[msg]) { return; }
+    for (var handler of this.subscribers[msg]) {
+      handler(msg, ...data);
+    }
   }
 
   addSystems(systemsData) {
@@ -195,7 +219,7 @@ export class EntityManager {
 
   get(componentName, entityId) {
     if (!this.store[componentName]) {
-      return {};
+      return null;
     } else if (!entityId) {
       return this.store[componentName];
     } else {

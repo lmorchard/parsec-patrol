@@ -63,7 +63,7 @@ export class ThrusterSystem extends Core.System {
         this.vBrakes.multiplyScalar(0-brakingDv);
         this.vInertia.add(this.vBrakes);
       }
-      if (thruster.stop && curr_v === 0) {
+      if (thruster.stop && currV === 0) {
         thruster.active = false;
       }
     }
