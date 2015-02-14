@@ -32,6 +32,9 @@ export class World {
 
     this.lastTickTime = 0;
     this.lastDrawTime = 0;
+
+    this.boundTickLoop = () => this.tickLoop();
+    this.boundDrawLoop = (timestamp) => this.drawLoop(timestamp);
   }
 
   addSystems(systemsData) {
@@ -60,8 +63,9 @@ export class World {
     // See also: http://www.chandlerprall.com/2012/06/requestanimationframe-is-not-your-logics-friend/
     this.lastTickTime = Date.now();
     this.lastDrawTime = 0;
-    setTimeout(() => this.tickLoop(), this.tickDuration);
-    requestAnimationFrame((timestamp) => this.drawLoop(timestamp));
+
+    setTimeout(this.boundTickLoop, this.tickDuration);
+    requestAnimationFrame(this.boundDrawLoop);
 
     return this;
   }
@@ -102,7 +106,7 @@ export class World {
     }
 
     if (this.isRunning) {
-      setTimeout(() => this.tickLoop(), this.tickDuration);
+      setTimeout(this.boundTickLoop, this.tickDuration);
     }
   }
 
@@ -129,7 +133,7 @@ export class World {
     }
 
     if (this.isRunning) {
-      requestAnimationFrame((timestamp) => this.drawLoop(timestamp));
+      requestAnimationFrame(this.boundDrawLoop);
     }
   }
 
@@ -216,8 +220,12 @@ export class Component {
 export class System {
 
   constructor(options) {
-    this.options = options || {};
+    this.options = Object.assign(this.defaultOptions(), options);
   }
+
+  defaultOptions() {
+    return {};
+  };
 
   setWorld(world) {
     this.world = world;

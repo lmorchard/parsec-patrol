@@ -2,35 +2,74 @@ import * as Core from "../core";
 
 export class CanvasViewport extends Core.System {
 
+  defaultOptions() {
+    return {
+      zoomStart: 1.0,
+      zoomMin: 0.1,
+      zoomMax: 10.0,
+      zoomWheelFactor: 0.001
+    };
+  };
+
   initialize() {
     this.container = document.querySelector(this.options.container);
     this.canvas = document.querySelector(this.options.canvas);
     this.ctx = this.canvas.getContext('2d');
 
-    window.addEventListener('resize',
-        () => { this.updateMetrics() }, false);
+    var events = {
+      'resize': (ev) => { this.updateMetrics(ev) },
+      'orientationchange': (ev) => { this.updateMetrics(ev) },
+      'mousedown': (ev) => { this.onMouseDown(ev); },
+      'mousemove': (ev) => { this.onMouseMove(ev); },
+      'mouseup': (ev) => { this.onMouseUp(ev); },
+      'wheel': (ev) => { this.onMouseWheel(ev); }
+    };
 
-    window.addEventListener('orientationchange',
-        () => { this.updateMetrics() }, false);
+    for (var name in events) {
+      window.addEventListener(name, events[name], false);
+    }
 
+    this.zoom = this.options.zoomStart;
     this.updateMetrics();
   }
 
-  draw(timeDelta) {
+  onMouseDown(ev) {
+    console.log("DOWN", ev);
+  }
 
+  onMouseMove(ev) {
+  }
+
+  onMouseUp(ev) {
+    console.log("UP", ev);
+  }
+
+  onMouseWheel(ev) {
+    this.zoom += ev.wheelDelta * this.options.zoomWheelFactor;
+    if (this.zoom < this.options.zoomMin) {
+      this.zoom = this.options.zoomMin;
+    }
+    if (this.zoom > this.options.zoomMax) {
+      this.zoom = this.options.zoomMax;
+    }
+  }
+
+  draw(timeDelta) {
     var width = this.canvas.width;
     var height = this.canvas.height;
 
-    var ctx = this.ctx;
-    ctx.save();
+    this.ctx.save();
 
-    ctx.translate(width / 2, height / 2);
-
+    // Move origin point to canvas center
+    this.ctx.translate(width / 2, height / 2);
     this.clear()
-    this.drawGrid();
+
+    this.ctx.scale(this.zoom, this.zoom);
+
+
     this.drawScene(timeDelta);
 
-    ctx.restore();
+    this.ctx.restore();
   }
 
   updateMetrics() {
@@ -90,17 +129,7 @@ export class CanvasViewport extends Core.System {
   }
 
   drawSprite(ctx, timeDelta, entityId, position) {
-
     ctx.strokeStyle = "#fff"
-
-    /*
-    ctx.beginPath()
-    ctx.moveTo(0, -50)
-    ctx.lineTo(-50, 50)
-    ctx.lineTo(50, 50)
-    ctx.lineTo(0, -50)
-    ctx.stroke()
-    */
 
     ctx.beginPath()
     ctx.moveTo(0, -50)
@@ -112,12 +141,6 @@ export class CanvasViewport extends Core.System {
     ctx.lineTo(0, -50)
     ctx.moveTo(0, -50)
     ctx.stroke()
-
-    /*
-    ctx.arc(0, 0, 10, 0, Math.PI*2, true)
-    ctx.fill()
-    */
-
   }
 
 }
