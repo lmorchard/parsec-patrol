@@ -32,18 +32,40 @@ export class CanvasViewport extends Core.System {
     }
 
     this.zoom = this.options.zoomStart;
+    this.followEntityId = this.options.followEntityId;
+
+    this.cursorRawX = 0;
+    this.cursorRawY = 0;
+
+    this.cursorX = 0;
+    this.cursorY = 0;
+
+    this.cameraX = 0;
+    this.cameraY = 0;
+
     this.updateMetrics();
   }
 
   onMouseDown(ev) {
-    console.log("DOWN", ev);
+    this.setCursor(ev.x, ev.y);
   }
 
   onMouseMove(ev) {
+    this.setCursor(ev.x, ev.y);
   }
 
   onMouseUp(ev) {
-    console.log("UP", ev);
+    this.setCursor(ev.x, ev.y);
+  }
+
+  setCursor(x, y) {
+    var width = this.container.offsetWidth;
+    var height = this.container.offsetHeight;
+
+    this.cursorRawX = x;
+    this.cursorRawY = y;
+    this.cursorX = ((x - (width / 2)) / this.zoom) - this.cameraX;
+    this.cursorY = ((y - (height / 2)) / this.zoom) - this.cameraY;
   }
 
   onMouseWheel(ev) {
@@ -57,37 +79,13 @@ export class CanvasViewport extends Core.System {
   }
 
   draw(timeDelta) {
-
-    // Look up the orbited entity ID, if only name given.
-    if (this.options.followName && !this.options.followEntityId) {
-      this.options.followEntityId = Core.getComponent('Name')
-        .findEntityByName(this.world, this.options.followName);
-    }
-
-    var width = this.canvas.width;
-    var height = this.canvas.height;
-
     this.ctx.save();
     this.clear();
-
-    // Move origin point to canvas center
-    this.ctx.translate(width / 2, height / 2);
-
-    this.ctx.scale(this.zoom, this.zoom);
-
-    if (this.options.followEntityId) {
-      var position = this.world.entities.get('Position', this.options.followEntityId);
-      if (position) {
-        this.ctx.translate(0 - position.x, 0 - position.y);
-      }
-    }
-
+    this.centerAndZoom();
+    this.followEntity();
     this.drawBackdrop();
-
     this.drawScene(timeDelta);
-
     this.ctx.restore();
-
   }
 
   updateMetrics() {
@@ -99,8 +97,31 @@ export class CanvasViewport extends Core.System {
   }
 
   clear() {
-    this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  centerAndZoom() {
+    this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+    this.ctx.scale(this.zoom, this.zoom);
+  }
+
+  followEntity() {
+    if (this.options.followName && !this.followEntityId) {
+      // Look up named entity, if necessary.
+      this.followEntityId = Core.getComponent('Name')
+        .findEntityByName(this.world, this.options.followName);
+    }
+    if (this.followEntityId) {
+      // Adjust the viewport center offset to the entity position
+      var position = this.world.entities.get('Position', this.followEntityId);
+      if (position) {
+        this.cameraX = 0 - position.x;
+        this.cameraY = 0 - position.y;
+        this.setCursor(this.cursorRawX, this.cursorRawY);
+        this.ctx.translate(this.cameraX, this.cameraY);
+      }
+    }
   }
 
   drawBackdrop() {
