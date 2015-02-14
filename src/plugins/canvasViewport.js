@@ -7,7 +7,9 @@ export class CanvasViewport extends Core.System {
       zoomStart: 1.0,
       zoomMin: 0.1,
       zoomMax: 10.0,
-      zoomWheelFactor: 0.001
+      zoomWheelFactor: 0.001,
+      followName: null,
+      followEntityId: null
     };
   };
 
@@ -55,21 +57,37 @@ export class CanvasViewport extends Core.System {
   }
 
   draw(timeDelta) {
+
+    // Look up the orbited entity ID, if only name given.
+    if (this.options.followName && !this.options.followEntityId) {
+      this.options.followEntityId = Core.getComponent('Name')
+        .findEntityByName(this.world, this.options.followName);
+    }
+
     var width = this.canvas.width;
     var height = this.canvas.height;
 
     this.ctx.save();
+    this.clear();
 
     // Move origin point to canvas center
     this.ctx.translate(width / 2, height / 2);
-    this.clear()
 
     this.ctx.scale(this.zoom, this.zoom);
 
+    if (this.options.followEntityId) {
+      var position = this.world.entities.get('Position', this.options.followEntityId);
+      if (position) {
+        this.ctx.translate(0 - position.x, 0 - position.y);
+      }
+    }
+
+    this.drawBackdrop();
 
     this.drawScene(timeDelta);
 
     this.ctx.restore();
+
   }
 
   updateMetrics() {
@@ -81,14 +99,11 @@ export class CanvasViewport extends Core.System {
   }
 
   clear() {
-    var width = this.canvas.width;
-    var height = this.canvas.height;
-    var ctx = this.ctx;
-    ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-    ctx.fillRect(-width/2, -height/2, width, height)
+    this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
   }
 
-  drawGrid() {
+  drawBackdrop() {
     var left = -200;
     var right = 200;
     var top = -200;

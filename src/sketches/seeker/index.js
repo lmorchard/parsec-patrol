@@ -15,7 +15,11 @@ var rot = (Math.PI / 2);
 
 var world = new Core.World({
   systems: {
-    CanvasViewport: { container: '#game', canvas: '#viewport' },
+    CanvasViewport: {
+      container: '#game',
+      canvas: '#viewport',
+      followName: 'orbiter1'
+    },
     DrawStats: {},
     MemoryStats: {},
     Motion: {},
@@ -29,7 +33,7 @@ world.entities.insert({
   Name: { name: 'sun'},
   Position: {}
 }, {
-  Name: { name: 'alpha'},
+  Name: { name: 'orbiter1'},
   Position: { x: 250, y: 250 },
   Orbiter: { name: 'sun' }
 }, {
@@ -37,13 +41,13 @@ world.entities.insert({
   Position: {},
   Motion: {},
   Thruster: { deltaV: 400, maxV: 175 },
-  Seeker: { targetName: 'alpha', radPerSec: 0.9 }
+  Seeker: { targetName: 'orbiter1', radPerSec: 0.9 }
 }, {
   Name: { name: 'chaser2'},
   Position: {},
   Motion: {},
   Thruster: { deltaV: 600, maxV: 400 },
-  Seeker: { targetName: 'alpha', radPerSec: 2 }
+  Seeker: { targetName: 'orbiter1', radPerSec: 2 }
 });
 
 world.start();
