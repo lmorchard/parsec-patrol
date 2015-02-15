@@ -5,8 +5,16 @@ export class CanvasSprite extends Core.Component {
     return {
       name: null,
       color: '#fff',
-      size: 100
+      size: 100,
+      width: null,
+      height: null
     };
+  }
+  static create(attrs) {
+    var c = super.create(attrs);
+    if (!c.width) { c.width = c.size; }
+    if (!c.height) { c.height = c.size; }
+    return c;
   }
 }
 Core.registerComponent('Sprite', CanvasSprite);
@@ -16,6 +24,7 @@ export class CanvasViewport extends Core.System {
   defaultOptions() {
     return {
       debug: false,
+      lineWidth: 1.5,
       zoom: 1.0,
       zoomMin: 0.1,
       zoomMax: 10.0,
@@ -23,6 +32,7 @@ export class CanvasViewport extends Core.System {
       gridEnabled: true,
       gridSize: 100,
       gridColor: "#111",
+      followEnabled: true,
       followName: null,
       followEntityId: null
     };
@@ -47,13 +57,16 @@ export class CanvasViewport extends Core.System {
     }
 
     this.debug = this.options.debug;
+    this.followEnabled = this.options.followEnabled;
     this.zoom = this.options.zoom;
     this.followEntityId = this.options.followEntityId;
     this.gridEnabled = this.options.gridEnabled;
+    this.lineWidth = this.options.lineWidth;
 
     this.cursorRawX = 0;
     this.cursorRawY = 0;
 
+    this.cursorChanged = false;
     this.cursorX = 0;
     this.cursorY = 0;
 
@@ -79,20 +92,6 @@ export class CanvasViewport extends Core.System {
     this.ctx.restore();
   }
 
-  onMouseDown(ev) {
-    this.setCursor(ev.x, ev.y);
-    // TODO: Use a symbol for 'cursorClick'?
-    this.world.publish('cursorClick', this.cursorX, this.cursorY);
-  }
-
-  onMouseMove(ev) {
-    this.setCursor(ev.x, ev.y);
-  }
-
-  onMouseUp(ev) {
-    this.setCursor(ev.x, ev.y);
-  }
-
   onMouseWheel(ev) {
     this.zoom += ev.wheelDelta * this.options.zoomWheelFactor;
     if (this.zoom < this.options.zoomMin) {
@@ -103,14 +102,46 @@ export class CanvasViewport extends Core.System {
     }
   }
 
+  // TODO: Use a symbol for 'mouse{Down,Move,Up}' message?
+
+  onMouseDown(ev) {
+    this.setCursor(ev.clientX, ev.clientY);
+    this.world.publish('mouseDown', this.cursorX, this.cursorY);
+  }
+
+  onMouseMove(ev) {
+    this.setCursor(ev.clientX, ev.clientY);
+  }
+
+  onMouseUp(ev) {
+    this.setCursor(ev.clientX, ev.clientY);
+    this.world.publish('mouseUp', this.cursorX, this.cursorY);
+  }
+
+  update(timeDelta) {
+    // Use the cursorChanged flag set by setCursor to limit mouseMove messages
+    // to one per game loop tick
+    if (this.cursorChanged) {
+      this.cursorChanged = false;
+      this.world.publish('mouseMove', this.cursorX, this.cursorY);
+    }
+  }
+
   setCursor(x, y) {
     var width = this.container.offsetWidth;
     var height = this.container.offsetHeight;
 
     this.cursorRawX = x;
     this.cursorRawY = y;
-    this.cursorX = ((x - (width / 2)) / this.zoom) + this.cameraX;
-    this.cursorY = ((y - (height / 2)) / this.zoom) + this.cameraY;
+
+    var newCursorX = ((x - (width / 2)) / this.zoom) + this.cameraX;
+    var newCursorY = ((y - (height / 2)) / this.zoom) + this.cameraY;
+
+    if (newCursorX !== this.cursorX || newCursorY !== this.cursorY) {
+      this.cursorChanged = true;
+      this.cursorX = newCursorX;
+      this.cursorY = newCursorY;
+    }
   }
 
   updateMetrics() {
@@ -140,6 +171,10 @@ export class CanvasViewport extends Core.System {
   }
 
   followEntity() {
+    if (!this.followEnabled) {
+      this.cameraX = this.cameraY = 0;
+      return;
+    }
     if (this.options.followName && !this.followEntityId) {
       // Look up named entity, if necessary.
       this.followEntityId = Core.getComponent('Name')
@@ -159,8 +194,9 @@ export class CanvasViewport extends Core.System {
 
   drawDebugCursor() {
     var ctx = this.ctx;
+    ctx.save();
     ctx.strokeStyle = '#f0f';
-    ctx.lineWidth = 1 / this.zoom;
+    ctx.lineWidth = this.lineWidth / this.zoom;
     ctx.translate(this.cursorX, this.cursorY);
     ctx.beginPath();
     ctx.moveTo(-20, 0);
@@ -169,6 +205,7 @@ export class CanvasViewport extends Core.System {
     ctx.lineTo(0, 20);
     ctx.strokeRect(-10, -10, 20, 20);
     ctx.stroke();
+    ctx.restore();
   }
 
   drawBackdrop() {
@@ -180,7 +217,7 @@ export class CanvasViewport extends Core.System {
 
     ctx.save();
     ctx.strokeStyle = this.options.gridColor;
-    ctx.lineWidth = 1 / this.zoom;
+    ctx.lineWidth = this.lineWidth / this.zoom;
 
     for (var x = (this.visibleLeft - gridOffsetX); x < this.visibleRight; x += gridSize) {
       ctx.moveTo(x, this.visibleTop);
@@ -212,6 +249,7 @@ export class CanvasViewport extends Core.System {
     if (!spriteFn) { spriteFn = getSprite('default'); }
 
     var ctx = this.ctx;
+
     ctx.save();
 
     ctx.translate(position.x, position.y);
@@ -220,15 +258,15 @@ export class CanvasViewport extends Core.System {
 
     // HACK: Try to keep line width consistent regardless of zoom, to sort of
     // simulate a vector display
-    ctx.lineWidth = 1 / this.zoom;
+    ctx.lineWidth = this.lineWidth / this.zoom / (sprite.size / 100);
 
     if (this.debug) {
       ctx.strokeStyle = '#303';
-      getSprite('default')(ctx, timeDelta, entityId, { size: sprite.size });
+      getSprite('default')(ctx, timeDelta, { size: sprite.size });
     }
 
     ctx.strokeStyle = sprite.color;
-    spriteFn(ctx, timeDelta, entityId, sprite);
+    spriteFn(ctx, timeDelta, sprite);
 
     ctx.restore();
 
@@ -246,7 +284,7 @@ export function getSprite(name) {
   return spriteRegistry[name];
 }
 
-registerSprite('default', (ctx, timeDelta, entityId, sprite) => {
+registerSprite('default', (ctx, timeDelta, sprite) => {
   ctx.beginPath();
   ctx.arc(0, 0, 50, 0, Math.PI * 2, true)
   ctx.moveTo(0, 0);
@@ -255,13 +293,13 @@ registerSprite('default', (ctx, timeDelta, entityId, sprite) => {
   ctx.stroke();
 });
 
-registerSprite('sun', (ctx, timeDelta, entityId, sprite) => {
+registerSprite('sun', (ctx, timeDelta, sprite) => {
   ctx.beginPath();
   ctx.arc(0, 0, 50, 0, Math.PI * 2, true)
   ctx.stroke();
 });
 
-registerSprite('enemyscout', (ctx, timeDelta, entityId, sprite) => {
+registerSprite('enemyscout', (ctx, timeDelta, sprite) => {
   ctx.beginPath();
   ctx.moveTo(0, -50);
   ctx.lineTo(-45, 50);
@@ -274,7 +312,7 @@ registerSprite('enemyscout', (ctx, timeDelta, entityId, sprite) => {
   ctx.stroke();
 });
 
-registerSprite('hero', (ctx, timeDelta, entityId, sprite) => {
+registerSprite('hero', (ctx, timeDelta, sprite) => {
   ctx.rotate(Math.PI);
   ctx.beginPath();
   ctx.moveTo(-12.5, -50);
@@ -289,7 +327,7 @@ registerSprite('hero', (ctx, timeDelta, entityId, sprite) => {
   ctx.stroke();
 });
 
-registerSprite('asteroid', (ctx, timeDelta, entityId, sprite) => {
+registerSprite('asteroid', (ctx, timeDelta, sprite) => {
 
   if (!sprite.points) {
     var NUM_POINTS = 7 + Math.floor(8 * Math.random());

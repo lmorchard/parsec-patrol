@@ -2,7 +2,6 @@ import * as Core from "../core";
 
 import "./position";
 
-import _ from "lodash";
 import Vector2D from "../lib/Vector2D";
 
 export class Orbiter extends Core.Component {

@@ -1,15 +1,16 @@
 import * as Core from "../../core";
 
+import "../../plugins/drawStats";
+import "../../plugins/memoryStats";
+import "../../plugins/datGui";
+import "../../plugins/canvasViewport";
 import "../../plugins/name";
 import "../../plugins/position";
 import "../../plugins/motion";
 import "../../plugins/thruster";
 import "../../plugins/seeker";
 import "../../plugins/clickCourse";
-import "../../plugins/canvasViewport";
-import "../../plugins/drawStats";
-import "../../plugins/memoryStats";
-import "../../plugins/datGui";
+import "../../plugins/collision";
 
 var debug = true;
 var move = 0.07;
@@ -27,6 +28,7 @@ var world = new Core.World({
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
+    Collision: {},
     Motion: {},
     ClickCourse: {},
     Thruster: {},
@@ -37,31 +39,29 @@ var world = new Core.World({
 world.entities.insert({
   Name: { name: 'hero1'},
   Sprite: { name: 'hero', color: '#00f' },
+  Collidable: {},
   Position: { x: 250, y: 250 },
   Thruster: { deltaV: 1200, maxV: 500, active: false },
   Seeker: { radPerSec: Math.PI },
   Motion: {},
   ClickCourse: { stopOnArrival: true, active: false }
-}, {
-  Name: { name: 'sun'},
-  Sprite: { name: 'asteroid', size: 300 },
-  Position: {},
-  Motion: { dx: 0, dy: 0, drotation: Math.PI / 6 }
-}, {
-  Name: { name: 'chaser1'},
-  Sprite: { name: 'enemyscout', color: '#f00' },
-  Position: {},
-  Motion: {},
-  Thruster: { deltaV: 400, maxV: 175 },
-  Seeker: { targetName: 'hero1', radPerSec: 0.9 }
-}, {
-  Name: { name: 'chaser2'},
-  Sprite: { name: 'enemyscout', color: '#0f0' },
-  Position: {},
-  Motion: {},
-  Thruster: { deltaV: 600, maxV: 400 },
-  Seeker: { targetName: 'hero1', radPerSec: 2 }
 });
+
+for (var idx = 0; idx < 200; idx++) {
+  world.entities.insert({
+    Name: { name: 'rock' + idx},
+    Sprite: { name: 'asteroid', size: 100 },
+    Collidable: {},
+    Position: {
+      x: (Math.random() * 4000) - 2000,
+      y: (Math.random() * 4000) - 2000
+    },
+    Motion: {
+      dx: 0, dy: 0,
+      drotation: Math.random() * (Math.PI * 2)
+    }
+  });
+}
 
 world.start();
 
@@ -69,6 +69,7 @@ var vpSystem = world.getSystem('CanvasViewport');
 var guiSystem = world.getSystem('DatGui');
 var gui = guiSystem.gui;
 
+gui.add(world, 'isPaused');
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 

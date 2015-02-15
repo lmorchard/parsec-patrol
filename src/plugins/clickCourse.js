@@ -13,7 +13,18 @@ export class ClickCourseSystem extends Core.System {
   matchComponent() { return 'ClickCourse'; }
 
   initialize() {
-    this.world.subscribe('cursorClick', (msg, x, y) => this.setCourse(x, y));
+    this.trackingCursor = false;
+    this.world
+      .subscribe('mouseDown', (msg, x, y) => {
+        this.trackingCursor = true;
+      })
+      .subscribe('mouseUp', (msg, x, y) => {
+        this.trackingCursor = false;
+        this.setCourse(x, y);
+      })
+      .subscribe('mouseMove', (msg, x, y) => {
+        if (this.trackingCursor) { this.setCourse(x, y); }
+      });
   }
 
   setCourse(x, y) {
@@ -42,7 +53,7 @@ export class ClickCourseSystem extends Core.System {
 
     var xOffset = Math.abs(position.x - clickCourse.x);
     var yOffset = Math.abs(position.y - clickCourse.y);
-    if (xOffset < sprite.size/2 && yOffset < sprite.size/2) {
+    if (xOffset < sprite.size && yOffset < sprite.size) {
       if (clickCourse.stopOnArrival) {
         thruster.stop = true;
       }
