@@ -72,11 +72,11 @@ var gui = guiSystem.gui;
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
-var names = [
-  'debug', 'gridEnabled', 'followEnabled',
-  'cameraX', 'cameraY',
-  'cursorX', 'cursorY'
-];
+var names = [ 'debug', 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
 names.forEach(function (name) {
   gui.add(vpSystem, name).listen();
 });
+
+var cp = vpSystem.cursorPosition;
+gui.add(cp, 'x').listen();
+gui.add(cp, 'y').listen();

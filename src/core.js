@@ -55,10 +55,10 @@ export class World {
     return this;
   }
 
-  publish(msg, ...data) {
+  publish(msg, data) {
     if (!this.subscribers[msg]) { return; }
-    for (var handler of this.subscribers[msg]) {
-      handler(msg, ...data);
+    for (var idx = 0, handler; handler = this.subscribers[msg][idx]; idx++) {
+      handler(msg, data);
     }
     return this;
   }

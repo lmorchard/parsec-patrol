@@ -15,13 +15,15 @@ var tap = require('gulp-tap');
 gulp.task('build', [
   'stylus', 'markup', 'browserify-sketches', 'browserify-app',
   'browserify-tests'
-], function () {
-  connect.reload()
-});
+]);
 
 var browserified = function () {
   return transform(function(filename) {
-    return browserify(filename)
+    var opts = {
+      entries: [filename],
+      debug: true
+    };
+    return browserify(opts)
       .transform(to5ify)
       .bundle();
   });

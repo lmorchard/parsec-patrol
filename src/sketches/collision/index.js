@@ -1,16 +1,21 @@
 import * as Core from "../../core";
 
+import _ from "lodash";
+import Vector2D from "../../lib/Vector2D";
+
 import "../../plugins/drawStats";
 import "../../plugins/memoryStats";
 import "../../plugins/datGui";
 import "../../plugins/canvasViewport";
 import "../../plugins/name";
+import "../../plugins/health";
 import "../../plugins/position";
 import "../../plugins/motion";
 import "../../plugins/thruster";
 import "../../plugins/seeker";
 import "../../plugins/clickCourse";
 import "../../plugins/collision";
+import "../../plugins/bounce";
 
 var debug = true;
 var move = 0.07;
@@ -28,11 +33,12 @@ var world = new Core.World({
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
-    Collision: {},
     Motion: {},
-    ClickCourse: {},
     Thruster: {},
-    Seeker: {}
+    Seeker: {},
+    ClickCourse: {},
+    Collision: {},
+    Bounce: {}
   }
 });
 
@@ -40,28 +46,73 @@ world.entities.insert({
   Name: { name: 'hero1'},
   Sprite: { name: 'hero', color: '#00f' },
   Collidable: {},
-  Position: { x: 250, y: 250 },
+  Bounce: { mass: 7000 },
+  Position: { x: 0, y: 0 },
   Thruster: { deltaV: 1200, maxV: 500, active: false },
   Seeker: { radPerSec: Math.PI },
   Motion: {},
   ClickCourse: { stopOnArrival: true, active: false }
 });
 
-for (var idx = 0; idx < 200; idx++) {
+function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
   world.entities.insert({
-    Name: { name: 'rock' + idx},
-    Sprite: { name: 'asteroid', size: 100 },
+    Sprite: { name: 'asteroid', size: width},
+    Health: { max: health },
     Collidable: {},
-    Position: {
-      x: (Math.random() * 4000) - 2000,
-      y: (Math.random() * 4000) - 2000
-    },
-    Motion: {
-      dx: 0, dy: 0,
-      drotation: Math.random() * (Math.PI * 2)
-    }
+    Bounce: { mass: mass },
+    Position: { x: x, y: y },
+    Motion: { dx: dx, dy: dy, drotation: dr }
   });
 }
+
+function spawnField(centerX, centerY, radius=300,
+    MAX_ASTEROIDS=50, MAX_TRIES=5, MIN_SIZE=30, MAX_SIZE=120, MAX_GRAV=15) {
+
+  var vCenter = new Vector2D(centerY, centerX);
+  var vSpawn = new Vector2D(0, 0);
+  var vGrav = new Vector2D(0, 0);
+  var inField = [];
+
+  for (var idx = 0; idx < MAX_ASTEROIDS; idx++) {
+    for (var c = 0; c < MAX_TRIES; c++) {
+
+      var size = _.random(MIN_SIZE, MAX_SIZE);
+      var rot = (Math.PI*4) * Math.random();
+      vSpawn.setValues(vCenter.x, vCenter.y - _.random(1, radius));
+      vSpawn.rotateAround(vCenter, rot);
+
+      var isClear = true;
+      for (var fldIdx = 0; fldIdx < inField.length; fldIdx++) {
+        var item = inField[fldIdx];
+        if (Math.abs(vSpawn.x - item.x) * 2 >= (size + item.width) * 1.025) { continue; }
+        if (Math.abs(vSpawn.y - item.y) * 2 >= (size + item.height) * 1.025) { continue; }
+        isClear = false;
+        break;
+      }
+      if (!isClear) { continue; }
+
+      inField.push({ x: vSpawn.x, y: vSpawn.y, width: size, height: size });
+
+      vGrav.setValues(0, Math.random() * MAX_GRAV);
+      vGrav.rotate(rot);
+
+      spawnAsteroid(
+        vSpawn.x, vSpawn.y,
+        size, size,
+        vGrav.x, vGrav.y,
+        (Math.PI * 0.25) * Math.random(),
+        4 * size * size,
+        4 * size * size
+      );
+
+    }
+  }
+}
+
+spawnField(-270, -270, 230);
+spawnField(270, 270, 230);
+spawnField(270, -270, 230);
+spawnField(-270, 270, 230);
 
 world.start();
 
@@ -73,11 +124,11 @@ gui.add(world, 'isPaused');
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
-var names = [
-  'debug', 'gridEnabled', 'followEnabled',
-  'cameraX', 'cameraY',
-  'cursorX', 'cursorY'
-];
+var names = [ 'debug', 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
 names.forEach(function (name) {
   gui.add(vpSystem, name).listen();
 });
+
+var cp = vpSystem.cursorPosition;
+gui.add(cp, 'x').listen();
+gui.add(cp, 'y').listen();

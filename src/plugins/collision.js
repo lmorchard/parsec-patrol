@@ -1,6 +1,6 @@
 import * as Core from "../core";
 
-import Quadtree from "../lib/quadtree2";
+import QuadTree from "../lib/QuadTree";
 
 export class Collidable extends Core.Component {
   static defaults() {
@@ -18,7 +18,8 @@ export class CollisionSystem extends Core.System {
   defaultOptions() {
     return {
       width: 5000,
-      height: 5000
+      height: 5000,
+      quadtreeObjectsPerNode: 10
     };
   };
 
@@ -28,12 +29,13 @@ export class CollisionSystem extends Core.System {
     this.width = this.options.width;
     this.height = this.options.height;
 
-    this.quadtree = new Quadtree({
-      x: 0 - this.width/2,
-      y: 0 - this.height/2,
-      width: this.width,
-      height: this.height
-    }, 25);
+    this.quadtree = new QuadTree(
+      0 - this.width/2,
+      0 - this.height/2,
+      this.width,
+      this.height,
+      this.options.quadtreeObjectsPerNode
+    );
 
     this.retrieveBounds = {};
   }
@@ -70,6 +72,8 @@ export class CollisionSystem extends Core.System {
     collidable.y = position.y - sprite.height/2;
     collidable.width = sprite.width;
     collidable.height = sprite.height;
+    collidable.right = collidable.x + collidable.width;
+    collidable.bottom = collidable.y + collidable.height;
     collidable.position = position;
     collidable.sprite = sprite;
     collidable.inCollision = false;
@@ -89,8 +93,8 @@ export class CollisionSystem extends Core.System {
 
     this.retrieveBounds.x = position.x;
     this.retrieveBounds.y = position.y;
-    this.retrieveBounds.width = sprite.width;
-    this.retrieveBounds.height = sprite.height;
+    this.retrieveBounds.right = position.x + sprite.width;
+    this.retrieveBounds.bottom = position.y + sprite.height;
 
     this.quadtree.iterate(this.retrieveBounds,
         (neighbor) => this.checkCollision(component, neighbor));

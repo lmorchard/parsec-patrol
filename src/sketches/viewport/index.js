@@ -7,6 +7,8 @@ import "../../plugins/motion";
 import "../../plugins/health";
 import "../../plugins/canvasViewport";
 import "../../plugins/drawStats";
+import "../../plugins/memoryStats";
+import "../../plugins/datGui";
 
 var move = 70;
 var rot = (Math.PI / 2);
@@ -18,6 +20,8 @@ var world = new Core.World({
       canvas: '#viewport'
     },
     DrawStats: {},
+    MemoryStats: {},
+    DatGui: {},
     Motion: {},
     Orbiter: {}
   }
@@ -42,7 +46,7 @@ world.entities.insert({
   Name: { name: 'whatever'},
   Position: { x: 250, y: -250 },
   Orbiter: { name: 'sun' }
-}, {
+}/*, {
   Name: { name: 'delta'},
   Position: {},
   Motion: { dx: move, dy: -move, drotation: -rot}
@@ -50,6 +54,6 @@ world.entities.insert({
   Name: { name: 'gamma'},
   Position: {},
   Motion: { dx: -move, dy: move, drotation: -rot}
-});
+}*/);
 
 world.start();

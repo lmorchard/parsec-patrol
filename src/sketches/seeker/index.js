@@ -68,11 +68,7 @@ var gui = guiSystem.gui;
 
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 
-var names = [
-  'debug', 'gridEnabled',
-  'cameraX', 'cameraY',
-  'cursorX', 'cursorY'
-];
+var names = [ 'debug', 'gridEnabled', 'cameraX', 'cameraY' ];
 names.forEach(function (name) {
   gui.add(vpSystem, name).listen();
 });

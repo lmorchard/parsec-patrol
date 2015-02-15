@@ -30,7 +30,7 @@ export class CanvasViewport extends Core.System {
       zoomMax: 10.0,
       zoomWheelFactor: 0.001,
       gridEnabled: true,
-      gridSize: 100,
+      gridSize: 500,
       gridColor: "#111",
       followEnabled: true,
       followName: null,
@@ -67,12 +67,12 @@ export class CanvasViewport extends Core.System {
     this.cursorRawY = 0;
 
     this.cursorChanged = false;
-    this.cursorX = 0;
-    this.cursorY = 0;
+    this.cursorPosition = { x: 0, y: 0 };
 
     this.cameraX = 0;
     this.cameraY = 0;
 
+    this.debugDummySprite = { size: 100 };
   }
 
   draw(timeDelta) {
@@ -106,7 +106,7 @@ export class CanvasViewport extends Core.System {
 
   onMouseDown(ev) {
     this.setCursor(ev.clientX, ev.clientY);
-    this.world.publish('mouseDown', this.cursorX, this.cursorY);
+    this.world.publish('mouseDown', this.cursorPosition);
   }
 
   onMouseMove(ev) {
@@ -115,7 +115,7 @@ export class CanvasViewport extends Core.System {
 
   onMouseUp(ev) {
     this.setCursor(ev.clientX, ev.clientY);
-    this.world.publish('mouseUp', this.cursorX, this.cursorY);
+    this.world.publish('mouseUp', this.cursorPosition);
   }
 
   update(timeDelta) {
@@ -123,7 +123,7 @@ export class CanvasViewport extends Core.System {
     // to one per game loop tick
     if (this.cursorChanged) {
       this.cursorChanged = false;
-      this.world.publish('mouseMove', this.cursorX, this.cursorY);
+      this.world.publish('mouseMove', this.cursorPosition);
     }
   }
 
@@ -134,13 +134,13 @@ export class CanvasViewport extends Core.System {
     this.cursorRawX = x;
     this.cursorRawY = y;
 
-    var newCursorX = ((x - (width / 2)) / this.zoom) + this.cameraX;
-    var newCursorY = ((y - (height / 2)) / this.zoom) + this.cameraY;
+    var newX = ((x - (width / 2)) / this.zoom) + this.cameraX;
+    var newY = ((y - (height / 2)) / this.zoom) + this.cameraY;
 
-    if (newCursorX !== this.cursorX || newCursorY !== this.cursorY) {
+    if (newX !== this.cursorPosition.x || newY !== this.cursorPosition.y) {
       this.cursorChanged = true;
-      this.cursorX = newCursorX;
-      this.cursorY = newCursorY;
+      this.cursorPosition.x = newX;
+      this.cursorPosition.y = newY;
     }
   }
 
@@ -197,7 +197,7 @@ export class CanvasViewport extends Core.System {
     ctx.save();
     ctx.strokeStyle = '#f0f';
     ctx.lineWidth = this.lineWidth / this.zoom;
-    ctx.translate(this.cursorX, this.cursorY);
+    ctx.translate(this.cursorPosition.x, this.cursorPosition.y);
     ctx.beginPath();
     ctx.moveTo(-20, 0);
     ctx.lineTo(20, 0)
@@ -262,7 +262,8 @@ export class CanvasViewport extends Core.System {
 
     if (this.debug) {
       ctx.strokeStyle = '#303';
-      getSprite('default')(ctx, timeDelta, { size: sprite.size });
+      this.debugDummySprite.size = sprite.size;
+      getSprite('default')(ctx, timeDelta, this.debugDummySprite);
     }
 
     ctx.strokeStyle = sprite.color;

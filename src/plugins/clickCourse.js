@@ -15,25 +15,27 @@ export class ClickCourseSystem extends Core.System {
   initialize() {
     this.trackingCursor = false;
     this.world
-      .subscribe('mouseDown', (msg, x, y) => {
+      .subscribe('mouseDown', (msg, cursorPosition) => {
         this.trackingCursor = true;
       })
-      .subscribe('mouseUp', (msg, x, y) => {
+      .subscribe('mouseUp', (msg, cursorPosition) => {
         this.trackingCursor = false;
-        this.setCourse(x, y);
+        this.setCourse(cursorPosition);
       })
-      .subscribe('mouseMove', (msg, x, y) => {
-        if (this.trackingCursor) { this.setCourse(x, y); }
+      .subscribe('mouseMove', (msg, cursorPosition) => {
+        if (this.trackingCursor) {
+          this.setCourse(cursorPosition);
+        }
       });
   }
 
-  setCourse(x, y) {
+  setCourse(cursorPosition) {
     var clickCourses = this.world.entities.get('ClickCourse');
     for (var entityId in clickCourses) {
       var clickCourse = clickCourses[entityId];
       clickCourse.active = true;
-      clickCourse.x = x;
-      clickCourse.y = y;
+      clickCourse.x = cursorPosition.x;
+      clickCourse.y = cursorPosition.y;
     }
   }
 
