@@ -12,7 +12,12 @@ var karma = require('karma');
 var transform = require('vinyl-transform');
 var tap = require('gulp-tap');
 
-gulp.task('build', ['stylus', 'markup', 'browserify-sketches', 'browserify-app', 'browserify-tests']);
+gulp.task('build', [
+  'stylus', 'markup', 'browserify-sketches', 'browserify-app',
+  'browserify-tests'
+], function () {
+  connect.reload()
+});
 
 var browserified = function () {
   return transform(function(filename) {
@@ -25,15 +30,13 @@ var browserified = function () {
 gulp.task('browserify-app', function () {
   return gulp.src('./src/app.js')
     .pipe(browserified())
-    .pipe(gulp.dest('./dist'))
-    .pipe(connect.reload());
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('browserify-sketches', function () {
   return gulp.src('./src/sketches/**/*.js')
     .pipe(browserified())
-    .pipe(gulp.dest('./dist/sketches'))
-    .pipe(connect.reload());
+    .pipe(gulp.dest('./dist/sketches'));
 });
 
 gulp.task('browserify-tests', function () {
@@ -45,14 +48,12 @@ gulp.task('browserify-tests', function () {
 gulp.task('stylus', function () {
   return gulp.src('./src/**/*.styl')
     .pipe(stylus())
-    .pipe(gulp.dest('./dist'))
-    .pipe(connect.reload());
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('markup', function () {
   return gulp.src('./src/**/*.html')
-    .pipe(gulp.dest('./dist'))
-    .pipe(connect.reload());
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('connect', function() {

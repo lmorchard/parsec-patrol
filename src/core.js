@@ -39,7 +39,6 @@ export class World {
     this.boundDrawLoop = (timestamp) => this.drawLoop(timestamp);
   }
 
-
   // TODO: Use a better pubsub library here. But, pubsub-js seemed to perform
   // badly in a game loop.
 
@@ -48,10 +47,12 @@ export class World {
       this.subscribers[msg] = [];
     }
     this.subscribers[msg].push(handler);
+    return this;
   }
 
   unsubscribe(msg, handler) {
     // TODO
+    return this;
   }
 
   publish(msg, ...data) {
@@ -59,6 +60,7 @@ export class World {
     for (var handler of this.subscribers[msg]) {
       handler(msg, ...data);
     }
+    return this;
   }
 
   addSystems(systemsData) {

@@ -39,6 +39,8 @@ gulp server
 * Come up with less brittle component / system registry names when necessary
   * Use ES6 Symbols?
 
+* Check out some pubsub libraries and see if one is performant in the game loop
+
 * Hitboxes / hit-shapes independent of sprite height / width
     * eg. for asteroids, make smaller than actual shape & tolerate some overlap
     * use circles instead of boxes? distance calcs may be expensive, though
