@@ -19,7 +19,7 @@ export class CollisionSystem extends Core.System {
     return {
       width: 10000,
       height: 10000,
-      quadtreeMaxAge: 10,
+      quadtreeMaxAge: 20,
       quadtreeObjectsPerNode: 10
     };
   };
@@ -59,6 +59,14 @@ export class CollisionSystem extends Core.System {
       var component = matches[entityId];
       this.updateQuadtreeWithComponent(entityId, component);
     }
+
+    /*
+    for (var aEntityId in matches) {
+      for (var bEntityId in matches) {
+        this.checkCollision(matches[aEntityId], matches[bEntityId]);
+      }
+    }
+    */
 
     for (var entityId in matches) {
       var component = matches[entityId];

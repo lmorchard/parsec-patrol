@@ -63,7 +63,7 @@ export class CanvasViewport extends Core.System {
     };
 
     for (var name in events) {
-      window.addEventListener(name, events[name], false);
+      this.canvas.addEventListener(name, events[name], false);
     }
 
     // See also: http://phrogz.net/JS/wheeldelta.html
