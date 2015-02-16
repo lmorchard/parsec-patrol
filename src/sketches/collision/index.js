@@ -66,7 +66,7 @@ function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
 }
 
 function spawnField(centerX, centerY, radius=300,
-    MAX_ASTEROIDS=50, MAX_TRIES=5, MIN_SIZE=30, MAX_SIZE=120, MAX_GRAV=15) {
+    MAX_ASTEROIDS=50, MAX_TRIES=5, MIN_SIZE=20, MAX_SIZE=200, MAX_GRAV=10) {
 
   var vCenter = new Vector2D(centerY, centerX);
   var vSpawn = new Vector2D(0, 0);
@@ -109,10 +109,14 @@ function spawnField(centerX, centerY, radius=300,
   }
 }
 
-spawnField(-270, -270, 230);
-spawnField(270, 270, 230);
-spawnField(270, -270, 230);
-spawnField(-270, 270, 230);
+var pos = 470;
+var size = 440;
+var num = 200;
+
+spawnField(-pos, -pos, size, num);
+spawnField(pos, pos, size, num);
+spawnField(pos, -pos, size, num);
+spawnField(-pos, pos, size, num);
 
 world.start();
 

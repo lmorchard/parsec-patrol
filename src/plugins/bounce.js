@@ -106,7 +106,7 @@ export class BounceSystem extends Core.System {
 
     // Minimum translation vector to push entities apart
     this.mt.x = this.dn.x * (aSprite.width + bSprite.width - delta);
-    this.mt.y = this.dn.y * (aSprite.width + bSprite.width - delta);
+    this.mt.y = this.dn.y * (aSprite.height + bSprite.height - delta);
 
     // Velocity vectors of entities before collision
     this.v1.x = (aMotion) ? aMotion.dx : 0;
@@ -128,7 +128,7 @@ export class BounceSystem extends Core.System {
     this.v2t.x = this.dt.x * this.v2.dot(this.dt);
     this.v2t.y = this.dt.y * this.v2.dot(this.dt);
 
-    // calculate new velocity vectors of the entitys, the tangential
+    // calculate new velocity vectors of the entities, the tangential
     // component stays the same, the normal component changes analog to
     // the 1-Dimensional case
 

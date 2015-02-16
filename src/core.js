@@ -112,7 +112,13 @@ export class World {
   tick(timeDeltaMS) {
     var timeDelta = timeDeltaMS / 1000;
     for (var systemName in this.systems) {
+      this.systems[systemName].updateStart(timeDelta);
+    }
+    for (var systemName in this.systems) {
       this.systems[systemName].update(timeDelta);
+    }
+    for (var systemName in this.systems) {
+      this.systems[systemName].updateEnd(timeDelta);
     }
   }
 
@@ -265,6 +271,8 @@ export class System {
     return this.world.entities.get(this.matchComponent());
   }
 
+  updateStart(timeDelta) { }
+
   update(timeDelta) {
     var matches = this.getMatchingComponents();
     for (var entityId in matches) {
@@ -274,6 +282,8 @@ export class System {
   }
 
   updateComponent(timeDelta, entityId, component) { }
+
+  updateEnd(timeDelta) { }
 
   drawStart(timeDelta) { }
 

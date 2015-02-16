@@ -17,8 +17,9 @@ export class CollisionSystem extends Core.System {
 
   defaultOptions() {
     return {
-      width: 5000,
-      height: 5000,
+      width: 10000,
+      height: 10000,
+      quadtreeMaxAge: 10,
       quadtreeObjectsPerNode: 10
     };
   };
@@ -38,13 +39,21 @@ export class CollisionSystem extends Core.System {
     );
 
     this.retrieveBounds = {};
+    this.quadtreeAge = 0;
   }
 
   update(timeDelta) {
 
     var matches = this.getMatchingComponents();
 
-    this.quadtree.clear();
+    // HACK: Track age of quadtree, clear it completely after an interval.
+    // This is because the insert logic will move entities, but it will not
+    // collapse subtrees when they are empty
+    this.quadtreeAge += timeDelta;
+    if (this.quadtreeAge >= this.options.quadtreeMaxAge) {
+      this.quadtreeMaxAge = 0;
+      this.quadtree.clear();
+    }
 
     for (var entityId in matches) {
       var component = matches[entityId];
@@ -103,10 +112,22 @@ export class CollisionSystem extends Core.System {
   checkCollision(aCollidable, bCollidable) {
 
     if (aCollidable.entityId === bCollidable.entityId) { return; }
-    if (Math.abs(aCollidable.position.x - bCollidable.position.x) * 2 >
-          (aCollidable.sprite.width + bCollidable.sprite.width)) { return; }
-    if (Math.abs(aCollidable.position.y - bCollidable.position.y) * 2 >
-          (aCollidable.sprite.height + bCollidable.sprite.height)) { return; }
+
+    var dx = aCollidable.position.x - bCollidable.position.x;
+    var dy = aCollidable.position.y - bCollidable.position.y;
+
+    // Check horizontal proximity
+    if (Math.abs(dx) * 2 > (aCollidable.sprite.width + bCollidable.sprite.width)) { return; }
+
+    // Check vertical proximity
+    if (Math.abs(dy) * 2 > (aCollidable.sprite.height + bCollidable.sprite.height)) { return; }
+
+    // TODO: Pluggable shape intersection detection here?
+
+    // Check collision circle via distance
+    var radii = (Math.max(aCollidable.sprite.width, aCollidable.sprite.height) +
+                 Math.max(bCollidable.sprite.width, bCollidable.sprite.height)) / 2;
+    if (dx*dx + dy*dy > radii*radii) { return; }
 
     aCollidable.inCollision = true;
     aCollidable.inCollisionWith[bCollidable.entityId] = 1;
@@ -163,9 +184,10 @@ export class CollisionSystem extends Core.System {
       var sprite = this.world.entities.get('Sprite', entityId);
 
       if (collidable.inCollision) {
-        ctx.strokeRect(
-            position.x - sprite.width/2, position.y - sprite.height/2,
-            sprite.width, sprite.height);
+        var diameter = Math.max(sprite.width, sprite.height);
+        ctx.beginPath();
+        ctx.arc(position.x, position.y, 1 + diameter / 2, 0, Math.PI * 2, true);
+        ctx.stroke();
       }
 
     }

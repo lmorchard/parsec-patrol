@@ -19,6 +19,16 @@ export class CanvasSprite extends Core.Component {
 }
 Core.registerComponent('Sprite', CanvasSprite);
 
+// See also: http://phrogz.net/JS/wheeldelta.html
+var wheelDistance = function(evt){
+  if (!evt) evt = event;
+  var w=evt.wheelDelta, d=evt.detail;
+  if (d){
+    if (w) return w/d/40*d>0?1:-1; // Opera
+    else return -d/3;              // Firefox;         TODO: do not /3 for OS X
+  } else return w/120;             // IE/Safari/Chrome TODO: /3 for Chrome OS X
+};
+
 export class CanvasViewport extends Core.System {
 
   defaultOptions() {
@@ -28,7 +38,7 @@ export class CanvasViewport extends Core.System {
       zoom: 1.0,
       zoomMin: 0.1,
       zoomMax: 10.0,
-      zoomWheelFactor: 0.001,
+      zoomWheelFactor: 0.025,
       gridEnabled: true,
       gridSize: 500,
       gridColor: "#111",
@@ -49,11 +59,20 @@ export class CanvasViewport extends Core.System {
       'mousedown': (ev) => { this.onMouseDown(ev); },
       'mousemove': (ev) => { this.onMouseMove(ev); },
       'mouseup': (ev) => { this.onMouseUp(ev); },
-      'wheel': (ev) => { this.onMouseWheel(ev); }
+      //'wheel': (ev) => { this.onMouseWheel(ev); }
     };
 
     for (var name in events) {
       window.addEventListener(name, events[name], false);
+    }
+
+    // See also: http://phrogz.net/JS/wheeldelta.html
+    var boundOnMouseWheel = (ev) => this.onMouseWheel(ev);
+    if (window.addEventListener){
+      window.addEventListener('mousewheel', boundOnMouseWheel, false); // Chrome/Safari/Opera
+      window.addEventListener('DOMMouseScroll', boundOnMouseWheel, false); // Firefox
+    } else if (window.attachEvent){
+      window.attachEvent('onmousewheel', boundOnMouseWheel); // IE
     }
 
     this.debug = this.options.debug;
@@ -87,13 +106,13 @@ export class CanvasViewport extends Core.System {
 
     this.drawScene(timeDelta);
 
-    if (this.debug) { this.drawDebugCursor(); }
+    //if (this.debug) { this.drawDebugCursor(); }
 
     this.ctx.restore();
   }
 
   onMouseWheel(ev) {
-    this.zoom += ev.wheelDelta * this.options.zoomWheelFactor;
+    this.zoom += wheelDistance(ev) * this.options.zoomWheelFactor;
     if (this.zoom < this.options.zoomMin) {
       this.zoom = this.options.zoomMin;
     }
@@ -216,6 +235,8 @@ export class CanvasViewport extends Core.System {
     var ctx = this.ctx;
 
     ctx.save();
+    ctx.beginPath();
+
     ctx.strokeStyle = this.options.gridColor;
     ctx.lineWidth = this.lineWidth / this.zoom;
 
@@ -260,11 +281,13 @@ export class CanvasViewport extends Core.System {
     // simulate a vector display
     ctx.lineWidth = this.lineWidth / this.zoom / (sprite.size / 100);
 
+    /*
     if (this.debug) {
       ctx.strokeStyle = '#303';
       this.debugDummySprite.size = sprite.size;
       getSprite('default')(ctx, timeDelta, this.debugDummySprite);
     }
+    */
 
     ctx.strokeStyle = sprite.color;
     spriteFn(ctx, timeDelta, sprite);
@@ -287,7 +310,7 @@ export function getSprite(name) {
 
 registerSprite('default', (ctx, timeDelta, sprite) => {
   ctx.beginPath();
-  ctx.arc(0, 0, 50, 0, Math.PI * 2, true)
+  ctx.arc(0, 0, 50, 0, Math.PI * 2, true);
   ctx.moveTo(0, 0);
   ctx.lineTo(0, -50);
   ctx.moveTo(0, 0);
