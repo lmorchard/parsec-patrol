@@ -229,25 +229,24 @@ QuadTree.prototype = {
    *
    * @method QuadTree#retrieve
    * @param {Phaser.Sprite|Phaser.Rectangle} source - The source object to check the QuadTree against. Either a Sprite or Rectangle.
-   * @return {array} - Array with all detected objects.
    */
-  iterate: function (source, iteratorFn) {
+  iterate: function (source, iteratorFn, optionalParam) {
     var index = this.getIndex(source);
 
     for (var i = 0; i < this.objects.length; i++) {
-      iteratorFn(this.objects[i]);
+      iteratorFn(this.objects[i], optionalParam);
     }
 
     if (this.nodes[0]) {
       //  If rect fits into a subnode ..
       if (index !== -1) {
-        this.nodes[index].iterate(source, iteratorFn);
+        this.nodes[index].iterate(source, iteratorFn, optionalParam);
       } else {
         //  If rect does not fit into a subnode, check it against all subnodes (unrolled for speed)
-        this.nodes[0].iterate(source, iteratorFn);
-        this.nodes[1].iterate(source, iteratorFn);
-        this.nodes[2].iterate(source, iteratorFn);
-        this.nodes[3].iterate(source, iteratorFn);
+        this.nodes[0].iterate(source, iteratorFn, optionalParam);
+        this.nodes[1].iterate(source, iteratorFn, optionalParam);
+        this.nodes[2].iterate(source, iteratorFn, optionalParam);
+        this.nodes[3].iterate(source, iteratorFn, optionalParam);
       }
     }
   },

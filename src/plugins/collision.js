@@ -13,13 +13,15 @@ export class Collidable extends Core.Component {
 
 Core.registerComponent('Collidable', Collidable);
 
+var idx, entityId, matches, sprite, position;
+
 export class CollisionSystem extends Core.System {
 
   defaultOptions() {
     return {
       width: 10000,
       height: 10000,
-      quadtreeMaxAge: 20,
+      quadtreeMaxAge: 5,
       quadtreeObjectsPerNode: 10
     };
   };
@@ -40,11 +42,12 @@ export class CollisionSystem extends Core.System {
 
     this.retrieveBounds = {};
     this.quadtreeAge = 0;
+
+    this.checkCollisionBound = (neighbor, component) =>
+      this.checkCollision(neighbor, component);
   }
 
   update(timeDelta) {
-
-    var matches = this.getMatchingComponents();
 
     // HACK: Track age of quadtree, clear it completely after an interval.
     // This is because the insert logic will move entities, but it will not
@@ -55,35 +58,24 @@ export class CollisionSystem extends Core.System {
       this.quadtree.clear();
     }
 
-    for (var entityId in matches) {
-      var component = matches[entityId];
-      this.updateQuadtreeWithComponent(entityId, component);
+    matches = this.getMatchingComponents();
+    // First, update the collidables and then the quadtree
+    for (entityId in matches) {
+      this.updateQuadtreeWithComponent(entityId, matches[entityId]);
     }
-
-    /*
-    for (var aEntityId in matches) {
-      for (var bEntityId in matches) {
-        this.checkCollision(matches[aEntityId], matches[bEntityId]);
-      }
-    }
-    */
-
-    for (var entityId in matches) {
-      var component = matches[entityId];
-      this.updateComponent(timeDelta, entityId, component);
+    // Second, process collidables for collisions with quadtree neighbors
+    for (entityId in matches) {
+      this.updateComponent(timeDelta, entityId, matches[entityId]);
     }
 
   }
 
   updateQuadtreeWithComponent(entityId, collidable) {
-    var entities = this.world.entities;
+    sprite = this.world.entities.get('Sprite', entityId);
+    position = this.world.entities.get('Position', entityId);
+    if (!sprite || !position) { return; }
 
-    var sprite = entities.get('Sprite', entityId);
-    if (!sprite) { return; }
-
-    var position = entities.get('Position', entityId);
-    if (!position) { return; }
-
+    // This update is ugly, but is an attempt not to spawn temp objects.
     collidable.entityId = entityId;
     collidable.x = position.x - sprite.width/2;
     collidable.y = position.y - sprite.height/2;
@@ -94,30 +86,27 @@ export class CollisionSystem extends Core.System {
     collidable.position = position;
     collidable.sprite = sprite;
     collidable.inCollision = false;
+
+    // TODO: Is there a better way to empty out an object than replacing it?
     collidable.inCollisionWith = {};
 
     this.quadtree.insert(collidable);
   }
 
   updateComponent(timeDelta, entityId, component) {
-    var entities = this.world.entities;
-
-    var sprite = entities.get('Sprite', entityId);
-    if (!sprite) { return; }
-
-    var position = entities.get('Position', entityId);
-    if (!position) { return; }
+    sprite = this.world.entities.get('Sprite', entityId);
+    position = this.world.entities.get('Position', entityId);
+    if (!sprite || !position) { return; }
 
     this.retrieveBounds.x = position.x;
     this.retrieveBounds.y = position.y;
     this.retrieveBounds.right = position.x + sprite.width;
     this.retrieveBounds.bottom = position.y + sprite.height;
 
-    this.quadtree.iterate(this.retrieveBounds,
-        (neighbor) => this.checkCollision(component, neighbor));
+    this.quadtree.iterate(this.retrieveBounds, this.checkCollisionBound, component);
   }
 
-  checkCollision(aCollidable, bCollidable) {
+  checkCollision(bCollidable, aCollidable) {
 
     if (aCollidable.entityId === bCollidable.entityId) { return; }
 
@@ -165,20 +154,18 @@ export class CollisionSystem extends Core.System {
   drawDebugQuadtree(timeDelta, ctx) {
     ctx.save();
     ctx.strokeStyle = "#404";
-
-    var drawNode = (root) => {
-      if (!root) { return; }
-      var b = root.bounds;
-      ctx.strokeRect(b.x, b.y, b.width, b.height);
-      for (var idx = 0, node; node = root.nodes[idx]; idx++) {
-        drawNode(node);
-      }
-    };
-
-    var qt = this.quadtree;
-    if (qt) { drawNode(qt); }
-
+    this.drawDebugQuadtreeNode(ctx, this.quadtree);
     ctx.restore();
+  }
+
+  drawDebugQuadtreeNode(ctx, root) {
+    if (!root) { return; }
+    ctx.strokeRect(root.bounds.x, root.bounds.y,
+                   root.bounds.width, root.bounds.height);
+    this.drawDebugQuadtreeNode(root.nodes[0]);
+    this.drawDebugQuadtreeNode(root.nodes[1]);
+    this.drawDebugQuadtreeNode(root.nodes[2]);
+    this.drawDebugQuadtreeNode(root.nodes[3]);
   }
 
   drawDebugInCollision(timeDelta, ctx) {
