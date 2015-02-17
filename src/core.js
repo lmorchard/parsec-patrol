@@ -11,6 +11,10 @@ var requestAnimationFrame =
   window.msRequestAnimationFrame ||
   (fn) => setTimeout(fn, (1000/60));
 
+// Commonly used temp variables, pre-declared early.
+var entityId, system, systemName, systemAttrs, systemCls, componentName,
+    timeNow, timeDelta, component, componentAttrs, matches, idx, item, handler;
+
 export class World {
 
   constructor(options) {
@@ -57,17 +61,17 @@ export class World {
 
   publish(msg, data) {
     if (!this.subscribers[msg]) { return; }
-    for (var idx = 0, handler; handler = this.subscribers[msg][idx]; idx++) {
+    for (idx = 0, handler; handler = this.subscribers[msg][idx]; idx++) {
       handler(msg, data);
     }
     return this;
   }
 
   addSystems(systemsData) {
-    for (var systemName in systemsData) {
-      var systemAttrs = systemsData[systemName];
-      var systemCls = getSystem(systemName);
-      var system = new systemCls(systemAttrs);
+    for (systemName in systemsData) {
+      systemAttrs = systemsData[systemName];
+      systemCls = getSystem(systemName);
+      system = new systemCls(systemAttrs);
       system.setWorld(this);
       this.systems[systemName] = system;
     }
@@ -81,7 +85,7 @@ export class World {
     if (this.isRunning) { return; }
     this.isRunning = true;
 
-    for (var systemName in this.systems) {
+    for (systemName in this.systems) {
       this.systems[systemName].initialize();
     }
 
@@ -110,21 +114,21 @@ export class World {
   }
 
   tick(timeDeltaMS) {
-    var timeDelta = timeDeltaMS / 1000;
-    for (var systemName in this.systems) {
+    timeDelta = timeDeltaMS / 1000;
+    for (systemName in this.systems) {
       this.systems[systemName].updateStart(timeDelta);
     }
-    for (var systemName in this.systems) {
+    for (systemName in this.systems) {
       this.systems[systemName].update(timeDelta);
     }
-    for (var systemName in this.systems) {
+    for (systemName in this.systems) {
       this.systems[systemName].updateEnd(timeDelta);
     }
   }
 
   tickLoop() {
-    var timeNow = Date.now();
-    var timeDelta = Math.min(timeNow - this.lastTickTime, this.maxTickDelta);
+    timeNow = Date.now();
+    timeDelta = Math.min(timeNow - this.lastTickTime, this.maxTickDelta);
     this.lastTickTime = timeNow;
 
     if (!this.isPaused) {
@@ -143,21 +147,21 @@ export class World {
   }
 
   draw(timeDeltaMS) {
-    var timeDelta = timeDeltaMS / 1000;
-    for (var systemName in this.systems) {
+    timeDelta = timeDeltaMS / 1000;
+    for (systemName in this.systems) {
       this.systems[systemName].drawStart(timeDelta);
     }
-    for (var systemName in this.systems) {
+    for (systemName in this.systems) {
       this.systems[systemName].draw(timeDelta);
     }
-    for (var systemName in this.systems) {
+    for (systemName in this.systems) {
       this.systems[systemName].drawEnd(timeDelta);
     }
   }
 
   drawLoop(timestamp) {
     if (!this.lastDrawTime) { this.lastDrawTime = timestamp; }
-    var timeDelta = timestamp - this.lastDrawTime;
+    timeDelta = timestamp - this.lastDrawTime;
     this.lastDrawTime = timestamp;
 
     if (!this.isPaused) {
@@ -188,10 +192,10 @@ export class EntityManager {
 
   insert(...items) {
     var out = [];
-    for (var idx=0, item; item=items[idx]; idx++) {
-      var entityId = this.generateEntityId();
-      for (var componentName in item) {
-        var componentAttrs = item[componentName];
+    for (idx = 0; item = items[idx]; idx++) {
+      entityId = this.generateEntityId();
+      for (componentName in item) {
+        componentAttrs = item[componentName];
         this.addComponent(entityId, componentName, componentAttrs);
       }
       out.push(entityId);
@@ -200,7 +204,7 @@ export class EntityManager {
   }
 
   destroy(entityId) {
-    for (var componentName in this.store) {
+    for (componentName in this.store) {
       this.removeComponent(entityId, componentName);
     }
   }
@@ -274,10 +278,9 @@ export class System {
   updateStart(timeDelta) { }
 
   update(timeDelta) {
-    var matches = this.getMatchingComponents();
-    for (var entityId in matches) {
-      var component = matches[entityId];
-      this.updateComponent(timeDelta, entityId, component);
+    matches = this.getMatchingComponents();
+    for (entityId in matches) {
+      this.updateComponent(timeDelta, entityId, matches[entityId]);
     }
   }
 
