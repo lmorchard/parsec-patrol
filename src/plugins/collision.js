@@ -22,7 +22,8 @@ export class CollisionSystem extends Core.System {
       width: 10000,
       height: 10000,
       quadtreeMaxAge: 5,
-      quadtreeObjectsPerNode: 10
+      quadtreeObjectsPerNode: 10,
+      quadtreeMaxLevels: 8
     };
   };
 
@@ -37,7 +38,8 @@ export class CollisionSystem extends Core.System {
       0 - this.height/2,
       this.width,
       this.height,
-      this.options.quadtreeObjectsPerNode
+      this.options.quadtreeObjectsPerNode,
+      this.options.quadtreeMaxLevels
     );
 
     this.retrieveBounds = {};
@@ -49,6 +51,9 @@ export class CollisionSystem extends Core.System {
 
   update(timeDelta) {
 
+    this.quadtree.clear();
+
+    /*
     // HACK: Track age of quadtree, clear it completely after an interval.
     // This is because the insert logic will move entities, but it will not
     // collapse subtrees when they are empty
@@ -57,6 +62,7 @@ export class CollisionSystem extends Core.System {
       this.quadtreeMaxAge = 0;
       this.quadtree.clear();
     }
+    */
 
     matches = this.getMatchingComponents();
     // First, update the collidables and then the quadtree
@@ -135,9 +141,9 @@ export class CollisionSystem extends Core.System {
   }
 
   draw(timeDelta) {
+    if (!this.world.debug) { return; }
+
     var vpSystem = this.world.getSystem('CanvasViewport');
-    if (!vpSystem) { return; }
-    if (!vpSystem.debug) { return; }
 
     var ctx = vpSystem.ctx;
     ctx.save();
@@ -153,19 +159,18 @@ export class CollisionSystem extends Core.System {
 
   drawDebugQuadtree(timeDelta, ctx) {
     ctx.save();
-    ctx.strokeStyle = "#404";
+    ctx.strokeStyle = "#707";
     this.drawDebugQuadtreeNode(ctx, this.quadtree);
     ctx.restore();
   }
 
   drawDebugQuadtreeNode(ctx, root) {
     if (!root) { return; }
-    ctx.strokeRect(root.bounds.x, root.bounds.y,
-                   root.bounds.width, root.bounds.height);
-    this.drawDebugQuadtreeNode(root.nodes[0]);
-    this.drawDebugQuadtreeNode(root.nodes[1]);
-    this.drawDebugQuadtreeNode(root.nodes[2]);
-    this.drawDebugQuadtreeNode(root.nodes[3]);
+    ctx.strokeRect(root.bounds.x, root.bounds.y, root.bounds.width, root.bounds.height);
+    this.drawDebugQuadtreeNode(ctx, root.nodes[0]);
+    this.drawDebugQuadtreeNode(ctx, root.nodes[1]);
+    this.drawDebugQuadtreeNode(ctx, root.nodes[2]);
+    this.drawDebugQuadtreeNode(ctx, root.nodes[3]);
   }
 
   drawDebugInCollision(timeDelta, ctx) {

@@ -33,7 +33,6 @@ export class CanvasViewport extends Core.System {
 
   defaultOptions() {
     return {
-      debug: false,
       lineWidth: 1.5,
       zoom: 1.0,
       zoomMin: 0.1,
@@ -75,7 +74,6 @@ export class CanvasViewport extends Core.System {
       window.attachEvent('onmousewheel', boundOnMouseWheel); // IE
     }
 
-    this.debug = this.options.debug;
     this.followEnabled = this.options.followEnabled;
     this.zoom = this.options.zoom;
     this.followEntityId = this.options.followEntityId;
@@ -106,7 +104,7 @@ export class CanvasViewport extends Core.System {
 
     this.drawScene(timeDelta);
 
-    //if (this.debug) { this.drawDebugCursor(); }
+    if (this.world.debug) { this.drawDebugCursor(); }
 
     this.ctx.restore();
   }
@@ -274,20 +272,21 @@ export class CanvasViewport extends Core.System {
     ctx.save();
 
     ctx.translate(position.x, position.y);
+
+    /*
+    ctx.fillStyle = "#fff";
+    ctx.font = "11px monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(''+entityId, 0, 0);
+    */
+
     ctx.rotate(position.rotation + Math.PI/2);
     ctx.scale(sprite.size / 100, sprite.size / 100);
 
     // HACK: Try to keep line width consistent regardless of zoom, to sort of
     // simulate a vector display
     ctx.lineWidth = this.lineWidth / this.zoom / (sprite.size / 100);
-
-    /*
-    if (this.debug) {
-      ctx.strokeStyle = '#303';
-      this.debugDummySprite.size = sprite.size;
-      getSprite('default')(ctx, timeDelta, this.debugDummySprite);
-    }
-    */
 
     ctx.strokeStyle = sprite.color;
     spriteFn(ctx, timeDelta, sprite);

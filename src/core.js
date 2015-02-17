@@ -22,6 +22,7 @@ export class World {
 
     this.isRunning = false;
     this.isPaused = false;
+    this.debug = true;
 
     this.entities = new EntityManager();
 

@@ -21,7 +21,7 @@ var debug = true;
 var move = 0.07;
 var rot = (Math.PI / 2);
 
-var world = new Core.World({
+var world = window.world = new Core.World({
   systems: {
     CanvasViewport: {
       debug: debug,
@@ -125,10 +125,11 @@ var guiSystem = world.getSystem('DatGui');
 var gui = guiSystem.gui;
 
 gui.add(world, 'isPaused');
+gui.add(world, 'debug');
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
-var names = [ 'debug', 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
+var names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
 names.forEach(function (name) {
   gui.add(vpSystem, name).listen();
 });

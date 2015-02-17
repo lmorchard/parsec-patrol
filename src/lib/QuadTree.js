@@ -152,6 +152,7 @@ QuadTree.prototype = {
       }
     }
 
+    /*
     // Check if we already have this item in the quadtree structure.
     var oldNode = this.root.entityMap[body.entityId];
     if (oldNode === this) {
@@ -170,6 +171,8 @@ QuadTree.prototype = {
     // lose items.
 
     this.root.entityMap[body.entityId] = this;
+    */
+
     this.objects.push(body);
 
     if (this.objects.length > this.maxObjects && this.level < this.maxLevels) {
