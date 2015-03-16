@@ -22,7 +22,7 @@ export class World {
 
     this.isRunning = false;
     this.isPaused = false;
-    this.debug = true;
+    this.debug = false;
 
     this.entities = new EntityManager();
 
@@ -258,6 +258,7 @@ export class System {
 
   constructor(options) {
     this.options = Object.assign(this.defaultOptions(), options);
+    this.debug = this.options.debug || false;
   }
 
   defaultOptions() {

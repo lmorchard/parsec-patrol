@@ -23,7 +23,7 @@ export class CollisionSystem extends Core.System {
       height: 10000,
       quadtreeMaxAge: 5,
       quadtreeObjectsPerNode: 10,
-      quadtreeMaxLevels: 8
+      quadtreeMaxLevels: 5
     };
   };
 
@@ -119,17 +119,17 @@ export class CollisionSystem extends Core.System {
     var dx = aCollidable.position.x - bCollidable.position.x;
     var dy = aCollidable.position.y - bCollidable.position.y;
 
+    /*
     // Check horizontal proximity
     if (Math.abs(dx) * 2 > (aCollidable.sprite.width + bCollidable.sprite.width)) { return; }
 
     // Check vertical proximity
     if (Math.abs(dy) * 2 > (aCollidable.sprite.height + bCollidable.sprite.height)) { return; }
-
+    */
     // TODO: Pluggable shape intersection detection here?
 
     // Check collision circle via distance
-    var radii = (Math.max(aCollidable.sprite.width, aCollidable.sprite.height) +
-                 Math.max(bCollidable.sprite.width, bCollidable.sprite.height)) / 2;
+    var radii = (aCollidable.sprite.size + bCollidable.sprite.size) / 2;
     if (dx*dx + dy*dy > radii*radii) { return; }
 
     aCollidable.inCollision = true;
@@ -141,7 +141,7 @@ export class CollisionSystem extends Core.System {
   }
 
   draw(timeDelta) {
-    if (!this.world.debug) { return; }
+    if (!this.debug) { return; }
 
     var vpSystem = this.world.getSystem('CanvasViewport');
 

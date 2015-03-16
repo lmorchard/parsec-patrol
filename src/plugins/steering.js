@@ -10,7 +10,8 @@ var PI2 = Math.PI * 2;
 export class Steering extends Core.Component {
   static defaults() {
     return {
-
+      sensorRange: 300,
+      obstacleRepel: [400, 2.35]
     };
   }
 }
@@ -23,11 +24,12 @@ export class SteeringSystem extends Core.System {
 
   initialize() {
 
-    this.seekFactor = 1;
+    this.seekFactor = 2;
 
-    this.avoidFactor = 10;
+    this.avoidFactor = 2;
+
     this.avoidSeeAhead = 300;
-    this.avoidRayWidthFactor = 1.25;
+    this.avoidRayWidthFactor = 1.15;
 
     this.vTarget = new Vector2D();
 
@@ -57,6 +59,53 @@ export class SteeringSystem extends Core.System {
   }
 
   avoid(vector, timeDelta, entityId, steering) {
+
+    if (this.debug) { steering.vectors = []; }
+
+    var sprite = this.world.entities.get('Sprite', entityId);
+    var position = this.world.entities.get('Position', entityId);
+
+    var range = steering.sensorRange;
+    this.world.getSystem('Collision').quadtree.iterate({
+      x: position.x - (range / 2),
+      y: position.y - (range / 2),
+      width: range,
+      height: range
+    }, (item) => {
+
+      if (entityId == item.entityId) { return; }
+
+      var targetPosition = this.world.entities.get('Position', item.entityId);
+      var targetSprite = this.world.entities.get('Sprite', item.entityId);
+
+      var A = 0;
+      var B = steering.obstacleRepel[0];
+      var n = 0;
+      var m = steering.obstacleRepel[1];
+
+      var dx = position.x - targetPosition.x;
+      var dy = position.y - targetPosition.y;
+      var edgeRange = sprite.size / 2 + targetSprite.size / 2;
+      var distance = Math.sqrt(dx*dx + dy*dy) - edgeRange;
+      if (distance <= 0) { distance = 0.01; }
+
+      if (distance > steering.sensorRange) { return; }
+
+      var U = (-A / Math.pow(distance, n)) +
+              ( B / Math.pow(distance, m));
+
+      vector.x += dx * U;
+      vector.y += dy * U;
+
+      if (this.debug) {
+        steering.vectors.push([targetPosition.x, targetPosition.y, U]);
+      }
+
+    });
+
+  }
+
+  avoid_old(vector, timeDelta, entityId, steering) {
 
     var sprite = this.world.entities.get('Sprite', entityId);
     var position = this.world.entities.get('Position', entityId);
@@ -113,7 +162,7 @@ export class SteeringSystem extends Core.System {
     vRayUnit.setValues(rayWidth, 0);
     vRayUnit.rotate(position.rotation);
 
-    if (this.world.debug) { steering.hitCircles = []; }
+    if (this.debug) { steering.hitCircles = []; }
 
     var obstacle;
     var steps = this.avoidSeeAhead / rayWidth;
@@ -132,7 +181,7 @@ export class SteeringSystem extends Core.System {
 
   searchCircleForObstacle(steering, entityId, x, y, size) {
 
-    if (this.world.debug) {
+    if (this.debug) {
       steering.hitCircles.push([x, y, size]);
     }
 
@@ -211,7 +260,7 @@ export class SteeringSystem extends Core.System {
       var targetAngle = this.vTarget.angle();
       if (targetAngle < 0) { targetAngle += (2 * Math.PI); }
 
-      if (this.world.debug) { steering.targetAngle = targetAngle; }
+      if (this.debug) { steering.targetAngle = targetAngle; }
 
       // Pick the direction from current to target angle
       var direction = (targetAngle < position.rotation) ? -1 : 1;
@@ -241,7 +290,7 @@ export class SteeringSystem extends Core.System {
   }
 
   draw(timeDelta) {
-    if (!this.world.debug) { return; }
+    if (!this.debug) { return; }
 
     var vpSystem = this.world.getSystem('CanvasViewport');
     var ctx = vpSystem.ctx;
@@ -256,6 +305,7 @@ export class SteeringSystem extends Core.System {
 
       var steering = matches[entityId];
       var position = this.world.entities.get('Position', entityId);
+      var sprite = this.world.entities.get('Sprite', entityId);
 
       this.drawSteeringVsPosition(ctx, steering, position);
 
@@ -264,6 +314,24 @@ export class SteeringSystem extends Core.System {
           ctx.strokeStyle = '#d00';
           ctx.beginPath();
           ctx.arc(x, y, size, 0, PI2, false);
+          ctx.stroke();
+        }
+      }
+
+      if (steering.sensorRange) {
+          ctx.strokeStyle = 'rgba(0, 64, 64, 0.75)';
+          ctx.beginPath();
+          ctx.arc(position.x, position.y, steering.sensorRange, 0, PI2, false);
+          ctx.stroke();
+      }
+
+      if (steering.vectors) {
+        for (var [x, y, U] of steering.vectors) {
+          ctx.strokeStyle = 'rgba(0, 64, 64, 0.75)';
+          ctx.beginPath();
+          ctx.moveTo(position.x, position.y);
+          ctx.lineWidth = Math.max(1, Math.min(U, sprite.width));
+          ctx.lineTo(x, y);
           ctx.stroke();
         }
       }

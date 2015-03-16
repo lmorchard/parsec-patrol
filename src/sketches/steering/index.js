@@ -37,7 +37,7 @@ var world = window.world = new Core.World({
     Motion: {},
     Thruster: {},
     Seeker: {},
-    Steering: {},
+    Steering: { debug: true },
     ClickCourse: {},
     Collision: {},
     Bounce: {}
@@ -100,15 +100,11 @@ function spawnField(centerX, centerY, radius=300,
   }
 }
 
-spawnField(0, 0, 750, 25);
-
-/*
-spawnAsteroid(
-  0, 0, 1250, 1250, 0, 0,
-  (Math.PI * 0.25) * Math.random(),
-  2500, 2500
-);
-*/
+spawnField(-450, -450, 200, 25);
+spawnField(-450,  450, 200, 25);
+spawnField(0, 0, 200, 25);
+spawnField(450, -450, 200, 25);
+spawnField(450,  450, 200, 25);
 
 var enemyCt = 0;
 
@@ -121,20 +117,20 @@ function spawnEnemy(x, y) {
     Position: { x: x, y: y },
     Thruster: { deltaV: 1000, maxV: 300, active: true },
     // Seeker: { radPerSec: Math.PI, targetName: 'hero1' },
-    Steering: { radPerSec: Math.PI / 2, seekTargetName: 'hero1' },
+    Steering: { radPerSec: Math.PI * 1, seekTargetName: 'hero1' },
     Motion: {},
   });
 }
 
 spawnEnemy(-1100, -750);
 //spawnEnemy(-1100, -500);
-spawnEnemy(-1100, -375);
+//spawnEnemy(-1100, -375);
 //spawnEnemy(-1100, -250);
-spawnEnemy(-1100, -125);
-//spawnEnemy(-1100,    0);
-spawnEnemy(-1100,  125);
+//spawnEnemy(-1100, -125);
+spawnEnemy(-1100,    0);
+//spawnEnemy(-1100,  125);
 //spawnEnemy(-1100,  250);
-spawnEnemy(-1100,  375);
+//spawnEnemy(-1100,  375);
 //spawnEnemy(-1100,  500);
 spawnEnemy(-1100,  750);
 
@@ -152,20 +148,31 @@ world.entities.insert({
 
 world.start();
 
-var vpSystem = world.getSystem('CanvasViewport');
 var guiSystem = world.getSystem('DatGui');
 var gui = guiSystem.gui;
 
-gui.add(world, 'isPaused');
-gui.add(world, 'debug');
-gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+var guiWorld = gui.addFolder('World');
+guiWorld.open();
+guiWorld.add(world, 'isPaused');
+guiWorld.add(world, 'debug');
+
+var vpSystem = world.getSystem('CanvasViewport');
+var guiViewport = gui.addFolder('Viewport');
+guiViewport.open();
+guiViewport.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+guiViewport.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
 var names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
 names.forEach(function (name) {
-  gui.add(vpSystem, name).listen();
+  guiViewport.add(vpSystem, name).listen();
 });
 
-var cp = vpSystem.cursorPosition;
-gui.add(cp, 'x').listen();
-gui.add(cp, 'y').listen();
+var collisionSystem = world.getSystem('Collision');
+var guiCollision = gui.addFolder('Collision');
+guiCollision.open();
+guiCollision.add(collisionSystem, 'debug');
+
+var steeringSystem = world.getSystem('Steering');
+var guiSteering = gui.addFolder('Steering');
+guiSteering.open();
+guiSteering.add(steeringSystem, 'debug');

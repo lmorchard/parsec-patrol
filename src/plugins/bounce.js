@@ -60,7 +60,7 @@ export class BounceSystem extends Core.System {
       var bBouncer = entities.get('Bounce', bEntityId);
       if (!bBouncer) { continue; }
 
-      this.resolveElasticCollision(aEntityId, aBouncer, bEntityId, bBouncer);
+      this.resolveElasticCollision(timeDelta, aEntityId, aBouncer, bEntityId, bBouncer);
     }
 
   }
@@ -70,7 +70,7 @@ export class BounceSystem extends Core.System {
   // http://en.m.wikipedia.org/wiki/Dot_product
   // https://github.com/Edifear/volleyball/blob/master/collision.html
   // https://github.com/DominikWidomski/Processing/blob/master/sketch_canvas_red_particles/particles.pde#L47
-  resolveElasticCollision(aEntityId, aBouncer, bEntityId, bBouncer) {
+  resolveElasticCollision(timeDelta, aEntityId, aBouncer, bEntityId, bBouncer) {
 
     var entities = this.world.entities;
 
@@ -81,6 +81,26 @@ export class BounceSystem extends Core.System {
     var bPosition = entities.get('Position', bEntityId);
     var bSprite = entities.get('Sprite', bEntityId);
     var bMotion = entities.get('Motion', bEntityId);
+
+    // First, back both entities off to try to prevent sticking
+    /*
+    aPosition.x -= aMotion.dx * timeDelta;
+    aPosition.y -= aMotion.dy * timeDelta;
+    bPosition.x -= bMotion.dx * timeDelta;
+    bPosition.y -= bMotion.dy * timeDelta;
+    var radii, dx, dy;
+    while (true) {
+      aPosition.x -= aMotion.dx * timeDelta;
+      aPosition.y -= aMotion.dy * timeDelta;
+      bPosition.x -= bMotion.dx * timeDelta;
+      bPosition.y -= bMotion.dy * timeDelta;
+
+      radii = (aSprite.size + bSprite.size) / 2;
+      dx = aPosition.x - bPosition.x;
+      dy = aPosition.y - bPosition.y;
+      if (dx*dx + dy*dy > radii*radii) { break; }
+    }
+    */
 
     // Vector between entities
     this.dn.setValues(aPosition.x - bPosition.x, aPosition.y - bPosition.y);
@@ -104,8 +124,8 @@ export class BounceSystem extends Core.System {
 
     // Minimum translation vector to push entities apart
     this.mt.setValues(
-      this.dn.x * (aSprite.width + bSprite.width - delta),
-      this.dn.y * (aSprite.height + bSprite.height - delta)
+      this.dn.x * (aSprite.width + bSprite.width - delta) * 1.1,
+      this.dn.y * (aSprite.height + bSprite.height - delta) * 1.1
     );
 
     // Velocity vectors of entities before collision

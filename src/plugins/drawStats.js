@@ -7,14 +7,14 @@ export class DrawStats extends Core.System {
   initialize() {
 
     this.drawStats = new Stats();
-    this.drawStats.setMode(1);
+    this.drawStats.setMode(0);
     this.drawStats.domElement.style.position = 'absolute';
     this.drawStats.domElement.style.left = '0px';
     this.drawStats.domElement.style.top = '0px';
     document.body.appendChild(this.drawStats.domElement);
 
     this.tickStats = new Stats();
-    this.tickStats.setMode(1);
+    this.tickStats.setMode(0);
     this.tickStats.domElement.style.position = 'absolute';
     this.tickStats.domElement.style.left = '0px';
     this.tickStats.domElement.style.top = '55px';
