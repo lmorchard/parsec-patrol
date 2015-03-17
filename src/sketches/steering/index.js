@@ -37,7 +37,9 @@ var world = window.world = new Core.World({
     Motion: {},
     Thruster: {},
     Seeker: {},
-    Steering: { debug: true },
+    Steering: {
+      debug: true
+    },
     ClickCourse: {},
     Collision: {},
     Bounce: {}
@@ -109,9 +111,9 @@ spawnField(450,  450, 200, 25);
 var enemyCt = 0;
 
 function spawnEnemy(x, y) {
-  world.entities.insert({
+  var entityId = world.entities.insert({
     Name: { name: 'enemy' + (enemyCt++) },
-    Sprite: { name: 'enemyscout', color: '#f00', size: 50 },
+    Sprite: { name: 'enemyscout', color: '#f00', size: 40 },
     Collidable: {},
     Bounce: { mass: 2500 },
     Position: { x: x, y: y },
@@ -120,25 +122,31 @@ function spawnEnemy(x, y) {
     Steering: { radPerSec: Math.PI * 1, seekTargetName: 'hero1' },
     Motion: {},
   });
+  setTimeout(function () {
+    //world.entities.destroy(entityId);
+  }, 5000);
 }
 
-spawnEnemy(-1100, -750);
+setInterval(function () {
+  spawnEnemy(-1400, 1500 * Math.random() - 750);
+}, 3000);
+
 //spawnEnemy(-1100, -500);
 //spawnEnemy(-1100, -375);
 //spawnEnemy(-1100, -250);
 //spawnEnemy(-1100, -125);
-spawnEnemy(-1100,    0);
+//spawnEnemy(-1100,    0);
 //spawnEnemy(-1100,  125);
 //spawnEnemy(-1100,  250);
 //spawnEnemy(-1100,  375);
 //spawnEnemy(-1100,  500);
-spawnEnemy(-1100,  750);
+//spawnEnemy(-1100,  750);
 
 world.entities.insert({
   Name: { name: 'hero1'},
   Sprite: { name: 'hero', color: '#0f0' },
   Collidable: {},
-  Bounce: { mass: 7000 },
+  Bounce: { mass: 700000 },
   Position: { x: 1100, y: 0 },
   Thruster: { deltaV: 1200, maxV: 500, active: false },
   Seeker: { radPerSec: Math.PI },

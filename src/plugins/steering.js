@@ -10,8 +10,8 @@ var PI2 = Math.PI * 2;
 export class Steering extends Core.Component {
   static defaults() {
     return {
-      sensorRange: 300,
-      obstacleRepel: [400, 2.35]
+      sensorRange: 350,
+      obstacleRepel: [400, 2.1]
     };
   }
 }
@@ -24,17 +24,20 @@ export class SteeringSystem extends Core.System {
 
   initialize() {
 
-    this.seekFactor = 2;
+    this.seekFactor = 1;
 
-    this.avoidFactor = 2;
+    this.pushFactor = 7;
 
-    this.avoidSeeAhead = 300;
-    this.avoidRayWidthFactor = 1.15;
+    this.avoidFactor = 10;
+
+    this.avoidSeeAhead = 500;
+    this.avoidRayWidthFactor = 1.5;
 
     this.vTarget = new Vector2D();
 
     this.vectors = {
       avoid: new Vector2D(),
+      push: new Vector2D(),
       seek: new Vector2D(),
       flee: new Vector2D(),
       wander: new Vector2D(),
@@ -64,6 +67,9 @@ export class SteeringSystem extends Core.System {
 
     var sprite = this.world.entities.get('Sprite', entityId);
     var position = this.world.entities.get('Position', entityId);
+
+    var result = this.lookForObstacle(entityId, position, sprite, steering);
+    if (!result) { return; }
 
     var range = steering.sensorRange;
     this.world.getSystem('Collision').quadtree.iterate({
@@ -105,14 +111,22 @@ export class SteeringSystem extends Core.System {
 
   }
 
-  avoid_old(vector, timeDelta, entityId, steering) {
+  push(vector, timeDelta, entityId, steering) {
+
+  }
+
+  avoid_ray(vector, timeDelta, entityId, steering) {
 
     var sprite = this.world.entities.get('Sprite', entityId);
     var position = this.world.entities.get('Position', entityId);
 
     // Scan ahead for an obstacle, bail if none found.
-    var obstacle = this.lookForObstacle(entityId, position, sprite, steering);
-    if (!obstacle) { return; }
+    var result = this.lookForObstacle(entityId, position, sprite, steering);
+    if (!result) { return; }
+
+    var obstacle = result[0];
+    var rayX = result[1];
+    var rayY = result[2];
 
     // Opposite right triangle leg is distance from obstacle to avoid collision.
     var oppositeLen = obstacle.sprite.size / 2 +
@@ -120,8 +134,8 @@ export class SteeringSystem extends Core.System {
 
     // Hypotenuse length is distance from obstacle.
     var hypotenuseLen = Math.sqrt(
-      Math.pow(obstacle.position.x - position.x, 2) +
-      Math.pow(obstacle.position.y - position.y, 2)
+      Math.pow(obstacle.position.x - rayX, 2) +
+      Math.pow(obstacle.position.y - rayY, 2)
     );
 
     // Adjacent length would be avoid tangent, but no need to calculate.
@@ -134,8 +148,8 @@ export class SteeringSystem extends Core.System {
 
     // Find the absolute angle to the obstacle from entity.
     var obstacleAngle = Math.atan2(
-      obstacle.position.y - position.y,
-      obstacle.position.x - position.x
+      obstacle.position.y - rayY,
+      obstacle.position.x - rayX
     );
 
     // Calculate nearest target angle for avoidance...
@@ -164,19 +178,21 @@ export class SteeringSystem extends Core.System {
 
     if (this.debug) { steering.hitCircles = []; }
 
-    var obstacle;
+    var obstacle, rayX, rayY;
     var steps = this.avoidSeeAhead / rayWidth;
     for (var step = 0; step < steps; step++) {
+      rayX = position.x + vRayUnit.x * step;
+      rayY = position.y + vRayUnit.y * step;
       obstacle = this.searchCircleForObstacle(
         steering, entityId,
-        position.x + vRayUnit.x * step,
-        position.y + vRayUnit.y * step,
-        rayWidth
+        rayX, rayY, rayWidth
       );
-      if (obstacle) { break; }
+      if (obstacle) {
+        return [obstacle, rayX, rayY];
+      }
     }
 
-    return obstacle;
+    return null;
   }
 
   searchCircleForObstacle(steering, entityId, x, y, size) {
@@ -334,6 +350,10 @@ export class SteeringSystem extends Core.System {
           ctx.lineTo(x, y);
           ctx.stroke();
         }
+      }
+
+      if (steering.pushing) {
+        this.drawAngle(ctx, position, position.rotation, '#d0d');
       }
 
       ctx.restore();
