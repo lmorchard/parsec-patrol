@@ -51,6 +51,7 @@
     "6to5": "^3.4.1",
     "dat-gui": "^0.5.0",
     "lodash": "^3.0.1",
+    "lodash.defaults": "^3.1.2",
     "pixi.js": "^2.2.5",
     "stats-js": "^1.0.0-alpha1"
   }
