@@ -1,6 +1,5 @@
 import * as Core from "../../core";
 
-import _ from "lodash";
 import Vector2D from "../../lib/Vector2D";
 
 import "../../plugins/drawStats";
@@ -8,8 +7,8 @@ import "../../plugins/memoryStats";
 import "../../plugins/datGui";
 import "../../plugins/canvasViewport";
 import "../../plugins/name";
-import "../../plugins/health";
 import "../../plugins/position";
+import "../../plugins/expiration";
 
 var debug = true;
 var move = 0.07;
@@ -23,6 +22,7 @@ var world = window.world = new Core.World({
       canvas: '#viewport',
       zoom: 0.5
     },
+    Expiration: {},
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
@@ -31,41 +31,36 @@ var world = window.world = new Core.World({
 
 var ttl = 0.75;
 var dist = 1750;
-var splosions = 100;
+var splosions = 50;
 
 var colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
 
-function spawnExplosion (ttlDone) {
-
-  var x = ( Math.random() * dist ) - (dist / 2);
-  var y = ( Math.random() * dist ) - (dist / 2);
-  var color = colors[Math.floor(Math.random() * colors.length)];
-
-  var eid = world.entities.insert({
-    Sprite: {
-      name: 'explosion',
-      color: color,
-      radius: 200,
-      ttl: ttl
-    },
-    Position: { x: x, y: y }
-  });
-
+function spawnExplosion () {
   setTimeout(() => {
-    world.entities.destroy(eid);
-    ttlDone();
-  }, ttl * 1000);
+    var x = ( Math.random() * dist ) - (dist / 2);
+    var y = ( Math.random() * dist ) - (dist / 2);
+    var color = colors[Math.floor(Math.random() * colors.length)];
 
-}
-
-function explodeForever () {
-  setTimeout(() => spawnExplosion(explodeForever),
-             1000 * ttl * Math.random());
+    var eid = world.entities.insert({
+      Sprite: {
+        name: 'explosion',
+        color: color,
+        radius: 200,
+        ttl: ttl
+      },
+      Position: { x: x, y: y },
+      Expiration: { ttl: ttl }
+    });
+  }, 1000 * Math.random());
 }
 
 for (var idx = 0; idx < splosions; idx++) {
-  explodeForever();
+  spawnExplosion();
 }
+
+world.subscribe(Core.Messages.ENTITY_DESTROY, function (msg, data) {
+  spawnExplosion();
+});
 
 world.start();
 

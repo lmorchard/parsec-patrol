@@ -22,7 +22,7 @@ export class ThrusterSystem extends Core.System {
 
   matchComponent() { return 'Thruster'; }
 
-  constructor() {
+  initialize() {
     this.vInertia = new Vector2D();
     this.vThrust = new Vector2D();
     this.vBrakes = new Vector2D();

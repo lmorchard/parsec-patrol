@@ -274,14 +274,6 @@ export class CanvasViewport extends Core.System {
 
     ctx.translate(position.x, position.y);
 
-    /*
-    ctx.fillStyle = "#fff";
-    ctx.font = "11px monospace";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(''+entityId, 0, 0);
-    */
-
     ctx.rotate(position.rotation + Math.PI/2);
     ctx.scale(sprite.size / 100, sprite.size / 100);
 
@@ -414,7 +406,7 @@ registerSprite('explosion', (ctx, timeDelta, sprite, entityId) => {
       p.dy = p.velocity * Math.cos(p.angle);
       p.distance = p.x = p.y = 0;
       p.maxDistance = sprite.radius * Math.random();
-      p.size = sprite.maxParticleSize; // * Math.random();
+      p.size = sprite.maxParticleSize;
       p.free = false;
 
     } else if (!p.free) {

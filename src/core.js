@@ -1,4 +1,6 @@
-require('6to5/polyfill');
+// require("babel/polyfill");
+//import assign from "lodash.assign";
+import defaults from "lodash.defaults";
 
 const TARGET_FPS = 60;
 const TARGET_DURATION = 1000 / TARGET_FPS;
@@ -9,11 +11,16 @@ var requestAnimationFrame =
   window.mozRequestAnimationFrame ||
   window.oRequestAnimationFrame ||
   window.msRequestAnimationFrame ||
-  (fn) => setTimeout(fn, (1000/60));
+  function (fn) { setTimeout(fn, (1000/60)) };
 
 // Commonly used temp variables, pre-declared early.
 var entityId, system, systemName, systemAttrs, systemCls, componentName,
     timeNow, timeDelta, component, componentAttrs, matches, idx, item, handler;
+
+export const Messages = {
+  ENTITY_INSERT: 'entity_insert',
+  ENTITY_DESTROY: 'entity_destroy'
+};
 
 export class World {
 
@@ -24,7 +31,9 @@ export class World {
     this.isPaused = false;
     this.debug = false;
 
-    this.entities = new EntityManager();
+    // TODO: This circular reference thing might be a mistake.
+    // TODO: Maybe merge entity manager with world?
+    this.entities = new EntityManager(this);
 
     this.systems = {};
     if (options.systems) {
@@ -178,7 +187,8 @@ export class World {
 
 export class EntityManager {
 
-  constructor() {
+  constructor(world) {
+    this.world = world;
     this.reset();
   }
 
@@ -199,12 +209,14 @@ export class EntityManager {
         componentAttrs = item[componentName];
         this.addComponent(entityId, componentName, componentAttrs);
       }
+      this.world.publish(Messages.ENTITY_INSERT, entityId);
       out.push(entityId);
     }
     return out.length > 1 ? out : out[0];
   }
 
   destroy(entityId) {
+    this.world.publish(Messages.ENTITY_DESTROY, entityId);
     for (componentName in this.store) {
       this.removeComponent(entityId, componentName);
     }
@@ -249,7 +261,7 @@ export class Component {
   }
 
   static create(attrs) {
-    return Object.assign(this.defaults(), attrs || {});
+    return defaults(attrs || {}, this.defaults());
   }
 
 }
@@ -257,7 +269,7 @@ export class Component {
 export class System {
 
   constructor(options) {
-    this.options = Object.assign(this.defaultOptions(), options);
+    this.options = defaults(options, this.defaultOptions());
     this.debug = this.options.debug || false;
   }
 
