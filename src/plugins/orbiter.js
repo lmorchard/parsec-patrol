@@ -1,8 +1,8 @@
-import * as Core from "../core";
+import * as Core from "core";
 
-import "./position";
+import "plugins/position";
 
-import Vector2D from "../lib/Vector2D";
+import Vector2D from "Vector2D";
 
 export class Orbiter extends Core.Component {
   static defaults() {

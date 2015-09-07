@@ -1,4 +1,4 @@
-import * as Core from "../core";
+import * as Core from "core";
 
 export class Expiration extends Core.Component {
   static defaults() {

@@ -1,4 +1,4 @@
-import * as Core from "../core";
+import * as Core from "core";
 
 import Stats from "stats-js";
 

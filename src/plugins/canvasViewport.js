@@ -1,4 +1,4 @@
-import * as Core from "../core";
+import * as Core from "core";
 import defaults from "lodash.defaults";
 
 export class CanvasSprite extends Core.Component {

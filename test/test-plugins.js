@@ -1,9 +1,9 @@
-import * as Core from "../src/core"
+import * as Core from "core"
 
-import "../src/plugins/name"
-import "../src/plugins/position"
-import "../src/plugins/motion"
-import "../src/plugins/health"
+import "plugins/name"
+import "plugins/position"
+import "plugins/motion"
+import "plugins/health"
 
 import {expect} from "chai"
 

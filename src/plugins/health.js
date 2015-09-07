@@ -1,4 +1,4 @@
-import * as Core from "../core";
+import * as Core from "core";
 
 export class Health extends Core.Component {
   static defaults() {

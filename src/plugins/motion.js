@@ -1,6 +1,6 @@
-import * as Core from "../core";
+import * as Core from "core";
 
-import "./position"
+import "plugins/position"
 
 export class Motion extends Core.Component {
   static defaults() {

@@ -1,14 +1,14 @@
-import * as Core from "../../core";
+import * as Core from "core";
 
-import Vector2D from "../../lib/Vector2D";
+import Vector2D from "Vector2D";
 
-import "../../plugins/drawStats";
-import "../../plugins/memoryStats";
-import "../../plugins/datGui";
-import "../../plugins/canvasViewport";
-import "../../plugins/name";
-import "../../plugins/position";
-import "../../plugins/expiration";
+import "plugins/drawStats";
+import "plugins/memoryStats";
+import "plugins/datGui";
+import "plugins/canvasViewport";
+import "plugins/name";
+import "plugins/position";
+import "plugins/expiration";
 
 var debug = true;
 var move = 0.07;

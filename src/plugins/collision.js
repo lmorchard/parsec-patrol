@@ -1,6 +1,6 @@
-import * as Core from "../core";
+import * as Core from "core";
 
-import QuadTree from "../lib/QuadTree";
+import QuadTree from "QuadTree";
 
 export class Collidable extends Core.Component {
   static defaults() {

@@ -1,8 +1,8 @@
-import * as Core from "../src/core"
+import * as Core from "core"
 
-import "../src/plugins/name"
-import "../src/plugins/position"
-import "../src/plugins/motion"
+import "plugins/name"
+import "plugins/position"
+import "plugins/motion"
 
 import {expect} from "chai"
 
@@ -310,6 +310,7 @@ Core.registerComponent('TestCounterComponent', TestCounterComponent);
 
 export class TestCounterSystem extends Core.System {
   constructor() {
+    super();
     this.initialized = false;
     this.drawCounter = 0;
     this.drawTimeElapsed = 0;

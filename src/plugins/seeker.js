@@ -1,9 +1,9 @@
-import * as Core from "../core";
+import * as Core from "core";
 
-import "./position";
-import "./motion";
+import "plugins/position";
+import "plugins/motion";
 
-import Vector2D from "../lib/Vector2D";
+import Vector2D from "Vector2D";
 
 export class Seeker extends Core.Component {
   static defaults() {

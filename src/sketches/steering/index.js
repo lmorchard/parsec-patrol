@@ -6,6 +6,7 @@ import Vector2D from "../../lib/Vector2D";
 import "../../plugins/drawStats";
 import "../../plugins/memoryStats";
 import "../../plugins/datGui";
+import "../../plugins/expiration";
 import "../../plugins/canvasViewport";
 import "../../plugins/name";
 import "../../plugins/health";
@@ -31,6 +32,7 @@ var world = window.world = new Core.World({
       // followName: 'hero1',
       zoom: 0.5
     },
+    Expiration: {},
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
@@ -108,39 +110,34 @@ spawnField(0, 0, 200, 25);
 spawnField(450, -450, 200, 25);
 spawnField(450,  450, 200, 25);
 
-var enemyCt = 0;
+var maxEnemies = 7;
+var ttl = 20;
 
-function spawnEnemy(x, y) {
-  var entityId = world.entities.insert({
-    Name: { name: 'enemy' + (enemyCt++) },
-    Sprite: { name: 'enemyscout', color: '#f00', size: 40 },
-    Collidable: {},
-    Bounce: { mass: 2500 },
-    Position: { x: x, y: y },
-    Thruster: { deltaV: 1000, maxV: 300, active: true },
-    // Seeker: { radPerSec: Math.PI, targetName: 'hero1' },
-    Steering: { radPerSec: Math.PI * 1, seekTargetName: 'hero1' },
-    Motion: {},
-  });
-  setTimeout(function () {
-    //world.entities.destroy(entityId);
-  }, 5000);
+function spawnEnemy() {
+  setTimeout(() => {
+    var x = -1400;
+    var y = 1500 * Math.random() - 750;
+    world.entities.insert({
+      Sprite: { name: 'enemyscout', color: '#f00', size: 40 },
+      Collidable: {},
+      Bounce: { mass: 2500 },
+      Position: { x: x, y: y },
+      Thruster: { deltaV: 1200, maxV: 500, active: true },
+      // Seeker: { radPerSec: Math.PI, targetName: 'hero1' },
+      Steering: { radPerSec: Math.PI * 1, seekTargetName: 'hero1' },
+      Motion: {},
+      Expiration: { ttl: ttl }
+    });
+  }, ttl * 1000 * Math.random());
 }
 
-setInterval(function () {
-  spawnEnemy(-1400, 1500 * Math.random() - 750);
-}, 3000);
+for (var idx = 0; idx < maxEnemies; idx++) {
+  spawnEnemy();
+}
 
-//spawnEnemy(-1100, -500);
-//spawnEnemy(-1100, -375);
-//spawnEnemy(-1100, -250);
-//spawnEnemy(-1100, -125);
-//spawnEnemy(-1100,    0);
-//spawnEnemy(-1100,  125);
-//spawnEnemy(-1100,  250);
-//spawnEnemy(-1100,  375);
-//spawnEnemy(-1100,  500);
-//spawnEnemy(-1100,  750);
+world.subscribe(Core.Messages.ENTITY_DESTROY, function (msg, data) {
+  spawnEnemy();
+});
 
 world.entities.insert({
   Name: { name: 'hero1'},
