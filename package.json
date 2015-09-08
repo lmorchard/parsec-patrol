@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "babel": "^5.8.23",
+    "babelify": "^6.3.0",
     "dat-gui": "^0.5.0",
     "lodash": "^3.0.1",
     "lodash.assign": "^3.2.0",

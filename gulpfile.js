@@ -20,16 +20,14 @@ var parallelize = require("concurrent-transform");
 
 var DEBUG = true;
 
-gulp.task('build', [
-  'stylus',
+var buildTasks = [
   'markup',
-  'browserify-vendor',
-  'browserify-debug',
-  'browserify-core',
-  'browserify-sketches',
-  'browserify-app',
-  'browserify-tests'
-]);
+  'stylus',
+  'build-app',
+  'build-tests'
+];
+
+var toWatch = [];
 
 var moduleBundles = {
   'vendor': {
@@ -61,6 +59,101 @@ fs.readdirSync('./src/plugins').filter(function (path) {
   if (requireName in moduleBundles.debug) { return; }
   moduleBundles.core[requireName] = './src/plugins/' + name;
 });
+
+// Create the build tasks for each of the module bundles
+Object.keys(moduleBundles).forEach(function (bundleName) {
+  var taskName = 'build-' + bundleName + '-bundle';
+  buildTasks.push(taskName);
+  gulp.task(taskName, function () {
+    return browserifyModuleBundle(bundleName);
+  });
+});
+
+// Dynamically build a list of all sketches
+var sketchesPath = './src/sketches/';
+var sketches = fs.readdirSync(sketchesPath).filter(function (path) {
+  return fs.statSync(sketchesPath + path).isDirectory();
+});
+
+// Register build and watcher tasks for each sketch
+sketches.forEach(function (sketchName) {
+  var taskName = 'build-sketch-' + sketchName
+  var srcPattern = './src/sketches/' + sketchName + '/*.js';
+
+  gulp.task(taskName, function () {
+    return gulp.src(srcPattern)
+      .pipe(browserified())
+      .pipe(gulp.dest('./dist/sketches/' + sketchName))
+      .pipe(connect.reload());
+  });
+
+  buildTasks.push(taskName);
+  toWatch.push([srcPattern, [taskName]]);
+});
+
+gulp.task('build-app', function () {
+  return gulp.src('./src/app.js')
+    .pipe(browserified())
+    .pipe(gulp.dest('./dist'));
+});
+
+gulp.task('build-tests', function () {
+  return gulp.src(['./test/index.js', './test/**/test-*.js'])
+    .pipe(browserified())
+    .pipe(gulp.dest('./dist-test'));
+});
+
+gulp.task('stylus', function () {
+  return gulp.src('./src/**/*.styl')
+    .pipe(stylus())
+    .pipe(gulp.dest('./dist'));
+});
+
+gulp.task('markup', function () {
+  return gulp.src('./src/**/*.html')
+    .pipe(gulp.dest('./dist'));
+});
+
+gulp.task('connect', function() {
+  connect.server({
+    root: 'dist',
+    livereload: true,
+    port: 3001
+  });
+});
+
+gulp.task('build', buildTasks);
+
+gulp.task('watch', function () {
+
+  toWatch.forEach(function (pair) {
+    gulp.watch(pair[0], pair[1]);
+  });
+
+  gulp.watch('./src/**/*.styl', ['stylus']);
+  gulp.watch('./src/**/*.html', ['markup']);
+  gulp.watch('./src/lib/*.js', ['build-vendor']);
+  gulp.watch('./src/core.js', ['build-modules']);
+  gulp.watch('./src/plugins/*.js', ['build-modules']);
+  gulp.watch('./src/plugins/{datGui,drawStats,memoryStats}.js', ['build-debug']);
+  gulp.watch('./src/app.js', ['build-app']);
+});
+
+gulp.task('deploy', function () {
+  gulp.src('./dist/**/*')
+    .pipe(deploy({}));
+});
+
+gulp.task('test', ['build'], function (done) {
+  karma.server.start({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, done);
+});
+
+gulp.task('server', ['build', 'connect', 'watch']);
+
+gulp.task('default', ['server']);
 
 function browserifyModuleBundle(bundleName) {
 
@@ -112,83 +205,3 @@ function browserified () {
 
   });
 };
-
-gulp.task('browserify-vendor', function () {
-  return browserifyModuleBundle('vendor');
-});
-
-gulp.task('browserify-debug', function () {
-  return browserifyModuleBundle('debug');
-});
-
-gulp.task('browserify-core', function () {
-  return browserifyModuleBundle('core');
-});
-
-gulp.task('browserify-app', function () {
-  return gulp.src('./src/app.js')
-    .pipe(browserified())
-    .pipe(gulp.dest('./dist'));
-});
-
-gulp.task('browserify-sketches', function () {
-  //return gulp.src('./src/sketches/**/*.js')
-  return gulp.src('./src/sketches/{explosions,steering}/*.js')
-    .pipe(browserified())
-    .pipe(gulp.dest('./dist/sketches'));
-});
-
-gulp.task('browserify-tests', function () {
-  return gulp.src(['./test/index.js', './test/**/test-*.js'])
-    .pipe(browserified())
-    .pipe(gulp.dest('./dist-test'));
-});
-
-gulp.task('stylus', function () {
-  return gulp.src('./src/**/*.styl')
-    .pipe(stylus())
-    .pipe(gulp.dest('./dist'));
-});
-
-gulp.task('markup', function () {
-  return gulp.src('./src/**/*.html')
-    .pipe(gulp.dest('./dist'));
-});
-
-gulp.task('connect', function() {
-  connect.server({
-    root: 'dist',
-    livereload: true,
-    port: 3001
-  });
-});
-
-gulp.task('watch', function () {
-  // Fix: Watching all of node_modules is too expensive. Need to re-run full
-  // build when changing dependencies.
-  // gulp.watch('./node_modules/**/*.js', ['browserify-vendor', 'browserify-debug']);
-  gulp.watch('./src/**/*.styl', ['stylus']);
-  gulp.watch('./src/**/*.html', ['markup']);
-  gulp.watch('./src/lib/*.js', ['browserify-vendor']);
-  gulp.watch('./src/core.js', ['browserify-modules']);
-  gulp.watch('./src/plugins/*.js', ['browserify-modules']);
-  gulp.watch('./src/plugins/{datGui,drawStats,memoryStats}.js', ['browserify-debug']);
-  gulp.watch('./src/app.js', ['browserify-app']);
-  gulp.watch('./src/sketches/**/*.js', ['browserify-sketches']);
-});
-
-gulp.task('deploy', function () {
-  gulp.src('./dist/**/*')
-    .pipe(deploy({}));
-});
-
-gulp.task('test', ['build'], function (done) {
-  karma.server.start({
-    configFile: __dirname + '/karma.conf.js',
-    singleRun: true
-  }, done);
-});
-
-gulp.task('server', ['build', 'connect', 'watch']);
-
-gulp.task('default', ['server']);
