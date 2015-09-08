@@ -1,15 +1,15 @@
-import * as Core from "../../core";
+import * as Core from "core";
 
-import "../../plugins/name";
-import "../../plugins/position";
-import "../../plugins/motion";
-import "../../plugins/thruster";
-import "../../plugins/seeker";
-import "../../plugins/clickCourse";
-import "../../plugins/canvasViewport";
-import "../../plugins/drawStats";
-import "../../plugins/memoryStats";
-import "../../plugins/datGui";
+import "plugins/name";
+import "plugins/position";
+import "plugins/motion";
+import "plugins/thruster";
+import "plugins/seeker";
+import "plugins/clickCourse";
+import "plugins/canvasViewport";
+import "plugins/drawStats";
+import "plugins/memoryStats";
+import "plugins/datGui";
 
 var debug = true;
 var move = 0.07;

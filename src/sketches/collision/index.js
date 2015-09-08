@@ -1,21 +1,20 @@
-import * as Core from "../../core";
+import * as Core from "core";
 
-import _ from "lodash";
-import Vector2D from "../../lib/Vector2D";
+import Vector2D from "Vector2D";
 
-import "../../plugins/drawStats";
-import "../../plugins/memoryStats";
-import "../../plugins/datGui";
-import "../../plugins/canvasViewport";
-import "../../plugins/name";
-import "../../plugins/health";
-import "../../plugins/position";
-import "../../plugins/motion";
-import "../../plugins/thruster";
-import "../../plugins/seeker";
-import "../../plugins/clickCourse";
-import "../../plugins/collision";
-import "../../plugins/bounce";
+import "plugins/drawStats";
+import "plugins/memoryStats";
+import "plugins/datGui";
+import "plugins/canvasViewport";
+import "plugins/name";
+import "plugins/health";
+import "plugins/position";
+import "plugins/motion";
+import "plugins/thruster";
+import "plugins/seeker";
+import "plugins/clickCourse";
+import "plugins/collision";
+import "plugins/bounce";
 
 var debug = true;
 var move = 0.07;
@@ -76,9 +75,9 @@ function spawnField(centerX, centerY, radius=300,
   for (var idx = 0; idx < MAX_ASTEROIDS; idx++) {
     for (var c = 0; c < MAX_TRIES; c++) {
 
-      var size = _.random(MIN_SIZE, MAX_SIZE);
+      var size = ((MAX_SIZE - MIN_SIZE) * Math.random()) + MIN_SIZE;
       var rot = (Math.PI*4) * Math.random();
-      vSpawn.setValues(vCenter.x, vCenter.y - _.random(1, radius));
+      vSpawn.setValues(vCenter.x, vCenter.y - (((radius - 1) * Math.random()) + 1));
       vSpawn.rotateAround(vCenter, rot);
 
       var isClear = true;

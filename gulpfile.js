@@ -132,10 +132,6 @@ gulp.task('watch', function () {
 
   gulp.watch('./src/**/*.styl', ['stylus']);
   gulp.watch('./src/**/*.html', ['markup']);
-  gulp.watch('./src/lib/*.js', ['build-vendor']);
-  gulp.watch('./src/core.js', ['build-modules']);
-  gulp.watch('./src/plugins/*.js', ['build-modules']);
-  gulp.watch('./src/plugins/{datGui,drawStats,memoryStats}.js', ['build-debug']);
   gulp.watch('./src/app.js', ['build-app']);
 });
 
@@ -182,7 +178,8 @@ function browserifyModuleBundle(bundleName) {
     .bundle()
     .pipe(source(bundleName + '.js'))
     .pipe(gulpif(!opts.debug, streamify(uglify())))
-    .pipe(gulp.dest('./dist'));
+    .pipe(gulp.dest('./dist'))
+    .pipe(connect.reload());
 }
 
 function browserified () {

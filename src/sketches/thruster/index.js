@@ -1,12 +1,12 @@
-import * as Core from "../../core";
+import * as Core from "core";
 
-import "../../plugins/name";
-import "../../plugins/position";
-import "../../plugins/thruster";
-import "../../plugins/orbiter";
-import "../../plugins/motion";
-import "../../plugins/canvasViewport";
-import "../../plugins/drawStats";
+import "plugins/name";
+import "plugins/position";
+import "plugins/thruster";
+import "plugins/orbiter";
+import "plugins/motion";
+import "plugins/canvasViewport";
+import "plugins/drawStats";
 
 var world = new Core.World({
   systems: {
