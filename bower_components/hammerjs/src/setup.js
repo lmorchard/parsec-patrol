@@ -1,1 +1,0 @@
-function setup(){if(Hammer.READY)return;Hammer.event.determineEventTypes();for(var e in Hammer.gestures)Hammer.gestures.hasOwnProperty(e)&&Hammer.detection.register(Hammer.gestures[e]);Hammer.event.onTouch(Hammer.DOCUMENT,Hammer.EVENT_MOVE,Hammer.detection.detect),Hammer.event.onTouch(Hammer.DOCUMENT,Hammer.EVENT_END,Hammer.detection.detect),Hammer.READY=!0}Hammer.READY=!1;

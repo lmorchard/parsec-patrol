@@ -1,91 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-    <head>
-        <title>Parsec Patrol Sketches</title>
-        <style type="text/css">
-            .sketches { margin: 0; padding: 0; list-style-type: none }
-            .sketches li { float: left; margin: 1em; padding: 0;}
-        </style>
-    </head>
-    <body>
-        <h1>Parsec Patrol!</h1>
-        <p>
-            This is not a game, yet. But, I'm sketching out some scenarios that
-            could eventually be part of a game. Below are live canvas demos, a
-            few of which are interactive. The links go to isolated demos of
-            each sketch with control panels.
-        </p>
-        <ol class="sketches">
-            <li>
-                <p><a href="sketches/sprites.html">sprites</a></p>
-                <canvas id="sprites" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/seeker.html">seeker</a></p>
-                <canvas id="seeker" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/click-course.html">click-course</a></p>
-                <canvas id="clickcourse" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/collisions.html">collisions</a></p>
-                <canvas id="collisions" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/fields.html">fields</a></p>
-                <canvas id="fields" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/steering.html">steering</a></p>
-                <canvas id="steering" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/explosions.html">explosions</a></p>
-                <canvas id="explosions" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/beams.html">beams</a></p>
-                <canvas id="beams" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/radar.html">radar</a></p>
-                <canvas id="radar" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/missiles.html">missiles</a></p>
-                <canvas id="missiles" width="400" height="300"></canvas>
-            </li>
-            <li>
-                <p><a href="sketches/json.html">json</a></p>
-                <canvas id="json" width="400" height="300"></canvas>
-            </li>
-        </ol>
-        <script src="bower_components/requirejs/require.js"></script>
-        <script>
-            require(['scripts/common'], function (config) {
-                require(['utils', 'sketches/sprites', 'sketches/collisions', 'sketches/seeker',
-                         'sketches/click-course', 'sketches/explosions', 'sketches/beams',
-                         'sketches/radar','sketches/missiles', 'sketches/fields',
-                         'sketches/steering'],
-                    function (utils, sprites, collisions, seeker, clickcourse,
-                              explosions, beams, radar, missiles, fields, steering) {
-                        sketches = [
-                            [sprites, 'sprites'], [collisions, 'collisions'],
-                            [seeker, 'seeker'], [clickcourse, 'clickcourse'],
-                            [explosions, 'explosions'], [beams, 'beams'],
-                            [radar, 'radar'], [missiles, 'missiles'],
-                            [fields, 'fields'], [steering, 'steering'],
-                        ];
-                        for (var i=0; i<sketches.length; i++) {
-                            var fn = sketches[i][0],
-                                id = sketches[i][1],
-                                canvas = document.getElementById(id);
-                            utils.pauseWhenHidden(fn(canvas, false, false).start());
-                        }
-                    }
-                );
-            });
-        </script>
-    </body>
+  <head>
+    <link href="app.css" rel="text/stylesheet">
+  </head>
+  <body>
+    <h1>Parsec patrol!</h1>
+    <p>GAR</p>
+    <script src="app.js" type="text/javascript"></script>
+  </body>
 </html>

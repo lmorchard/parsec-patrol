@@ -1,9 +1,0 @@
-{
-  "name": "threex.keyboardstate",
-  "version": "0.0.0",
-  "commit": "01251e21b4bbd1cc36f3d0be8260006c2c54744f",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jeromeetienne/threex.keyboardstate.git"
-  }
-}

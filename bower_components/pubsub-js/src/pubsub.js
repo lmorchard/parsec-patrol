@@ -1,8 +1,0 @@
-/*
-Copyright (c) 2010,2011,2012 Morgan Roderick http://roderick.dk
-License: MIT - http://mrgnrdrck.mit-license.org
-
-https://github.com/mroderick/PubSubJS
-*/
-
-(function(e,t){typeof exports=="object"&&module?module.exports=t():typeof define=="function"&&define.amd?define(t):e.PubSub=t()})(typeof window=="object"&&window||this,function(){function r(e){return function(){throw e}}function i(e,t,n){try{e(t,n)}catch(i){setTimeout(r(i),0)}}function s(e,t,n){e(t,n)}function o(e,n,r,o){var u=t[n],a=o?s:i,f,l;if(!t.hasOwnProperty(n))return;for(f=0;f<u.length;f++)a(u[f].func,e,r)}function u(e,t,n){return function(){var i=String(e),s=i.lastIndexOf(".");o(e,e,t,n);while(s!==-1)i=i.substr(0,s),s=i.lastIndexOf("."),o(e,i,t)}}function a(e){var n=String(e),r=t.hasOwnProperty(n),i=n.lastIndexOf(".");while(!r&&i!==-1)n=n.substr(0,i),i=n.lastIndexOf("."),r=t.hasOwnProperty(n);return r&&t[n].length>0}function f(e,t,n,r){var i=u(e,t,r),s=a(e);return s?(n===!0?i():setTimeout(i,0),!0):!1}var e={name:"PubSubJS",version:"1.3.9"},t={},n=-1;return e.publish=function(t,n){return f(t,n,!1,e.immediateExceptions)},e.publishSync=function(t,n){return f(t,n,!0,e.immediateExceptions)},e.subscribe=function(e,r){if(typeof r!="function")return!1;t.hasOwnProperty(e)||(t[e]=[]);var i=String(++n);return t[e].push({token:i,func:r}),i},e.unsubscribe=function(e){var n=typeof e=="string",r=n?"token":"func",i=n?e:!0,s=!1,o,u;for(o in t)if(t.hasOwnProperty(o))for(u=t[o].length-1;u>=0;u--)if(t[o][u][r]===e){t[o].splice(u,1),s=i;if(n)return s}return s},e});

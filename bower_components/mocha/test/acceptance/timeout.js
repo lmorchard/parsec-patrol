@@ -1,1 +1,0 @@
-describe("timeouts",function(){beforeEach(function(e){e()}),it("should error on timeout",function(e){e()}),it("should allow overriding per-test",function(e){this.timeout(1e3),setTimeout(function(){e()},300)})});

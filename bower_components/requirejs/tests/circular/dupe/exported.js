@@ -1,1 +1,0 @@
-define(["require","exports","module","func","func"],function(e,t){t.makeMessage=function(t){return"hello "+t+" "+e("func").suffix},t.justSuffix=function(){return e("func").suffix}});

@@ -1,1 +1,0 @@
-(function(){define(["components","entities","worlds","underscore"],function(e,t,n,r){var i,s,o,u;return u=[e,t,n],i=u[0],s=u[1],o=u[2],suite("Components",function(){return setup(function(){return this.world=new n.World}),test("Module should be defined",function(){return assert.isDefined(e)})})})}).call(this);

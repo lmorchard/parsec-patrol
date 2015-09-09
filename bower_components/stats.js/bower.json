@@ -1,9 +1,0 @@
-{
-  "name": "stats.js",
-  "version": "0.0.0",
-  "commit": "923ab65e86dc56bae4d7fbc2967747f0ecb2d94f",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/mrdoob/stats.js.git"
-  }
-}

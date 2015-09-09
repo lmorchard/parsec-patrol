@@ -1,1 +1,0 @@
-define(["exported"],function(e){function t(t){return e.makeMessage(t)}return t.suffix="suffix",t});

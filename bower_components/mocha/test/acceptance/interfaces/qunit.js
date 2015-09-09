@@ -1,1 +1,0 @@
-function ok(e,t){if(!e)throw new Error(t)}suite("Array"),test("#length",function(){var e=[1,2,3];ok(e.length==3)}),test("#indexOf()",function(){var e=[1,2,3];ok(e.indexOf(1)==0),ok(e.indexOf(2)==1),ok(e.indexOf(3)==2)}),suite("String"),test("#length",function(){ok("foo".length==3)});

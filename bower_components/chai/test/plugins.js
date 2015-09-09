@@ -1,1 +1,0 @@
-suite("plugins",function(){function e(e){if(e.Assertion.prototype.testing)return;Object.defineProperty(e.Assertion.prototype,"testing",{get:function(){return"successful"}})}test("basic usage",function(){chai.use(e);var t=chai.expect;t(t("").testing).to.equal("successful")}),test("double plugin",function(){chai.expect(function(){chai.use(e)}).to.not.throw()})});
