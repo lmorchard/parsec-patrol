@@ -209,14 +209,14 @@ export class EntityManager {
         componentAttrs = item[componentName];
         this.addComponent(entityId, componentName, componentAttrs);
       }
-      this.world.publish(Messages.ENTITY_INSERT, entityId);
+      if (this.world) this.world.publish(Messages.ENTITY_INSERT, entityId);
       out.push(entityId);
     }
     return out.length > 1 ? out : out[0];
   }
 
   destroy(entityId) {
-    this.world.publish(Messages.ENTITY_DESTROY, entityId);
+    if (this.world) this.world.publish(Messages.ENTITY_DESTROY, entityId);
     for (componentName in this.store) {
       this.removeComponent(entityId, componentName);
     }
@@ -269,7 +269,7 @@ export class Component {
 export class System {
 
   constructor(options) {
-    this.options = defaults(options, this.defaultOptions());
+    this.options = defaults(options || {}, this.defaultOptions());
     this.debug = this.options.debug || false;
   }
 

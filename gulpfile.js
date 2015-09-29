@@ -65,7 +65,7 @@ Object.keys(moduleBundles).forEach(function (bundleName) {
   var taskName = 'build-' + bundleName + '-bundle';
   buildTasks.push(taskName);
   gulp.task(taskName, function () {
-    return browserifyModuleBundle(bundleName);
+    return browserifyModuleBundle(bundleName, taskName);
   });
 });
 
@@ -130,6 +130,7 @@ gulp.task('watch', function () {
     gulp.watch(pair[0], pair[1]);
   });
 
+  gulp.watch('./test/**/*.js', ['build-tests']);
   gulp.watch('./src/**/*.styl', ['stylus']);
   gulp.watch('./src/**/*.html', ['markup']);
   gulp.watch('./src/app.js', ['build-app']);
@@ -151,7 +152,7 @@ gulp.task('server', ['build', 'connect', 'watch']);
 
 gulp.task('default', ['server']);
 
-function browserifyModuleBundle(bundleName) {
+function browserifyModuleBundle(bundleName, taskName) {
 
   var opts = {};
   if (DEBUG && bundleName == 'core') {
@@ -163,6 +164,7 @@ function browserifyModuleBundle(bundleName) {
   // Add all the modules for this bundle.
   var modules = moduleBundles[bundleName];
   for (var moduleName in moduleBundles[bundleName]) {
+    toWatch.push([modules[moduleName] + '.js', [taskName]]);
     b.require(modules[moduleName], {expose: moduleName});
   }
 

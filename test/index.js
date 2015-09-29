@@ -1,3 +1,4 @@
 require('babel/polyfill');
 require('./test-core');
-require('./test-plugins');
+require('./plugins/test-health');
+require('./plugins/test-motion');

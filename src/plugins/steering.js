@@ -82,6 +82,8 @@ export class SteeringSystem extends Core.System {
       if (entityId == item.entityId) { return; }
 
       var targetPosition = this.world.entities.get('Position', item.entityId);
+      if (!targetPosition) { return; }
+
       var targetSprite = this.world.entities.get('Sprite', item.entityId);
 
       var A = 0;
